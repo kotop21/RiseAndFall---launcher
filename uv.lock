@@ -1,0 +1,27 @@
+version = 1
+revision = 3
+requires-python = ">=3.13"
+
+[[package]]
+name = "dearpygui"
+version = "2.2"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/18/ab/eb8070ca8fd881d4a9ac49fca5fb7b54ce66cc2742afa38e59d72b2c2dec/dearpygui-2.2-cp313-cp313-macosx_13_0_arm64.whl", hash = "sha256:084c309c56d3e05fcf75eef872df6df97f5e3e19da5ecad393a57cf7a5e56294", size = 1931423, upload-time = "2026-02-17T14:21:56.397Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/03/5988d5f4cf3ddc7c3d886623bb904b76c5f5f628a0256ac53d848df33cf7/dearpygui-2.2-cp313-cp313-manylinux1_x86_64.whl", hash = "sha256:05d8c18a0134d72f680e333c80ccab264351170293f86a05f5a0e14222992f27", size = 2592542, upload-time = "2026-02-17T14:22:03.949Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/5a/573df5f7277a13b5044daa9a27797fbd4e766da03cab6462a151b557727c/dearpygui-2.2-cp313-cp313-win_amd64.whl", hash = "sha256:500087e88d61b4ef0c841f30b12a05f5128774db3883fde7ff7c6172f03f6d79", size = 1830558, upload-time = "2026-02-17T14:21:44.551Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/76/3ccaec465021b647f13c83be42a635043a08255076984a658ed691701498/dearpygui-2.2-cp314-cp314-macosx_13_0_arm64.whl", hash = "sha256:22451146968729429ba37afa2602957dfefc03ff92dcc627dd4d85ba3f93e771", size = 1931385, upload-time = "2026-02-17T14:21:58.193Z" },
+    { url = "https://files.pythonhosted.org/packages/52/ac/8e591f33a712563742fe77b0731c1c900fe2fcc3d3e75bd4c7d8e60057a8/dearpygui-2.2-cp314-cp314-manylinux1_x86_64.whl", hash = "sha256:dcc9377d8d9fe27f659ae6b016fe96aa37d8b26b57ce60c47985290e1be7801e", size = 2592691, upload-time = "2026-02-17T14:22:05.191Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/03/aeb4ebe09a0240c8c9337018d2ac3e087fd911f6051a3bb0131248fbd942/dearpygui-2.2-cp314-cp314-win_amd64.whl", hash = "sha256:fe3c8dc37be3ddce0356afb0c16721c0e485a4c94a831886935a0692bb9a9966", size = 1889279, upload-time = "2026-02-17T14:21:46.16Z" },
+]
+
+[[package]]
+name = "raf-launcher"
+version = "0.0.1"
+source = { editable = "." }
+dependencies = [
+    { name = "dearpygui" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "dearpygui", specifier = ">=2.2" }]
