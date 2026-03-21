@@ -29,3 +29,4 @@ def render_main_content():
         dpg.add_spacer(height=10)
         dpg.add_button(label="Подключить ZeroTier", callback=action_connect_zt)
         dpg.add_text("Статус: Ожидание", tag="zt_status_text")
+        dpg.add_text("Твой айпи", tag="zt_status_ip")
