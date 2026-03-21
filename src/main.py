@@ -8,7 +8,7 @@ def main():
     dpg.create_context()
 
     with dpg.font_registry():
-        with dpg.font(FONT_PATH, 16) as default_font:
+        with dpg.font(FONT_PATH, 20) as default_font:
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Default)
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Cyrillic)
 

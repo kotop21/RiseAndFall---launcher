@@ -1,3 +1,9 @@
 {
-    "game_dir": "/Users/vitia/Applications/FileZilla.app"
+    "game_dir": "/Users/vitia/Applications/FileZilla.app",
+    "custom_players": [
+        {
+            "name": "niger",
+            "ip": "10.20.50.1"
+        }
+    ]
 }
