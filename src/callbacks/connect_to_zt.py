@@ -28,19 +28,19 @@ def connect_to_zt_network():
             time.sleep(1)
             dpg.set_value("zt_status_text", "Статус: Уже в сети")
         else:
-            print(f"ZT Error: {join_proc.stderr}")
             dpg.set_value("zt_status_text", "Статус: Ошибка сети")
 
     except FileNotFoundError:
-        dpg.set_value("zt_status_text", "Статус: Установка ZT...")
-        try:
-            install_zerotier()
+        dpg.set_value("zt_status_text", "Статус: Скачивание ZT...")
+
+        success, message = install_zerotier()
+
+        if success:
             dpg.set_value("zt_status_text", "Статус: ZT Установлен")
-            time.sleep(1)
+            time.sleep(2)
             connect_to_zt_network()
-        except Exception as e:
-            print(f"Install error: {e}")
-            dpg.set_value("zt_status_text", "Статус: Ошибка установки")
+        else:
+            dpg.set_value("zt_status_text", f"Статус: {message}")
 
 
 def action_connect_zt(sender, app_data):
