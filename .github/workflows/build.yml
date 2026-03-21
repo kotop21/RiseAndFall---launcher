@@ -1,0 +1,45 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.ps1 | iex
+        shell: powershell
+
+      - name: Install dependencies
+        run: |
+          uv sync
+          uv add pyinstaller
+
+      - name: Build EXE
+        run: |
+          $env:PYTHONPATH = "src"
+          uv run pyinstaller --noconfirm --onefile --windowed `
+            --name "Raf-Launcher" `
+            --add-data "assets;assets" `
+            --paths "src" `
+            src/main.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-Launcher
+          path: dist/Raf-Launcher.exe
+          retention-days: 5
