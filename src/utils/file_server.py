@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.post("/receive_saves")
 async def receive_saves(file: UploadFile = File(...)):
-    exe_path = cfg.get("game_exe")
+    exe_path = cfg.get("game_dir")
     if not exe_path:
         return {"status": "error", "message": "Game path not set on receiver"}
 

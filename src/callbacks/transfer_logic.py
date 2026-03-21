@@ -12,7 +12,10 @@ from config import PORT
 def start_transfer(player_data):
     zip_file = None
     try:
-        player_ip = player_data["ip"]
+        player_ip = player_data.get("ip")
+        if not player_ip:
+            show_toast("IP друга не найден!", title="Ошибка", color=(255, 0, 0))
+            return
 
         if not cfg.get("game_dir"):
             _close_transfer_window()
@@ -36,7 +39,7 @@ def start_transfer(player_data):
 
             with open(zip_file, "rb") as f:
                 url = f"http://{player_ip}:{PORT}/receive_saves"
-                response = requests.post(url, files={"file": f}, timeout=30)
+                response = requests.post(url, files={"file": f}, timeout=(5, 30))
 
             if response.status_code == 200:
                 _update_status("Готово!", 1.0)
@@ -52,9 +55,13 @@ def start_transfer(player_data):
             show_toast("Ошибка создания архива", title="Ошибка", color=(255, 0, 0))
 
     except requests.exceptions.ConnectionError:
-        show_toast("Друг не в сети (ZeroTier)", title="Ошибка", color=(255, 0, 0))
+        show_toast(
+            "Брандмауэр друга блокирует порт!", title="Ошибка сети", color=(255, 0, 0)
+        )
     except requests.exceptions.Timeout:
-        show_toast("Превышено время ожидания", title="Ошибка", color=(255, 0, 0))
+        show_toast(
+            "Превышено время ожидания (Таймаут)", title="Ошибка", color=(255, 0, 0)
+        )
     except Exception as e:
         print(f"Ошибка передачи: {e}")
         show_toast("Критическая ошибка передачи", title="Ошибка", color=(255, 0, 0))

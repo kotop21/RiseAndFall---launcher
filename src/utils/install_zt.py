@@ -1,9 +1,9 @@
 import os
 import platform
 import subprocess
-import urllib.request
 import tempfile
 import ctypes
+import requests
 
 
 def is_admin():
@@ -21,6 +21,10 @@ def install_zerotier():
     temp_dir = tempfile.gettempdir()
     installer_path = ""
 
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+
     try:
         if system == "Windows":
             if not is_admin():
@@ -29,7 +33,11 @@ def install_zerotier():
             url = "https://download.zerotier.com/dist/ZeroTier%20One.msi"
             installer_path = os.path.join(temp_dir, "zt_setup.msi")
 
-            urllib.request.urlretrieve(url, installer_path)
+            response = requests.get(url, headers=headers, stream=True)
+            response.raise_for_status()  # Проверяем, нет ли ошибок (типа 404 или 403)
+            with open(installer_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
 
             process = subprocess.run(
                 ["msiexec", "/i", installer_path, "/passive", "/norestart"],
@@ -43,7 +51,11 @@ def install_zerotier():
         elif system == "Darwin":
             url = "https://download.zerotier.com/dist/ZeroTier%20One.pkg"
             installer_path = os.path.join(temp_dir, "zt_setup.pkg")
-            urllib.request.urlretrieve(url, installer_path)
+
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            with open(installer_path, "wb") as f:
+                f.write(response.content)
 
             cmd = f"osascript -e 'do shell script \"installer -pkg {installer_path} -target /\" with administrator privileges'"
             exit_code = os.system(cmd)
