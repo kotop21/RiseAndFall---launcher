@@ -47,7 +47,7 @@ def get_zt_ip(zerotier_id):
     return None
 
 
-def connect_to_zt_network():
+def connect_to_zt_network(is_retry=False):
     from config import zerotier_id
 
     cmd = get_zt_cmd()
@@ -85,12 +85,17 @@ def connect_to_zt_network():
             dpg.set_value("zt_status_text", "Статус: Ошибка сети")
 
     except FileNotFoundError:
+        if is_retry:
+            dpg.set_value("zt_status_text", "Статус: Перезапустите приложение")
+            return
+
         dpg.set_value("zt_status_text", "Статус: Скачивание ZT...")
         success, message = install_zerotier()
+
         if success:
             dpg.set_value("zt_status_text", "Статус: ZT Установлен")
             time.sleep(2)
-            connect_to_zt_network()
+            connect_to_zt_network(is_retry=True)
         else:
             dpg.set_value("zt_status_text", f"Статус: {message}")
 
