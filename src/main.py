@@ -1,7 +1,9 @@
 import dearpygui.dearpygui as dpg
-from config import FONT_PATH
+import threading
+from config import FONT_PATH, res
 from ui.players_list import render_players_list
 from ui.main_menu import render_main_content
+from utils.file_server import run_server
 
 
 def main():
@@ -11,8 +13,11 @@ def main():
         with dpg.font(FONT_PATH, 20) as default_font:
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Default)
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Cyrillic)
+        with dpg.font(FONT_PATH, 26) as big_font:
+            dpg.add_font_range_hint(dpg.mvFontRangeHint_Cyrillic)
 
     dpg.bind_font(default_font)
+    res.big_font = big_font
 
     with dpg.window(tag="PrimaryWindow"):
         with dpg.group(horizontal=True):
@@ -23,6 +28,7 @@ def main():
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.set_primary_window("PrimaryWindow", True)
+    threading.Thread(target=run_server, daemon=True).start()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
