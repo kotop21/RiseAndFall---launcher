@@ -8,13 +8,14 @@ game_dir = cfg.get("game_dir")
 
 def render_main_content():
     with dpg.file_dialog(
-        directory_selector=True,
+        directory_selector=False,
         show=False,
         callback=action_set_game_dir,
         tag="game_dir_dialog",
         width=500,
         height=300,
     ):
+        dpg.add_file_extension("Executable (*.exe){.exe}")
         dpg.add_file_extension(".*")
 
     with dpg.child_window(border=True):

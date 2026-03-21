@@ -1,9 +1,9 @@
 {
-    "game_dir": "/Users/vitia/Applications/FileZilla.app",
     "custom_players": [
         {
             "name": "niger",
             "ip": "10.20.50.1"
         }
-    ]
+    ],
+    "game_dir": "/Volumes/Ventoy 1/123/Rise And Fall Civilization at war.app/Contents/SharedSupport/prefix/drive_c/Rise and Fall/._RiseAndFall.exe"
 }

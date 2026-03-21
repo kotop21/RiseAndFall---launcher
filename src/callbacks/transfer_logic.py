@@ -13,9 +13,8 @@ def start_transfer(player_data):
     zip_file = None
     try:
         player_ip = player_data["ip"]
-        exe_path = cfg.get("game_exe")
 
-        if not exe_path:
+        if not cfg.get("game_dir"):
             _close_transfer_window()
             show_toast(
                 "Выберите .exe игры в настройках!", title="Ошибка", color=(255, 0, 0)
@@ -25,7 +24,7 @@ def start_transfer(player_data):
         _update_status("Поиск сохранений за сегодня...")
 
         archive_name = f"temp_saves_{player_data['name']}.zip"
-        zip_file, error = create_daily_saves_archive(exe_path, archive_name)
+        zip_file, error = create_daily_saves_archive(cfg.get("game_dir"), archive_name)
 
         if error or not zip_file:
             _close_transfer_window()
