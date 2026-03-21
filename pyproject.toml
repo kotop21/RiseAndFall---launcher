@@ -1,7 +1,7 @@
 [project]
-name = "raf-launcher"
-version = "0.0.1"
-description = "Add your description here"
+name = "Raf-launcher"
+version = "0.1.0"
+description = "Author: kotop21"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
