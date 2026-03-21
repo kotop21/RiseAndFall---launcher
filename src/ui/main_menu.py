@@ -26,8 +26,6 @@ def render_main_content():
 
         dpg.add_text(f"Путь: {game_dir or 'Не выбран'}", tag="game_dir_text")
         dpg.add_spacer(height=10)
-        dpg.add_button(label="Синхронизировать сейвы")
-        dpg.add_text("Последний сейв: Нет данных")
         dpg.add_spacer(height=10)
         dpg.add_button(label="Подключить ZeroTier", callback=action_connect_zt)
         dpg.add_text("Статус: Ожидание", tag="zt_status_text")
