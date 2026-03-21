@@ -47,8 +47,14 @@ async def receive_saves(file: UploadFile = File(...)):
 
 
 def run_server():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_level="info")
-    server = uvicorn.Server(config)
-    loop.run_until_complete(server.serve())
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_config=None)
+        server = uvicorn.Server(config)
+
+        loop.run_until_complete(server.serve())
+    except Exception as e:
+        with open("CRASH_LOG.txt", "w", encoding="utf-8") as f:
+            f.write(f"Ошибка запуска сервера:\n{str(e)}")

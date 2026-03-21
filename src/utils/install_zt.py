@@ -34,7 +34,7 @@ def install_zerotier():
             installer_path = os.path.join(temp_dir, "zt_setup.msi")
 
             response = requests.get(url, headers=headers, stream=True)
-            response.raise_for_status()  # Проверяем, нет ли ошибок (типа 404 или 403)
+            response.raise_for_status()
             with open(installer_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
