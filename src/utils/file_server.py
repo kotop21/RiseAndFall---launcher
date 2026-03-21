@@ -3,6 +3,7 @@ from fastapi import FastAPI, UploadFile, File
 import shutil
 import os
 import zipfile
+import asyncio
 from config import cfg
 from utils.notifications import show_toast
 from config import PORT
@@ -41,4 +42,8 @@ async def receive_saves(file: UploadFile = File(...)):
 
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="error")
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_level="info")
+    server = uvicorn.Server(config)
+    loop.run_until_complete(server.serve())
