@@ -3,10 +3,10 @@ name: Build Windows EXE
 on:
   pull_request:
     branches:
-      - develop  # Запуск при создании PR в develop
+      - develop  
   push:
     branches:
-      - develop  # И при слиянии (мердже) в develop
+      - develop  
 
 jobs:
   build:
