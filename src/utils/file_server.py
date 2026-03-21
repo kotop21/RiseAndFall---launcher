@@ -50,8 +50,10 @@ def run_server():
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_level="info")
+
+        config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_config=None)
         server = uvicorn.Server(config)
+
         loop.run_until_complete(server.serve())
     except Exception as e:
         with open("CRASH_LOG.txt", "w", encoding="utf-8") as f:
