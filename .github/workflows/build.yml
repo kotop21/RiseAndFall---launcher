@@ -23,22 +23,27 @@ jobs:
 
       - name: Install uv
         run: |
-          curl -LsSf https://astral.sh/uv/install.ps1 | iex
+          powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+        shell: powershell
+
+      - name: Add uv to PATH
+        run: echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: powershell
 
       - name: Install dependencies
         run: |
           uv sync
           uv add pyinstaller python-multipart requests fastapi uvicorn
+        shell: powershell
 
       - name: Build EXE
         run: |
-          # Собираем: код в src, ассеты в корне
           uv run pyinstaller --noconfirm --onefile --windowed `
             --name "Raf-Launcher" `
             --add-data "assets;assets" `
             --paths "src" `
             src/main.py
+        shell: powershell
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
