@@ -11,6 +11,11 @@ from config import PORT
 app = FastAPI()
 
 
+@app.get("/test")
+async def test_connection():
+    return {"status": "ok", "message": "Сервер работает и порт открыт!"}
+
+
 @app.post("/receive_saves")
 async def receive_saves(file: UploadFile = File(...)):
     exe_path = cfg.get("game_dir")
