@@ -9,3 +9,6 @@ wheels/
 # Virtual environments
 .venv
 config.json
+RafLauncher/
+config.json
+RafLauncher/config.json
