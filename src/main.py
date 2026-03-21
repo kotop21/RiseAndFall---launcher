@@ -28,7 +28,9 @@ def main():
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.set_primary_window("PrimaryWindow", True)
+
     threading.Thread(target=run_server, daemon=True).start()
+
     dpg.start_dearpygui()
     dpg.destroy_context()
 
