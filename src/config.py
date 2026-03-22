@@ -26,8 +26,12 @@ cfg = ConfigManager()
 
 def _get_project_version():
     try:
-        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        toml_path = os.path.join(root_dir, "pyproject.toml")
+        if hasattr(sys, "_MEIPASS"):
+            toml_path = resource_path("pyproject.toml")
+        else:
+            root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            toml_path = os.path.join(root_dir, "pyproject.toml")
+
         with open(toml_path, "r", encoding="utf-8") as f:
             content = f.read()
             match = re.search(

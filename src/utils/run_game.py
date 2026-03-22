@@ -11,6 +11,6 @@ def run_game():
         if os.path.exists(game_path):
             game_dir = os.path.dirname(game_path)
             subprocess.Popen(
-                [game_path, "-datapath", "Data\\", "-redistpath", "redist\\"],
+                [game_path, "-datapath", "Data", "-redistpath", "redist"],
                 cwd=game_dir,
             )

@@ -41,6 +41,7 @@ jobs:
           uv run pyinstaller --noconfirm --onefile --windowed `
             --name "Raf-Launcher" `
             --add-data "assets;assets" `
+            --add-data "pyproject.toml;." `
             --paths "src" `
             src/main.py
         shell: powershell
