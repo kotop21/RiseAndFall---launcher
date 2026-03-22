@@ -40,7 +40,11 @@ def render_main_content():
         )
         dpg.bind_item_theme("btn_play", "play_button_theme")
 
-        dpg.add_spacer(height=20)
+        # dpg.add_spacer(height=5)
+        # with dpg.group(horizontal=True):
+        #     dpg.add_button(label="Настройки dxvoodoo", width=250, height=30)
+
+        dpg.add_spacer(height=5)
         dpg.add_separator()
         dpg.add_spacer(height=20)
 
