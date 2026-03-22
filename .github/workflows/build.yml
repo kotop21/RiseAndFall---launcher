@@ -6,7 +6,7 @@ on:
       - develop  
   push:
     branches:
-      - features/ConNetworkZT
+      - features/enhancements
 
 jobs:
   build:
