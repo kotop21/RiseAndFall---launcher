@@ -11,7 +11,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-FONT_PATH = resource_path(os.path.join("assets", "Roboto-Regular.ttf"))
+FONT_PATH = resource_path(os.path.join("assets", "ofont.ru_Fixedsys.ttf"))
 
 PORT = 9911
 
