@@ -10,7 +10,10 @@ def run_game():
     if game_path and game_path.lower().endswith(".exe"):
         if os.path.exists(game_path):
             game_dir = os.path.dirname(game_path)
+
+            cmd = f'"{game_path}" -dataPath "Data\\" -redistpath "redist\\"'
+
             subprocess.Popen(
-                [game_path, "-datapath", "Data", "-redistpath", "redist"],
+                cmd,
                 cwd=game_dir,
             )
