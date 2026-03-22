@@ -9,7 +9,7 @@ from utils.daily_saves_archive import create_daily_saves_archive
 from config import PORT
 
 
-def start_transfer(player_data):
+def action_start_transfer(player_data):
     zip_file = None
     try:
         player_ip = player_data.get("ip")

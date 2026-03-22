@@ -10,10 +10,10 @@ def main():
     dpg.create_context()
 
     with dpg.font_registry():
-        with dpg.font(FONT_PATH, 20) as default_font:
+        with dpg.font(FONT_PATH, 25) as default_font:
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Default)
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Cyrillic)
-        with dpg.font(FONT_PATH, 26) as big_font:
+        with dpg.font(FONT_PATH, 30) as big_font:
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Cyrillic)
 
     dpg.bind_font(default_font)
@@ -24,7 +24,11 @@ def main():
             render_players_list()
             render_main_content()
 
-    dpg.create_viewport(title="Rise And Fall - Launcher", width=900, height=600)
+    dpg.create_viewport(title="Rise And Fall - Launcher", width=800, height=500)
+    dpg.set_viewport_min_width(800)
+    dpg.set_viewport_min_height(500)
+    dpg.set_viewport_max_width(800)
+    dpg.set_viewport_max_height(500)
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.set_primary_window("PrimaryWindow", True)

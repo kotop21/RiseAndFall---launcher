@@ -22,12 +22,27 @@ def update_players_ui():
                     )
 
 
+def open_add_player_modal():
+    vw = dpg.get_viewport_client_width()
+    vh = dpg.get_viewport_client_height()
+
+    dpg.configure_item(
+        "add_player_modal", show=True, pos=[(vw - 300) // 2, (vh - 120) // 2]
+    )
+
+
 def render_players_list():
     with dpg.window(
-        label="Новый игрок", modal=True, show=False, tag="add_player_modal", width=300
+        label="Новый игрок",
+        modal=True,
+        show=False,
+        tag="add_player_modal",
+        width=300,
+        no_resize=True,
     ):
         dpg.add_input_text(label="Имя", tag="new_player_name")
         dpg.add_input_text(label="IP", tag="new_player_ip")
+        dpg.add_spacer(height=5)
         with dpg.group(horizontal=True):
             dpg.add_button(label="Сохранить", callback=action_save_player, width=140)
             dpg.add_button(
@@ -39,10 +54,7 @@ def render_players_list():
     with dpg.child_window(width=200, border=True, tag="players_container"):
         with dpg.group(horizontal=True):
             dpg.add_text("Друзья")
-            dpg.add_button(
-                label="+",
-                callback=lambda: dpg.configure_item("add_player_modal", show=True),
-            )
+            dpg.add_button(label="+", callback=open_add_player_modal)
             dpg.add_button(label="-", callback=action_delete_player)
         dpg.add_separator()
         dpg.add_group(tag="players_list_group")

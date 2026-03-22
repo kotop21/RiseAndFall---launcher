@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import threading
-from callbacks.transfer_logic import start_transfer
+from callbacks.transfer_logic import action_start_transfer
 
 
 def action_send_saves(sender, app_data, user_data):
@@ -31,4 +31,6 @@ def action_send_saves(sender, app_data, user_data):
         )
 
     # Запускаем вынесенную логику в потоке
-    threading.Thread(target=start_transfer, args=(user_data,), daemon=True).start()
+    threading.Thread(
+        target=action_start_transfer, args=(user_data,), daemon=True
+    ).start()
