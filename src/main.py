@@ -1,8 +1,9 @@
 import dearpygui.dearpygui as dpg
 import threading
 from config import FONT_PATH, res, project_version
-from ui.players_list import render_players_list
-from ui.main_menu import render_main_content
+
+from ui.header import render_header
+from ui.views import render_views
 from utils.file_server import run_server
 
 
@@ -20,9 +21,9 @@ def main():
     res.big_font = big_font
 
     with dpg.window(tag="PrimaryWindow"):
-        with dpg.group(horizontal=True):
-            render_players_list()
-            render_main_content()
+        render_header()
+
+        render_views()
 
     dpg.create_viewport(
         title=f"Rise And Fall - Launcher v{project_version}", width=800, height=500
