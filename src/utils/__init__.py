@@ -8,3 +8,5 @@ from .daily_saves_archive import create_daily_saves_archive
 from .get_zt_path import get_zt_path
 
 from .run_game import run_game
+
+from .get_short_path import get_short_path

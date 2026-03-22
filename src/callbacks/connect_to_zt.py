@@ -56,55 +56,53 @@ def connect_to_zt_network(is_retry=False):
         kwargs["creationflags"] = 0x08000000
 
     try:
-        # Отключаем кнопку на время процесса, чтобы не спамили нажатиями
-        dpg.configure_item("zt_status_text", enabled=False)
+        # Отключаем кнопку "zt_btn"
+        dpg.configure_item("zt_btn", enabled=False)
 
         check_proc = subprocess.run(
             [cmd, "listnetworks"], capture_output=True, text=True, **kwargs
         )
 
         if zerotier_id in check_proc.stdout:
-            dpg.configure_item("zt_status_text", label="Уже в сети", enabled=False)
+            dpg.configure_item("zt_btn", label="Уже в сети", enabled=False)
             ip = get_zt_ip(zerotier_id)
             dpg.set_value("zt_status_ip", f"Твой IP: {ip if ip else 'Получение...'}")
             return
 
-        dpg.configure_item("zt_status_text", label="Подключение...", enabled=False)
+        dpg.configure_item("zt_btn", label="Подключение...", enabled=False)
 
         join_proc = subprocess.run(
             [cmd, "join", zerotier_id], capture_output=True, text=True, **kwargs
         )
 
         if join_proc.returncode == 0:
-            dpg.configure_item("zt_status_text", label="Подключено", enabled=False)
+            dpg.configure_item("zt_btn", label="Подключено", enabled=False)
             for _ in range(5):
                 time.sleep(1)
                 ip = get_zt_ip(zerotier_id)
                 if ip:
                     dpg.set_value("zt_status_ip", f"Твой IP: {ip}")
                     break
-            dpg.configure_item("zt_status_text", label="Уже в сети", enabled=False)
+            dpg.configure_item("zt_btn", label="Уже в сети", enabled=False)
         else:
-            dpg.configure_item("zt_status_text", label="Ошибка сети", enabled=True)
+            dpg.configure_item("zt_btn", label="Ошибка сети", enabled=True)
 
     except FileNotFoundError:
         if is_retry:
             dpg.configure_item(
-                "zt_status_text", label="Перезапустите приложение", enabled=False
+                "zt_btn", label="Перезапустите приложение", enabled=False
             )
             return
 
-        dpg.configure_item("zt_status_text", label="Скачивание ZT...", enabled=False)
+        dpg.configure_item("zt_btn", label="Скачивание ZT...", enabled=False)
         success, message = install_zerotier()
 
         if success:
-            dpg.configure_item("zt_status_text", label="ZT Установлен", enabled=False)
+            dpg.configure_item("zt_btn", label="ZT Установлен", enabled=False)
             time.sleep(2)
             connect_to_zt_network(is_retry=True)
         else:
-            dpg.configure_item(
-                "zt_status_text", label=f"Ошибка: {message}", enabled=True
-            )
+            dpg.configure_item("zt_btn", label=f"Ошибка: {message}", enabled=True)
 
 
 def action_connect_zt(sender, app_data):

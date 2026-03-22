@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import threading
-from config import FONT_PATH, res
+from config import FONT_PATH, res, project_version
 from ui.players_list import render_players_list
 from ui.main_menu import render_main_content
 from utils.file_server import run_server
@@ -24,7 +24,9 @@ def main():
             render_players_list()
             render_main_content()
 
-    dpg.create_viewport(title="Rise And Fall - Launcher", width=800, height=500)
+    dpg.create_viewport(
+        title=f"Rise And Fall - Launcher v{project_version}", width=800, height=500
+    )
     dpg.set_viewport_min_width(800)
     dpg.set_viewport_min_height(500)
     dpg.set_viewport_max_width(800)

@@ -1,7 +1,9 @@
 import dearpygui.dearpygui as dpg
+from utils.get_short_path import get_short_path
 from callbacks.game_dir_action import action_set_game_dir
 from callbacks.connect_to_zt import action_connect_zt
-from config import cfg, project_version
+from callbacks.run_game_button import action_run_game
+from config import cfg
 
 game_dir = cfg.get("game_dir")
 
@@ -26,34 +28,43 @@ def render_main_content():
         dpg.add_file_extension("Executable (*.exe){.exe}")
         dpg.add_file_extension(".*")
 
-    with dpg.child_window(border=True):
+    with dpg.child_window(border=False):
         dpg.add_spacer(height=10)
 
-        dpg.add_button(label="ЗАПУСТИТЬ ИГРУ", width=-1, height=80, tag="btn_play")
+        dpg.add_button(
+            label="ЗАПУСТИТЬ ИГРУ",
+            width=-1,
+            height=80,
+            tag="btn_play",
+            callback=action_run_game,
+        )
         dpg.bind_item_theme("btn_play", "play_button_theme")
 
         dpg.add_spacer(height=20)
         dpg.add_separator()
         dpg.add_spacer(height=20)
 
-        with dpg.group(horizontal=True):
-            with dpg.group(width=260):
-                dpg.add_button(
-                    label="Выбрать путь к игре",
-                    callback=lambda: dpg.show_item("game_dir_dialog"),
-                    width=-1,
-                )
-                dpg.add_text(f"Путь: {game_dir or 'Не выбран'}", tag="game_dir_text")
+        with dpg.group(width=-1):
+            dpg.add_button(
+                label="Выбрать путь к игре",
+                callback=lambda: dpg.show_item("game_dir_dialog"),
+                width=-1,
+            )
+            dpg.add_text(
+                f"Путь: {get_short_path(game_dir)}",
+                tag="game_dir_text",
+                color=[200, 200, 200],
+            )
 
-            dpg.add_spacer(width=25)
+        dpg.add_spacer(height=15)
 
-            with dpg.group(width=260):
-                dpg.add_button(
-                    label="Подключить ZeroTier",
-                    callback=action_connect_zt,
-                    width=-1,
-                    tag="zt_status_text",
-                )
-                dpg.add_text("Твой айпи", tag="zt_status_ip")
-
-            dpg.add_text(f"v{project_version}", color=[120, 120, 120], pos=[500, 446])
+        with dpg.group(width=-1):
+            dpg.add_button(
+                label="Подключить ZeroTier",
+                callback=action_connect_zt,
+                width=-1,
+                tag="zt_btn",
+            )
+            dpg.add_text(
+                "Твой IP: Ожидание...", tag="zt_status_ip", color=[200, 200, 200]
+            )
