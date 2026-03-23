@@ -2,11 +2,10 @@ import dearpygui.dearpygui as dpg
 import time
 import os
 import requests
-from config import cfg
+
+from config import PORT, get_exe_path
 from utils.notifications import show_toast
 from utils.daily_saves_archive import create_daily_saves_archive
-
-from config import PORT
 
 
 def action_start_transfer(player_data):
@@ -17,7 +16,7 @@ def action_start_transfer(player_data):
             show_toast("IP друга не найден!", title="Ошибка", color=(255, 0, 0))
             return
 
-        if not cfg.get("game_dir"):
+        if not get_exe_path():
             _close_transfer_window()
             show_toast(
                 "Выберите .exe игры в настройках!", title="Ошибка", color=(255, 0, 0)
@@ -27,7 +26,8 @@ def action_start_transfer(player_data):
         _update_status("Поиск сохранений за сегодня...")
 
         archive_name = f"temp_saves_{player_data['name']}.zip"
-        zip_file, error = create_daily_saves_archive(cfg.get("game_dir"), archive_name)
+
+        zip_file, error = create_daily_saves_archive(archive_name)
 
         if error or not zip_file:
             _close_transfer_window()

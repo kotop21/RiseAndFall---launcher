@@ -12,3 +12,5 @@ config.json
 RafLauncher/
 config.json
 RafLauncher/config.json
+
+src/utils/installer/

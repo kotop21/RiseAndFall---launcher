@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 from utils.get_short_path import get_short_path
 from callbacks.game_dir_action import action_set_game_dir
 from callbacks.connect_to_zt import action_connect_zt
-from callbacks.run_game_button import action_run_game
+from callbacks.run_game_action import action_run_game
 from config import cfg
 
 game_dir = cfg.get("game_dir")
@@ -64,7 +64,7 @@ def render_main_content():
 
         with dpg.group(width=-1):
             dpg.add_button(
-                label="Подключить ZeroTier",
+                label="Подключиться к сети",
                 callback=action_connect_zt,
                 width=-1,
                 tag="zt_btn",

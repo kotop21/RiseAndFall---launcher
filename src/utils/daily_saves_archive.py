@@ -4,11 +4,11 @@ from datetime import datetime, date
 
 
 def create_daily_saves_archive(exe_path, archive_name="daily_saves.zip"):
-    game_dir = os.path.dirname(exe_path)
-    saves_dir = os.path.join(game_dir, "Data", "Saved Games")
+    from config import get_saves_dir
 
-    if not os.path.exists(saves_dir):
-        return None, "Папка сейвов не найдена"
+    saves_dir = get_saves_dir()
+    if not saves_dir or not os.path.exists(saves_dir):
+        return None, "Папка сейвов не найдена или игра не выбрана"
 
     today = date.today()
     files_to_zip = []

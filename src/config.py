@@ -1,7 +1,7 @@
 import os
 import sys
 import re
-from utils.user_config import ConfigManager
+from utils.config_manager import ConfigManager
 
 zerotier_id = "ebe7fbd445156789"
 
@@ -45,3 +45,24 @@ def _get_project_version():
 
 
 project_version = _get_project_version()
+
+
+def get_exe_path():
+    """Возвращает путь к .exe игры из конфига."""
+    return cfg.get("game_dir")
+
+
+def get_game_dir():
+    """Возвращает папку в которой лежит .exe игры."""
+    exe_path = get_exe_path()
+    if exe_path and isinstance(exe_path, str) and os.path.exists(exe_path):
+        return os.path.dirname(exe_path)
+    return None
+
+
+def get_saves_dir():
+    """Возвращает путь к папке сохранений."""
+    game_dir = get_game_dir()
+    if game_dir:
+        return os.path.join(game_dir, "Data", "Saved Games")
+    return None

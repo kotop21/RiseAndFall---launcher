@@ -1,67 +1,33 @@
 import os
-import shutil
-import subprocess
 import threading
 import time
 import re
-import platform
 import dearpygui.dearpygui as dpg
 from utils.install_zt import install_zerotier
-
-
-def get_zt_cmd():
-    cmd = shutil.which("zerotier-cli")
-    if cmd:
-        return cmd
-    if platform.system() == "Windows":
-        fallback = r"C:\ProgramData\ZeroTier\One\zerotier-cli.bat"
-        if os.path.exists(fallback):
-            return fallback
-    elif platform.system() == "Darwin":
-        for fallback in [
-            "/usr/local/bin/zerotier-cli",
-            "/Library/Application Support/ZeroTier/One/zerotier-cli",
-        ]:
-            if os.path.exists(fallback):
-                return fallback
-    return "zerotier-cli"
+from utils.get_zt_path import run_zt_command
 
 
 def get_zt_ip(zerotier_id):
     try:
-        cmd = get_zt_cmd()
-        kwargs = {}
-        if platform.system() == "Windows":
-            kwargs["creationflags"] = 0x08000000
+        proc = run_zt_command(["listnetworks"])
 
-        proc = subprocess.run(
-            [cmd, "listnetworks"], capture_output=True, text=True, **kwargs
-        )
         for line in proc.stdout.splitlines():
             if zerotier_id in line:
                 match = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/\d+", line)
                 if match:
                     return match.group(1)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Ошибка получения IP: {e}")
     return None
 
 
 def connect_to_zt_network(is_retry=False):
     from config import zerotier_id
 
-    cmd = get_zt_cmd()
-    kwargs = {}
-    if platform.system() == "Windows":
-        kwargs["creationflags"] = 0x08000000
-
     try:
-        # Отключаем кнопку "zt_btn"
         dpg.configure_item("zt_btn", enabled=False)
 
-        check_proc = subprocess.run(
-            [cmd, "listnetworks"], capture_output=True, text=True, **kwargs
-        )
+        check_proc = run_zt_command(["listnetworks"])
 
         if zerotier_id in check_proc.stdout:
             dpg.configure_item("zt_btn", label="Уже в сети", enabled=False)
@@ -71,9 +37,7 @@ def connect_to_zt_network(is_retry=False):
 
         dpg.configure_item("zt_btn", label="Подключение...", enabled=False)
 
-        join_proc = subprocess.run(
-            [cmd, "join", zerotier_id], capture_output=True, text=True, **kwargs
-        )
+        join_proc = run_zt_command(["join", zerotier_id])
 
         if join_proc.returncode == 0:
             dpg.configure_item("zt_btn", label="Подключено", enabled=False)
