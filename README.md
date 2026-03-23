@@ -4,7 +4,7 @@
 
 <br>
 
-<img src="https://img.shields.io/badge/Game-Rise%20And%20Fall:%20Civilizations%20At%20War-ffd700?style=for-the-badge&logo=epicgames&logoColor=black" alt="Game">
+<img src="https://img.shields.io/badge/Game-Rise%20And%20Fall:%20Civilizations%20At%20War-ffd700?style=for-the-badge&logoColor=black" alt="Game">
 <img src="https://img.shields.io/badge/Python->=3.13-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
 
 <br>
