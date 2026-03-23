@@ -1,5 +1,4 @@
 import os
-from config import get_game_dir
 from .registry import INSTALL_CONFIGS
 from .downloader import download_file
 from .extractor import extract_and_cleanup
@@ -8,6 +7,8 @@ from .extractor import extract_and_cleanup
 class InstallManager:
     @staticmethod
     def process_installation(utility_name: str) -> tuple[bool, str]:
+        from config import get_game_dir
+
         if utility_name not in INSTALL_CONFIGS:
             return False, "Unknown mods"
 

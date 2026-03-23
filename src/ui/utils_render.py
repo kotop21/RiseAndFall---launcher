@@ -1,8 +1,9 @@
 import dearpygui.dearpygui as dpg
-from config import res
 
 
 def render_utils():
+    from config import res
+
     title_utils = dpg.add_text("Утилиты для игры")
     dpg.bind_item_font(title_utils, res.big_font)
     dpg.add_spacer(height=15)

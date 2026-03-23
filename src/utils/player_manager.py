@@ -1,7 +1,6 @@
-from config import cfg
-
-
 def add_player_to_cfg(name: str, ip: str):
+    from config import cfg
+
     players = cfg.get("custom_players")
     if not isinstance(players, list):
         players = []
@@ -10,6 +9,8 @@ def add_player_to_cfg(name: str, ip: str):
 
 
 def delete_last_player_from_cfg():
+    from config import cfg
+
     players = cfg.get("custom_players")
     if isinstance(players, list) and len(players) > 0:
         players.pop()

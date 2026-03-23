@@ -3,12 +3,13 @@ from utils.get_short_path import get_short_path
 from callbacks.game_dir_action import action_set_game_dir
 from callbacks.connect_to_zt import action_connect_zt
 from callbacks.run_game_action import action_run_game
-from config import cfg
-
-game_dir = cfg.get("game_dir")
 
 
 def render_main_content():
+    from config import cfg
+
+    game_dir = cfg.get("game_dir")
+
     with dpg.theme(tag="play_button_theme"):
         with dpg.theme_component(dpg.mvButton):
             dpg.add_theme_color(dpg.mvThemeCol_Button, (46, 204, 113))

@@ -5,6 +5,7 @@ from config import FONT_PATH, res, project_version
 from ui.header import render_header
 from ui.views import render_views
 from utils.file_server import run_server
+from utils.update_checker import run_update_checker
 
 
 def main():
@@ -22,7 +23,6 @@ def main():
 
     with dpg.window(tag="PrimaryWindow"):
         render_header()
-
         render_views()
 
     dpg.create_viewport(
@@ -37,6 +37,8 @@ def main():
     dpg.set_primary_window("PrimaryWindow", True)
 
     threading.Thread(target=run_server, daemon=True).start()
+
+    run_update_checker()
 
     dpg.start_dearpygui()
     dpg.destroy_context()

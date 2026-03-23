@@ -10,3 +10,5 @@ from .get_zt_path import get_zt_path, run_zt_command
 from .run_game import run_game
 
 from .get_short_path import get_short_path
+
+from .update_checker import *

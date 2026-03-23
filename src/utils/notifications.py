@@ -5,7 +5,7 @@ _current_toast_tag = None
 _current_timer = None
 
 
-def show_toast(message, title="Уведомление", duration=3.0, color=(0, 255, 0)):
+def show_toast(message, title="Уведомление", duration=1.5, color=(0, 255, 0)):
     global _current_toast_tag, _current_timer
     from config import res
 

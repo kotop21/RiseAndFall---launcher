@@ -47,12 +47,14 @@ async def receive_saves(file: UploadFile = File(...)):
 
 
 def run_server():
+    print("[Server] Запускаем сервер.")
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
         config = uvicorn.Config(app, host="0.0.0.0", port=PORT, log_config=None)
         server = uvicorn.Server(config)
+        print("[Server] Сервер запущен!")
 
         loop.run_until_complete(server.serve())
     except Exception as e:

@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-from config import cfg
+
 from utils.notifications import show_toast
 from callbacks.list_save_player import action_save_player
 from callbacks.list_delete_player import action_delete_player
@@ -14,6 +14,8 @@ def _copy_ip_to_clipboard(sender, app_data, user_data):
 
 
 def update_players_ui():
+    from config import cfg
+
     if dpg.does_item_exist("players_list_group"):
         dpg.delete_item("players_list_group", children_only=True)
 

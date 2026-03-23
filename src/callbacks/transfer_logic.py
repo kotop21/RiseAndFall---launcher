@@ -3,12 +3,14 @@ import time
 import os
 import requests
 
-from config import PORT, get_exe_path
+
 from utils.notifications import show_toast
 from utils.daily_saves_archive import create_daily_saves_archive
 
 
 def action_start_transfer(player_data):
+    from config import PORT, get_exe_path
+
     zip_file = None
     try:
         player_ip = player_data.get("ip")
