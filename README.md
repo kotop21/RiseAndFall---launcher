@@ -2,7 +2,7 @@
 
 # ⚔️ Rise And Fall Game Launcher
 
-[🇷🇺 Русский](#русская-версия) | [🇬🇧 English](#english-version)
+[Русский](#русская-версия) | [English](#english-version)
 
 <br>
 
@@ -23,7 +23,7 @@
 
 </div>
 
-## <a id="русская-версия"></a>🇷🇺 Русская версия
+## <a id="русская-версия"></a>Русская версия
 
 
 ### 🎮 О проекте
@@ -60,7 +60,7 @@ uv run pyinstaller --noconfirm --onefile --windowed --name "Raf-Launcher" --add-
 
 ---
 
-## <a id="english-version"></a>🇬🇧 English Version
+## <a id="english-version"></a>English Version
 
 ### 🎮 About the Project
 **Raf-launcher** is a modern, custom-built launcher specifically designed for the game **Rise and Fall: Civilizations at War**. It solves the main pain points of co-op multiplayer by streamlining LAN connections, enabling instant save-game sharing between friends, and providing an easy 1-click installation for game modifications (like GFM-raf).
