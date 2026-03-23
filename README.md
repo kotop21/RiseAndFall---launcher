@@ -1,5 +1,7 @@
 <div align="center">
 
+# ⚔️ Rise And Fall Game Launcher
+
 [🇷🇺 Русский](#русская-версия) | [🇬🇧 English](#english-version)
 
 <br>
@@ -15,6 +17,11 @@
 <img src="https://img.shields.io/badge/Network-Requests-lightgrey?style=flat-square" alt="Requests">
 <img src="https://img.shields.io/badge/Package_Manager-uv-232F3E?style=flat-square" alt="uv">
 <img src="https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white" alt="GitHub Actions">
+
+<br>
+<br>
+
+![Скриншот лаунчера Rise And Fall](images/launcher.png)
 
 </div>
 
