@@ -22,9 +22,6 @@
 ![Скриншот лаунчера Rise And Fall](images/launcher.png)
 
 </div>
-
-![Скриншот лаунчера Rise And Fall](images/launcher.png)
-
 ---
 
 ## <a id="русская-версия"></a>🇷🇺 Русская версия
