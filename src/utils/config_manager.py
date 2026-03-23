@@ -15,7 +15,11 @@ class ConfigManager:
     def _get_path(self) -> str:
         appdata: Optional[str] = os.getenv("APPDATA")
         base_dir: str = appdata if appdata else os.getcwd()
-        return os.path.join(base_dir, f"{self.base_conf_name}.json")
+        launcher_dir = os.path.join(base_dir, "RafLauncher")
+        if not os.path.exists(launcher_dir):
+            os.makedirs(launcher_dir)
+
+        return os.path.join(launcher_dir, f"{self.base_conf_name}.json")
 
     def create_config(self) -> None:
         if not os.path.exists(self.config_path):
