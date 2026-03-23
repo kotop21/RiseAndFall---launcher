@@ -1,25 +1,54 @@
 import dearpygui.dearpygui as dpg
 from config import cfg
+from utils.notifications import show_toast
 from callbacks.list_save_player import action_save_player
 from callbacks.list_delete_player import action_delete_player
 from callbacks.list_send_saves import action_send_saves
+
+
+def _copy_ip_to_clipboard(sender, app_data, user_data):
+    player_ip = user_data.get("ip", "")
+    if player_ip:
+        dpg.set_clipboard_text(player_ip)
+        show_toast(f"IP скопирован", title="Буфер обмена", duration=1.5)
 
 
 def update_players_ui():
     if dpg.does_item_exist("players_list_group"):
         dpg.delete_item("players_list_group", children_only=True)
 
+    if not dpg.does_item_exist("player_btn_theme"):
+        with dpg.theme(tag="player_btn_theme"):
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 0, 0, 0])
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [255, 255, 255, 30])
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [255, 255, 255, 60])
+                dpg.add_theme_style(dpg.mvStyleVar_ButtonTextAlign, 0.0, 0.5)
+
+    if not dpg.does_item_exist("popup_compact_theme"):
+        with dpg.theme(tag="popup_compact_theme"):
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 4.0, 4.0)
+
     players = cfg.get("custom_players")
     if isinstance(players, list):
         for player in players:
-            with dpg.group(horizontal=True, parent="players_list_group"):
-                p_text = dpg.add_text(player["name"])
-                with dpg.popup(p_text, mousebutton=dpg.mvMouseButton_Right):
-                    dpg.add_button(
-                        label=f"Передать последние сохранения {player['name']}",
-                        callback=action_send_saves,
-                        user_data=player,
-                    )
+            btn = dpg.add_button(
+                label=player["name"],
+                width=-1,
+                callback=_copy_ip_to_clipboard,
+                user_data=player,
+                parent="players_list_group",
+            )
+            dpg.bind_item_theme(btn, "player_btn_theme")
+
+            with dpg.popup(btn, mousebutton=dpg.mvMouseButton_Right) as popup_id:
+                dpg.bind_item_theme(popup_id, "popup_compact_theme")
+                dpg.add_button(
+                    label=f"Передать последние сохранения {player['name']}",
+                    callback=action_send_saves,
+                    user_data=player,
+                )
 
 
 def open_add_player_modal():

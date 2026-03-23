@@ -31,7 +31,12 @@ def action_start_transfer(player_data):
 
         if error or not zip_file:
             _close_transfer_window()
-            show_toast(error or "Файлы не найдены", title="Инфо", color=(255, 255, 0))
+            show_toast(
+                error or "Файлы не найдены",
+                title="Инфо",
+                color=(255, 255, 0),
+                duration=1.5,
+            )
             return
 
         if isinstance(zip_file, str) and os.path.exists(zip_file):
