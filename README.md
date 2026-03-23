@@ -13,8 +13,6 @@
 
 <img src="https://img.shields.io/badge/GUI-DearPyGui-8A2BE2?style=flat-square" alt="DearPyGui">
 <img src="https://img.shields.io/badge/API-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
-<img src="https://img.shields.io/badge/Server-Uvicorn-E34F26?style=flat-square" alt="Uvicorn">
-<img src="https://img.shields.io/badge/Network-Requests-lightgrey?style=flat-square" alt="Requests">
 <img src="https://img.shields.io/badge/Package_Manager-uv-232F3E?style=flat-square" alt="uv">
 <img src="https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white" alt="GitHub Actions">
 
