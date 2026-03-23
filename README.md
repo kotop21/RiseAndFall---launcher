@@ -27,7 +27,7 @@
 
 
 ### 🎮 О проекте
-**Raf-launcher** — это современный кастомный лаунчер, созданный специально для игры **Rise and Fall: Civilizations at War**. Он решает главные проблемы кооперативной игры: упрощает подключение по локальной сети, позволяет мгновенно делиться сохранениями с друзьями и удобно устанавливать модификации (например, GFM-raf) всего в пару кликов.
+**Raf-launcher** — это современный кастомный лаунчер, созданный специально для игры **Rise and Fall: Civilizations at War**. Он решает главные проблемы онлайн игры: упрощает подключение по локальной сети, позволяет мгновенно делиться сохранениями с друзьями и удобно устанавливать модификации (например, GFM-raf) всего в пару кликов.
 
 ### ✨ Текущий функционал
 * 🚀 **Прямой запуск игры:** Автоматический запуск с нужными аргументами (`-datapath`, `-redistpath`).
@@ -63,7 +63,7 @@ uv run pyinstaller --noconfirm --onefile --windowed --name "Raf-Launcher" --add-
 ## <a id="english-version"></a>English Version
 
 ### 🎮 About the Project
-**Raf-launcher** is a modern, custom-built launcher specifically designed for the game **Rise and Fall: Civilizations at War**. It solves the main pain points of co-op multiplayer by streamlining LAN connections, enabling instant save-game sharing between friends, and providing an easy 1-click installation for game modifications (like GFM-raf).
+**Raf-launcher** is a modern, custom-built launcher specifically designed for the game **Rise and Fall: Civilizations at War**. It solves the main pain points of multiplayer by streamlining LAN connections, enabling instant save-game sharing between friends, and providing an easy 1-click installation for game modifications (like GFM-raf).
 
 ### ✨ Current Features
 * 🚀 **Direct Game Launching:** Automatically launches the game with the required arguments (`-datapath`, `-redistpath`).
