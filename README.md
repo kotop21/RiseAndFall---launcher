@@ -27,10 +27,10 @@
 **Raf-launcher** — это современный кастомный лаунчер, созданный специально для игры **Rise and Fall: Civilizations at War**. Он решает главные проблемы кооперативной игры: упрощает подключение по локальной сети, позволяет мгновенно делиться сохранениями с друзьями и удобно устанавливать модификации (например, GFM-raf) всего в пару кликов.
 
 ### ✨ Текущий функционал
-* 🚀 **Прямой запуск игры:** Автоматический запуск с нужными аргументами (`-dataPath`, `-redistpath`).
+* 🚀 **Прямой запуск игры:** Автоматический запуск с нужными аргументами (`-datapath`, `-redistpath`).
 * 🌐 **Интеграция с ZeroTier:** Лаунчер сам проверяет, устанавливает и подключается к нужной сети ZT, а также выводит твой виртуальный IP-адрес прямо в интерфейсе.
 * 💾 **Умная передача сохранений:** Встроенный P2P-сервер на базе FastAPI. Лаунчер сам находит твои сохранения за текущий день, архивирует их и отправляет другу по сети одним кликом.
-* 🛠 **Менеджер модов:** Скачивание и точечная распаковка архивов с модами (с умным игнорированием ненужных файлов типа `readme`).
+* 🛠 **Менеджер модов:** Скачивание и точечная распаковка архивов с модами.
 * 👥 **Список друзей:** Сохранение IP-адресов друзей, быстрое копирование IP в буфер обмена по левому клику и отправка сохранений по правому.
 
 ### 💻 Как запустить (Для разработчиков)
@@ -63,10 +63,10 @@ uv run pyinstaller --noconfirm --onefile --windowed --name "Raf-Launcher" --add-
 **Raf-launcher** is a modern, custom-built launcher specifically designed for the game **Rise and Fall: Civilizations at War**. It solves the main pain points of co-op multiplayer by streamlining LAN connections, enabling instant save-game sharing between friends, and providing an easy 1-click installation for game modifications (like GFM-raf).
 
 ### ✨ Current Features
-* 🚀 **Direct Game Launching:** Automatically launches the game with the required arguments (`-dataPath`, `-redistpath`).
+* 🚀 **Direct Game Launching:** Automatically launches the game with the required arguments (`-datapath`, `-redistpath`).
 * 🌐 **ZeroTier Integration:** Auto-installs the client, connects to the designated network, and displays your virtual IP address directly in the UI.
 * 💾 **Smart Save Sync:** Built-in P2P FastAPI server. Automatically locates today's save files, archives them, and sends them directly to a friend over the network with a single click.
-* 🛠 **Mod Manager:** Downloads and extracts mod archives directly into the game folder (with smart exclusion of junk files like `readme`).
+* 🛠 **Mod Manager:** Downloads and extracts mod archives directly into the game folder.
 * 👥 **Friends List:** Saves friends' IP addresses for quick transfers. Left-click to copy IP to clipboard, right-click to send saves.
 
 ### 💻 How to Run (Development)
