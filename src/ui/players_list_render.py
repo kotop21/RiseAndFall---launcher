@@ -13,6 +13,16 @@ def _copy_ip_to_clipboard(sender, app_data, user_data):
         show_toast(f"IP скопирован", title="Буфер обмена", duration=1.5)
 
 
+def _delete_and_close(sender, app_data, user_data):
+    dpg.configure_item(dpg.get_item_parent(sender), show=False)
+    action_delete_player(sender, app_data, user_data)
+
+
+def _send_saves_and_close(sender, app_data, user_data):
+    dpg.configure_item(dpg.get_item_parent(sender), show=False)
+    action_send_saves(sender, app_data, user_data)
+
+
 def update_players_ui():
     from config import cfg
 
@@ -31,6 +41,7 @@ def update_players_ui():
         with dpg.theme(tag="popup_compact_theme"):
             with dpg.theme_component(dpg.mvAll):
                 dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 4.0, 4.0)
+                dpg.add_theme_style(dpg.mvStyleVar_ItemSpacing, 4.0, 4.0)
 
     players = cfg.get("custom_players")
     if isinstance(players, list):
@@ -46,10 +57,18 @@ def update_players_ui():
 
             with dpg.popup(btn, mousebutton=dpg.mvMouseButton_Right) as popup_id:
                 dpg.bind_item_theme(popup_id, "popup_compact_theme")
+
                 dpg.add_button(
-                    label=f"Передать последние сохранения {player['name']}",
-                    callback=action_send_saves,
+                    label="Передать сохранения",
+                    callback=_send_saves_and_close,
                     user_data=player,
+                    width=270,
+                )
+                dpg.add_button(
+                    label="Удалить",
+                    callback=_delete_and_close,
+                    user_data=player,
+                    width=270,
                 )
 
 
@@ -86,7 +105,6 @@ def render_players_list():
         with dpg.group(horizontal=True):
             dpg.add_text("Друзья")
             dpg.add_button(label="+", callback=open_add_player_modal)
-            dpg.add_button(label="-", callback=action_delete_player)
         dpg.add_separator()
         dpg.add_group(tag="players_list_group")
         update_players_ui()

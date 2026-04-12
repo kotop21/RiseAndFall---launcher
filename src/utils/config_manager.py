@@ -40,14 +40,14 @@ class ConfigManager:
         with open(self.config_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str, default: Any = 0) -> Any:
         if not os.path.exists(self.config_path):
-            return 0
+            return default
 
         try:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 data: Dict[str, Any] = json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
-            return 0
+            return default
 
-        return data.get(key, 0)
+        return data.get(key, default)

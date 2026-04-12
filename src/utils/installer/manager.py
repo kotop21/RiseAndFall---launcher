@@ -10,11 +10,11 @@ class InstallManager:
         from config import get_game_dir
 
         if utility_name not in INSTALL_CONFIGS:
-            return False, "Unknown mods"
+            return False, "Неизвестный мод"
 
         game_dir = get_game_dir()
         if not game_dir:
-            return False, "Game directory not set"
+            return False, "Путь к игре не установлен"
 
         config = INSTALL_CONFIGS[utility_name]
         url = config["url"]
@@ -29,6 +29,6 @@ class InstallManager:
         try:
             archive_path = download_file(url, filename)
             extract_and_cleanup(archive_path, target_dir, ignore_list)
-            return True, "Success"
+            return True, "Успешно"
         except Exception as e:
             return False, str(e)

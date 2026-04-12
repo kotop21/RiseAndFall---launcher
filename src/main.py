@@ -26,7 +26,7 @@ def main():
         render_views()
 
     dpg.create_viewport(
-        title=f"Rise And Fall - Launcher v{project_version}", width=800, height=500
+        title=f"⚔️ Rise And Fall - Launcher v{project_version}", width=800, height=500
     )
     dpg.set_viewport_min_width(800)
     dpg.set_viewport_min_height(500)

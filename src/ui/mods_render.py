@@ -5,6 +5,7 @@ from callbacks.mods import action_install_mods
 def render_mods():
     from config import res
 
+    dpg.add_spacer(height=10)
     title_mods = dpg.add_text("Моды")
     dpg.bind_item_font(title_mods, res.big_font)
     dpg.add_spacer(height=15)
