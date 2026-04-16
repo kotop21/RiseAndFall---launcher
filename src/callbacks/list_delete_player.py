@@ -1,8 +1,10 @@
-from utils.player_manager import delete_last_player_from_cfg
+from utils.player_manager import delete_player_from_cfg
 
 
-def action_delete_player():
+def action_delete_player(sender, app_data, user_data):
     from ui.players_list_render import update_players_ui
 
-    delete_last_player_from_cfg()
-    update_players_ui()
+    player_name = user_data.get("name")
+    if player_name:
+        delete_player_from_cfg(player_name)
+        update_players_ui()
