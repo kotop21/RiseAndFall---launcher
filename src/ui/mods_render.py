@@ -21,3 +21,17 @@ def render_mods():
         with dpg.group():
             dpg.add_spacer()
             dpg.add_text("Ребаланс игры", color=(180, 180, 180))
+    with dpg.group(horizontal=True):
+        btn_gfm = dpg.add_button(
+            label="DgVoodoo2",
+            width=180,
+            height=45,
+            callback=action_install_mods,
+            user_data="dgVoodoo2",
+        )
+        with dpg.group():
+            dpg.add_spacer()
+            dpg.add_text(
+                "Улучшает совместимость игры с новыми системами.\nТакже помогает если игра не запускается.",
+                color=(180, 180, 180),
+            )
