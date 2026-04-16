@@ -2,6 +2,7 @@ import dearpygui.dearpygui as dpg
 from utils.get_short_path import get_short_path
 from utils.notifications import show_toast
 from callbacks.game_dir_action import action_set_game_dir
+from callbacks.open_setting_dgvoodoo import action_open_dgvoodoo
 from callbacks.install_game_action import (
     action_select_install_dir,
     action_save_launch_args,
@@ -67,6 +68,15 @@ def render_settings_content():
             callback=lambda: dpg.show_item("game_dir_dialog"),
             width=-1,
             tag="btn_game_dir",
+        )
+
+        dpg.add_spacer(height=5)
+
+        dpg.add_button(
+            label="Открыть настройки dgVoodoo",
+            width=-1,
+            height=35,
+            callback=action_open_dgvoodoo,
         )
 
         dpg.add_spacer(height=20)

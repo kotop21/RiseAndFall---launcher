@@ -21,3 +21,5 @@ from .install_game_action import (
     action_save_launch_args,
     action_select_install_dir,
 )
+
+from .open_setting_dgvoodoo import action_open_dgvoodoo
