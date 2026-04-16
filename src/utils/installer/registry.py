@@ -11,4 +11,22 @@ INSTALL_CONFIGS = {
         "subfolder": ".",
         "ignore": ["README.txt"],
     },
+    "asi_loader": {
+        "url": "http://raf-api.duckdns.org:25566/api/public/dl/qWWyTV7q",
+        "filename": "ultimate_asi_loader.zip",
+        "subfolder": ".",
+        "ignore": ["README.txt"],
+    },
+    "raf_loader": {
+        "url": "http://raf-api.duckdns.org:25566/api/public/dl/nX0xUKLV",
+        "filename": "RafLoader.zip",
+        "subfolder": ".",
+        "ignore": ["README.txt"],
+    },
+    "crash_fixer": {
+        "url": "http://raf-api.duckdns.org:25566/api/public/dl/_jV8sNfp",
+        "filename": "CrushFixes.zip",
+        "subfolder": "scripts",
+        "ignore": ["README.txt"],
+    },
 }
