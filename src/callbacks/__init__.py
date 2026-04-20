@@ -1,5 +1,9 @@
 from callbacks.mods import mods_actions
-from .game_dir_action import action_set_game_dir
+from .game_dir_action import (
+    wrapped_set_game_dir,
+    select_game_dir_native,
+    select_install_dir_native,
+)
 from .connect_to_zt import action_connect_zt
 from .run_game_action import action_run_game
 

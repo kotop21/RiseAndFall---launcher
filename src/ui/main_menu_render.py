@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 from callbacks.connect_to_zt import action_connect_zt
 from callbacks.run_game_action import action_run_game
+from callbacks.game_dir_action import select_game_dir_native, select_install_dir_native
 
 
 def try_run_game():
@@ -49,7 +50,7 @@ def render_main_content():
                     width=200,
                     callback=lambda: [
                         dpg.configure_item("no_path_modal", show=False),
-                        dpg.show_item("install_dir_dialog"),
+                        select_install_dir_native(),
                     ],
                 )
                 dpg.add_button(
@@ -57,7 +58,7 @@ def render_main_content():
                     width=160,
                     callback=lambda: [
                         dpg.configure_item("no_path_modal", show=False),
-                        dpg.show_item("game_dir_dialog"),
+                        select_game_dir_native(),
                     ],
                 )
 
