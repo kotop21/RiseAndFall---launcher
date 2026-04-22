@@ -4,8 +4,8 @@ from config import FONT_PATH, res, project_version
 
 from ui.header import render_header
 from ui.views import render_views
-from utils.file_server import run_server
-from utils.update_checker import run_update_checker
+from utils.web_server import run_server
+from utils.launcher_update_checker import run_update_checker
 
 
 def main():
@@ -26,12 +26,11 @@ def main():
         render_views()
 
     dpg.create_viewport(
-        title=f"Rise And Fall - Launcher v{project_version}", width=800, height=500
+        title=f"Rise And Fall - Launcher v{project_version}",
+        width=850,
+        height=550,
+        resizable=False,
     )
-    dpg.set_viewport_min_width(800)
-    dpg.set_viewport_min_height(500)
-    dpg.set_viewport_max_width(800)
-    dpg.set_viewport_max_height(500)
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.set_primary_window("PrimaryWindow", True)

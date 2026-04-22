@@ -1,7 +1,7 @@
 import threading
 import dearpygui.dearpygui as dpg
-from utils.installer.manager import InstallManager
-from utils.notifications import show_toast
+from utils.addon_installer.manager import InstallManager
+from utils.launcher_toast import show_toast
 
 
 def _run_install_thread(mods_name: str):

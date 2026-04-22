@@ -1,0 +1,9 @@
+{
+  "typeCheckingMode": "standard",
+  "reportUnknownMemberType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownVariableType": false,
+  "reportAny": false,
+  "reportExplicitAny": false,
+  "reportGeneralTypeIssues": true
+}

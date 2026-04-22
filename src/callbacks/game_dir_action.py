@@ -2,7 +2,7 @@ import sys
 import subprocess
 import dearpygui.dearpygui as dpg
 from utils.get_short_path import get_short_path
-from utils.notifications import show_toast
+from utils.launcher_toast import show_toast
 
 
 def _ask_file_subprocess():

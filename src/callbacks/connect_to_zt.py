@@ -1,11 +1,10 @@
-import os
 import threading
 import time
 import re
 import dearpygui.dearpygui as dpg
-from utils.install_zt import install_zerotier
-from utils.get_zt_path import run_zt_command
-from utils.notifications import show_toast
+from utils.zt_install import install_zerotier
+from utils.zt_get_path import run_zt_command
+from utils.launcher_toast import show_toast
 
 
 def get_zt_ip(zerotier_id):

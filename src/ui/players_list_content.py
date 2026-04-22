@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 
-from utils.notifications import show_toast
+from utils.launcher_toast import show_toast
 from callbacks.list_save_player import action_save_player
 from callbacks.list_delete_player import action_delete_player
 from callbacks.list_send_saves import action_send_saves

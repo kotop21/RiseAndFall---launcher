@@ -18,13 +18,13 @@ def show_toast(message, title="Уведомление", duration=1.5, color=(0, 
     tag = f"toast_{dpg.generate_uuid()}"
     _current_toast_tag = tag
 
-    vp_width = dpg.get_viewport_width()
-    vp_height = dpg.get_viewport_height()
+    vp_width = dpg.get_viewport_client_width()
+    vp_height = dpg.get_viewport_client_height()
 
-    vp_width = vp_width if vp_width > 0 else 800
-    vp_height = vp_height if vp_height > 0 else 500
+    vp_width = vp_width if vp_width > 0 else 850
+    vp_height = vp_height if vp_height > 0 else 550
 
-    pos_x = vp_width - 780
+    pos_x = vp_width - 830
     pos_y = vp_height - 120
 
     with dpg.window(
@@ -33,6 +33,8 @@ def show_toast(message, title="Уведомление", duration=1.5, color=(0, 
         no_move=True,
         no_resize=True,
         no_background=False,
+        no_scrollbar=True,
+        no_saved_settings=True,
         pos=[pos_x, pos_y],
         tag=tag,
     ):
@@ -42,8 +44,8 @@ def show_toast(message, title="Уведомление", duration=1.5, color=(0, 
         with dpg.group(horizontal=True):
             dpg.add_text("V", color=color)
             dpg.add_text(f"{title}: {message}")
-            dpg.add_spacer(width=10)
-            dpg.add_button(label="X", callback=lambda: _close_toast(tag), small=True)
+            dpg.add_spacer(width=5)
+            # dpg.add_button(label="X", callback=lambda: _close_toast(tag), small=True)
 
     def _close_toast(t_tag):
         if dpg.does_item_exist(t_tag):

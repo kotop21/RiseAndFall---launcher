@@ -1,4 +1,4 @@
-from utils.run_game import run_game
+from utils.game_run import run_game
 
 
 def action_run_game():

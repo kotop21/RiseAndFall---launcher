@@ -1,9 +1,9 @@
 import dearpygui.dearpygui as dpg
-from utils.player_manager import add_player_to_cfg
+from utils.launcher_player_manager import add_player_to_cfg
 
 
 def action_save_player(sender, app_data):
-    from ui.players_list_render import update_players_ui
+    from ui.players_list_content import update_players_ui
 
     name = dpg.get_value("new_player_name")
     ip = dpg.get_value("new_player_ip")
