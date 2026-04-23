@@ -1,8 +1,10 @@
 import dearpygui.dearpygui as dpg
-from ui import render_players_list
-from ui import render_main_content
-from ui.mods_content import render_mods
-from ui.settings_content import render_settings_content
+from ui import (
+    render_players_list,
+    render_settings_content,
+    render_mods,
+    render_main_content,
+)
 
 
 def render_views():

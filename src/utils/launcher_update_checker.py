@@ -1,7 +1,7 @@
 import threading
 import requests
 import re
-from ui.update_modal_toast import render_update_modal
+from ui import render_update_modal
 
 GITHUB_REPO = "kotop21/RiseAndFall---launcher"
 
