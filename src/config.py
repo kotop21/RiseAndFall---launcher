@@ -1,7 +1,8 @@
 import os
 import sys
 import re
-from utils.launcher_config_manager import ConfigManager
+from utils import ConfigManager
+
 
 zerotier_id = "ebe7fbd445156789"
 

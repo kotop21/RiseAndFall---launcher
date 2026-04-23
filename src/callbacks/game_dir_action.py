@@ -1,8 +1,7 @@
 import sys
 import subprocess
 import dearpygui.dearpygui as dpg
-from utils.get_short_path import get_short_path
-from utils.launcher_toast import show_toast
+from utils import get_short_path, show_toast
 
 
 def _ask_file_subprocess():
@@ -65,7 +64,7 @@ def select_game_dir_native():
 
 
 def select_install_dir_native():
-    from callbacks.install_game_action import action_select_install_dir
+    from callbacks import action_select_install_dir
 
     dir_path = _ask_dir_subprocess()
     if dir_path:

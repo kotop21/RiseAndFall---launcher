@@ -2,12 +2,11 @@ import threading
 import time
 import re
 import dearpygui.dearpygui as dpg
-from utils.zt_install import install_zerotier
-from utils.zt_get_path import run_zt_command
-from utils.launcher_toast import show_toast
 
 
 def get_zt_ip(zerotier_id):
+    from utils import run_zt_command
+
     try:
         proc = run_zt_command(["listnetworks"])
 
@@ -22,12 +21,15 @@ def get_zt_ip(zerotier_id):
 
 
 def _copy_my_ip(sender, app_data, user_data):
+    from utils import show_toast
+
     if user_data:
         dpg.set_clipboard_text(user_data)
         show_toast(f"IP скопирован", title="Буфер обмена", duration=1.5)
 
 
-def connect_to_zt_network(is_retry=False):
+def _connect_to_zt_network(is_retry=False):
+    from utils import run_zt_command, install_zerotier
     from config import zerotier_id
 
     try:
@@ -84,10 +86,10 @@ def connect_to_zt_network(is_retry=False):
         if success:
             dpg.configure_item("zt_btn", label="ZT Установлен", enabled=False)
             time.sleep(2)
-            connect_to_zt_network(is_retry=True)
+            _connect_to_zt_network(is_retry=True)
         else:
             dpg.configure_item("zt_btn", label=f"Ошибка: {message}", enabled=True)
 
 
 def action_connect_zt(sender, app_data):
-    threading.Thread(target=connect_to_zt_network, daemon=True).start()
+    threading.Thread(target=_connect_to_zt_network, daemon=True).start()

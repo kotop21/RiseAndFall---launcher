@@ -1,7 +1,10 @@
 import dearpygui.dearpygui as dpg
-from callbacks.connect_to_zt import action_connect_zt
-from callbacks.run_game_action import action_run_game
-from callbacks.game_dir_action import select_game_dir_native, select_install_dir_native
+from callbacks import (
+    action_connect_zt,
+    action_run_game,
+    select_game_dir_native,
+    select_install_dir_native,
+)
 
 
 def try_run_game():

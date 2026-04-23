@@ -1,11 +1,10 @@
 import dearpygui.dearpygui as dpg
-from utils.get_short_path import get_short_path
-from callbacks.open_setting_dgvoodoo import action_open_dgvoodoo
-from callbacks.install_game_action import action_save_launch_args
-from callbacks.game_dir_action import (
-    wrapped_set_game_dir,
+from utils import get_short_path
+from callbacks import (
     select_game_dir_native,
     select_install_dir_native,
+    action_save_launch_args,
+    action_open_dgvoodoo,
 )
 
 
@@ -15,7 +14,7 @@ def render_settings_content():
     game_dir = cfg.get("game_dir")
     launch_args = cfg.get("launch_args", '-dataPath "Data\\" -redistpath "redist\\"')
 
-    with dpg.child_window(border=False):
+    with dpg.child_window(border=False, autosize_x=True, autosize_y=True):
         dpg.add_spacer(height=10)
         t1 = dpg.add_text("Управление игрой")
         if res.big_font:

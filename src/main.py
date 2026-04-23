@@ -2,10 +2,10 @@ import dearpygui.dearpygui as dpg
 import threading
 from config import FONT_PATH, res, project_version
 
-from ui.header import render_header
-from ui.views import render_views
+from ui import render_header
+from ui import render_views
 from utils.web_server import run_server
-from utils.launcher_update_checker import run_update_checker
+from utils import run_update_checker
 
 
 def main():

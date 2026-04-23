@@ -1,7 +1,6 @@
 import dearpygui.dearpygui as dpg
-from ui.players_list_content import render_players_list
-from ui.main_menu_content import render_main_content
-from ui.utils_render import render_utils
+from ui import render_players_list
+from ui import render_main_content
 from ui.mods_content import render_mods
 from ui.settings_content import render_settings_content
 
@@ -11,9 +10,6 @@ def render_views():
         with dpg.group(horizontal=True):
             render_players_list()
             render_main_content()
-
-    with dpg.group(tag="view_utils", show=False):
-        render_utils()
 
     with dpg.group(tag="view_mods", show=False):
         render_mods()
