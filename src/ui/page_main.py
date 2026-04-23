@@ -22,7 +22,7 @@ def try_run_game():
         action_run_game()
 
 
-def render_main_content():
+def main_content():
     if not dpg.does_alias_exist("play_button_theme"):
         with dpg.theme(tag="play_button_theme"):
             with dpg.theme_component(dpg.mvButton):

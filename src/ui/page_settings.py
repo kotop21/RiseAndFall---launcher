@@ -6,10 +6,11 @@ from callbacks import (
     action_save_launch_args,
     action_open_dgvoodoo,
 )
+from utils.launcher_big_font import set_big_font
 
 
-def render_settings_content():
-    from config import cfg, res, project_version
+def settings_content():
+    from config import cfg, project_version
 
     game_dir = cfg.get("game_dir")
     launch_args = cfg.get("launch_args", '-dataPath "Data\\" -redistpath "redist\\"')
@@ -17,8 +18,7 @@ def render_settings_content():
     with dpg.child_window(border=False, autosize_x=True, autosize_y=True):
         dpg.add_spacer(height=10)
         t1 = dpg.add_text("Управление игрой")
-        if res.big_font:
-            dpg.bind_item_font(t1, res.big_font)
+        set_big_font(t1)
 
         dpg.add_separator()
         dpg.add_spacer(height=5)
@@ -48,8 +48,7 @@ def render_settings_content():
 
         dpg.add_spacer(height=20)
         t2 = dpg.add_text("Параметры запуска")
-        if res.big_font:
-            dpg.bind_item_font(t2, res.big_font)
+        set_big_font(t2)
         dpg.add_separator()
         dpg.add_spacer(height=5)
 
@@ -62,8 +61,7 @@ def render_settings_content():
 
         dpg.add_spacer(height=40)
         t3 = dpg.add_text("О лаунчере")
-        if res.big_font:
-            dpg.bind_item_font(t3, res.big_font)
+        set_big_font(t3)
         dpg.add_separator()
         dpg.add_spacer(height=5)
 

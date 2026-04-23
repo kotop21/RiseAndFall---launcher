@@ -1,20 +1,18 @@
 import dearpygui.dearpygui as dpg
-from ui import (
-    render_players_list,
-    render_settings_content,
-    render_mods,
-    render_main_content,
-)
+from .page_main import main_content
+from .page_mods import mods_content
+from .page_settings import settings_content
+from .ui_player_list import render_players_list
 
 
 def render_views():
     with dpg.group(tag="view_main", show=True):
         with dpg.group(horizontal=True):
             render_players_list()
-            render_main_content()
+            main_content()
 
     with dpg.group(tag="view_mods", show=False):
-        render_mods()
+        mods_content()
 
     with dpg.group(tag="view_settings", show=False):
-        render_settings_content()
+        settings_content()

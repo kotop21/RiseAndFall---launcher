@@ -14,3 +14,4 @@ from .get_short_path import get_short_path
 from .launcher_update_checker import *
 from .launcher_player_manager import add_player_to_cfg, delete_player_from_cfg
 from .zt_install import install_zerotier, is_admin
+from .launcher_big_font import set_big_font
