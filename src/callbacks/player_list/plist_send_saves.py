@@ -1,9 +1,10 @@
 import dearpygui.dearpygui as dpg
 import threading
-from callbacks.transfer_logic import action_start_transfer
 
 
 def action_send_saves(sender, app_data, user_data):
+    from callbacks import action_start_transfer
+
     if dpg.does_item_exist("transfer_window"):
         return
 

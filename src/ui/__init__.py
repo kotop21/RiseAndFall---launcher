@@ -1,11 +1,10 @@
-from .main_menu_render import render_main_content
-from .players_list_render import render_players_list
-from .utils_render import render_utils
-from .mods_render import render_mods
+from .page_main import main_content
+from .ui_player_list import render_players_list, update_players_ui
+from .page_mods import mods_content
 
-from .header import switch_view, render_header
-from .views import render_views
+from .launcher_header import switch_view, render_header
+from .launcher_pages import render_views
 
-from .update_modal_render import render_update_modal
+from .ui_update_toast import render_update_modal
 
-from .settings_render import wrapped_set_game_dir, render_settings_content
+from .page_settings import settings_content

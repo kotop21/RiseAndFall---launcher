@@ -1,16 +1,12 @@
 import dearpygui.dearpygui as dpg
 
-from utils.notifications import show_toast
-from callbacks.list_save_player import action_save_player
-from callbacks.list_delete_player import action_delete_player
-from callbacks.list_send_saves import action_send_saves
-
-
-def _copy_ip_to_clipboard(sender, app_data, user_data):
-    player_ip = user_data.get("ip", "")
-    if player_ip:
-        dpg.set_clipboard_text(player_ip)
-        show_toast(f"IP скопирован", title="Буфер обмена", duration=1.5)
+from callbacks.player_list import (
+    action_save_player,
+    action_delete_player,
+    action_send_saves,
+    copy_ip_to_clipboard,
+    open_add_player_modal,
+)
 
 
 def _delete_and_close(sender, app_data, user_data):
@@ -49,7 +45,7 @@ def update_players_ui():
             btn = dpg.add_button(
                 label=player["name"],
                 width=-1,
-                callback=_copy_ip_to_clipboard,
+                callback=copy_ip_to_clipboard,
                 user_data=player,
                 parent="players_list_group",
             )
@@ -70,15 +66,6 @@ def update_players_ui():
                     user_data=player,
                     width=270,
                 )
-
-
-def open_add_player_modal():
-    vw = dpg.get_viewport_client_width()
-    vh = dpg.get_viewport_client_height()
-
-    dpg.configure_item(
-        "add_player_modal", show=True, pos=[(vw - 300) // 2, (vh - 120) // 2]
-    )
 
 
 def render_players_list():

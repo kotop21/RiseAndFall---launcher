@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-from callbacks.update_actions import (
+from callbacks import (
     action_update_launcher,
     action_remind_later,
     action_skip_update,

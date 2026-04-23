@@ -1,6 +1,6 @@
 import os
 import subprocess
-from utils.notifications import show_toast
+from utils import show_toast
 
 
 def action_open_dgvoodoo():

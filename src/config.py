@@ -1,7 +1,9 @@
 import os
 import sys
 import re
-from utils.config_manager import ConfigManager
+from utils import ConfigManager
+from typing import Union, Optional
+
 
 zerotier_id = "ebe7fbd445156789"
 
@@ -17,7 +19,7 @@ PORT = 9911
 
 
 class AppResources:
-    big_font = None
+    big_font: Optional[Union[int, str]] = None
 
 
 res = AppResources()

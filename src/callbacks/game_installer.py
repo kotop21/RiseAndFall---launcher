@@ -3,7 +3,7 @@ import urllib.request
 import zipfile
 import os
 import dearpygui.dearpygui as dpg
-from utils.get_short_path import get_short_path
+from utils import get_short_path
 
 GAME_ARCHIVE_URL = "http://raf-api.duckdns.org:25566/api/public/dl/igh79Xlx"
 GAME_EXE_NAME = "RiseAndFall.exe"

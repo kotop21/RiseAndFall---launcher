@@ -1,13 +1,14 @@
 import dearpygui.dearpygui as dpg
-from callbacks.mods import action_install_mods
+from callbacks.game_mods import action_install_mods
+from utils.launcher_big_font import set_big_font
 
 
-def render_mods():
-    from config import res
+def mods_content():
 
     dpg.add_spacer(height=10)
     title_mods = dpg.add_text("Моды/Утилиты")
-    dpg.bind_item_font(title_mods, res.big_font)
+    set_big_font(title_mods)
+    dpg.add_separator()
     dpg.add_spacer(height=15)
 
     with dpg.group(horizontal=True):
@@ -38,7 +39,8 @@ def render_mods():
     # -------------------------------
     dpg.add_spacer(height=10)
     title_asi_mods = dpg.add_text("Asi mods")
-    dpg.bind_item_font(title_asi_mods, res.big_font)
+    set_big_font(title_asi_mods)
+    dpg.add_separator()
     dpg.add_spacer(height=15)
     with dpg.group(horizontal=True):
         ultimate_asi_loader = dpg.add_button(
@@ -71,7 +73,8 @@ def render_mods():
     # -------------------------------
     dpg.add_spacer(height=10)
     title_lua_mods = dpg.add_text("Lua mods")
-    dpg.bind_item_font(title_lua_mods, res.big_font)
+    set_big_font(title_lua_mods)
+    dpg.add_separator()
     dpg.add_spacer(height=15)
     with dpg.group(horizontal=True):
         crash_fix = dpg.add_button(

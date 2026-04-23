@@ -5,7 +5,7 @@ import os
 import zipfile
 import asyncio
 from config import cfg
-from utils.notifications import show_toast
+from utils import show_toast
 from config import PORT
 
 app = FastAPI()
