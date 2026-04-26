@@ -55,6 +55,13 @@ jobs:
             --icon "assets/icon.ico" `
             --add-data "assets;assets" `
             --paths "src" `
+            --exclude-module tkinter `
+            --exclude-module unittest `
+            --exclude-module pydoc `
+            --exclude-module pdb `
+            --exclude-module email `
+            --exclude-module http.server `
+            --exclude-module xmlrpc `
             src/main.py
         shell: powershell
 
