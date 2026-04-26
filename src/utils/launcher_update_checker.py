@@ -1,7 +1,6 @@
 import threading
 import requests
 import re
-from ui import render_update_modal
 
 GITHUB_REPO = "kotop21/RiseAndFall---launcher"
 
@@ -27,6 +26,7 @@ def _is_newer_version(latest, current):
 
 
 def _check_github_logic():
+    from ui import render_update_modal
     from config import cfg, project_version
 
     try:

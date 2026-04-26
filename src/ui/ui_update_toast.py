@@ -21,11 +21,11 @@ def render_update_modal(new_version, release_url):
         no_resize=True,
         no_move=True,
         no_collapse=True,
-        pos=[(vw - 420) // 2, (vh - 150) // 2],
+        pos=[(vw - 430) // 2, (vh - 190) // 2],
         width=460,
     ):
         dpg.add_text(
-            f"Найдена новая версия лаунчера: {new_version}\nРекомендуем обновиться для стабильной игры.",
+            f"Найдена новая версия: {new_version}\nРекомендуем обновиться для стабильной игры.",
             wrap=400,
         )
         dpg.add_spacer(height=15)

@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import threading
-from config import FONT_PATH, res, project_version
+from config import FONT_PATH, ICON_PATH, res, project_version
 
 from ui import render_header
 from ui import render_views
@@ -26,10 +26,12 @@ def main():
         render_views()
 
     dpg.create_viewport(
-        title=f"Rise And Fall - Launcher v{project_version}",
+        title=f"Rise And Fall - Launcher {project_version}",
         width=850,
         height=550,
         resizable=False,
+        small_icon=ICON_PATH,
+        large_icon=ICON_PATH,
     )
     dpg.setup_dearpygui()
     dpg.show_viewport()

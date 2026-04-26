@@ -1,0 +1,64 @@
+name: Build RELEASE (Nuitka)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        run: |
+          powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+        shell: powershell
+
+      - name: Add uv to PATH
+        run: echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: powershell
+
+      - name: Install dependencies
+        run: |
+          uv sync
+          uv add nuitka python-multipart requests fastapi uvicorn
+        shell: powershell
+
+      - name: Inject version into code
+        run: |
+          $content = Get-Content pyproject.toml -Raw
+          $version = [regex]::match($content, '(?m)^version\s*=\s*["'']([^"'']+)["'']').Groups[1].Value
+          if (-not $version) { $version = "0.0.0" }
+          Set-Content -Path src/version.py -Value "PROJECT_VERSION = '$version'" -Encoding utf8
+        shell: powershell
+
+      - name: Build EXE with Nuitka
+        run: |
+          uv run python -m nuitka `
+            --assume-yes-for-downloads `
+            --onefile `
+            --windows-console-mode=disable `
+            --windows-icon-from-ico="assets/icon.ico" `
+            --include-data-dir="assets=assets" `
+            -o "Raf-Launcher.exe" `
+            src/main.py
+        shell: powershell
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Raf-Launcher
+          path: Raf-Launcher.exe 
+          retention-days: 14
