@@ -1,4 +1,4 @@
-name: Build RELEASE (Nuitka)
+name: Build RELEASE (PyInstaller)
 
 on:
   push:
@@ -21,6 +21,10 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Install UPX
+        run: choco install upx --no-progress
+        shell: powershell
+
       - name: Install uv
         run: |
           powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
@@ -33,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync
-          uv add nuitka python-multipart requests fastapi uvicorn
+          uv add pyinstaller python-multipart requests fastapi uvicorn
         shell: powershell
 
       - name: Inject version into code
@@ -44,15 +48,18 @@ jobs:
           Set-Content -Path src/version.py -Value "PROJECT_VERSION = '$version'" -Encoding utf8
         shell: powershell
 
-      - name: Build EXE with Nuitka
+      - name: Build EXE
         run: |
-          uv run python -m nuitka `
-            --assume-yes-for-downloads `
-            --onefile `
-            --windows-console-mode=disable `
-            --windows-icon-from-ico="assets/icon.ico" `
-            --include-data-dir="assets=assets" `
-            -o "Raf-Launcher.exe" `
+          uv run pyinstaller --noconfirm --onefile --windowed --upx-dir "C:\ProgramData\chocolatey\bin" `
+            --name "Raf-Launcher" `
+            --icon "assets/icon.ico" `
+            --add-data "assets;assets" `
+            --paths "src" `
+            --exclude-module tkinter `
+            --exclude-module unittest `
+            --exclude-module pydoc `
+            --exclude-module pdb `
+            --exclude-module xmlrpc `
             src/main.py
         shell: powershell
 
@@ -60,5 +67,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Raf-Launcher
-          path: Raf-Launcher.exe 
+          path: dist/Raf-Launcher.exe 
           retention-days: 14
