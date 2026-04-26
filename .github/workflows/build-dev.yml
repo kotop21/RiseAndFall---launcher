@@ -1,12 +1,12 @@
-name: Build Windows EXE
+name: Build DEV (PyInstaller)
 
 on:
-  pull_request:
-    branches:
-      - develop  
   push:
     branches:
-      - features/enhancements
+      - develop
+      - 'features/**'
+  pull_request:
+    branches:
       - develop
 
 jobs:
@@ -37,13 +37,20 @@ jobs:
           uv add pyinstaller python-multipart requests fastapi uvicorn
         shell: powershell
 
+      - name: Inject version into code
+        run: |
+          $content = Get-Content pyproject.toml -Raw
+          $version = [regex]::match($content, '(?m)^version\s*=\s*["'']([^"'']+)["'']').Groups[1].Value
+          if (-not $version) { $version = "0.0.0" }
+          Set-Content -Path src/version.py -Value "PROJECT_VERSION = '$version'" -Encoding utf8
+        shell: powershell
+
       - name: Build EXE
         run: |
           uv run pyinstaller --noconfirm --onefile --windowed `
-            --name "Raf-Launcher" `
+            --name "Raf-Launcher-Dev" `
             --icon "assets/icon.ico" `
             --add-data "assets;assets" `
-            --add-data "pyproject.toml;." `
             --paths "src" `
             src/main.py
         shell: powershell
@@ -51,6 +58,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Windows-Launcher-EXE
-          path: dist/Raf-Launcher.exe
+          name: Windows-Launcher-Dev
+          path: dist/Raf-Launcher-Dev.exe
           retention-days: 5
