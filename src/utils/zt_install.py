@@ -2,18 +2,7 @@ import os
 import platform
 import subprocess
 import tempfile
-import ctypes
 import requests
-
-
-def is_admin():
-    try:
-        if platform.system() == "Windows":
-            return ctypes.windll.shell32.IsUserAnAdmin() != 0
-        else:
-            return os.getuid() == 0
-    except:
-        return False
 
 
 def install_zerotier():
@@ -27,9 +16,6 @@ def install_zerotier():
 
     try:
         if system == "Windows":
-            if not is_admin():
-                return False, "Access Denied: Run as Admin"
-
             url = "https://download.zerotier.com/dist/ZeroTier%20One.msi"
             installer_path = os.path.join(temp_dir, "zt_setup.msi")
 

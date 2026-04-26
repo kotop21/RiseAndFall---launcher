@@ -33,19 +33,19 @@ def render_header():
 
     with dpg.group(horizontal=True):
         btn_main = dpg.add_button(
-            label="> Играть ",
+            label=" > Играть ",
             user_data="view_main",
             callback=switch_view,
             tag="btn_view_main",
         )
         dpg.add_button(
-            label="* Моды ",
+            label=" * Моды ",
             user_data="view_mods",
             callback=switch_view,
             tag="btn_view_mods",
         )
         dpg.add_button(
-            label="= Настройки ",
+            label=" = Настройки ",
             user_data="view_settings",
             callback=switch_view,
             tag="btn_view_settings",

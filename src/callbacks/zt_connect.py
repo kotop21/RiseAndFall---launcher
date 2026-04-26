@@ -2,11 +2,11 @@ import threading
 import time
 import re
 import dearpygui.dearpygui as dpg
+from utils import admin_check, run_zt_command, install_zerotier, show_toast
+from config import zerotier_id
 
 
 def get_zt_ip(zerotier_id):
-    from utils import run_zt_command
-
     try:
         proc = run_zt_command(["listnetworks"])
 
@@ -15,23 +15,34 @@ def get_zt_ip(zerotier_id):
                 match = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/\d+", line)
                 if match:
                     return match.group(1)
-    except Exception as e:
-        print(f"Ошибка получения IP: {e}")
+    except Exception:
+        pass
     return None
 
 
 def _copy_my_ip(sender, app_data, user_data):
-    from utils import show_toast
-
     if user_data:
         dpg.set_clipboard_text(user_data)
-        show_toast(f"IP скопирован", title="Буфер обмена", duration=1.5)
+        show_toast("IP скопирован", title="Буфер обмена", duration=1.5)
+
+
+def _start_zt_install():
+    dpg.configure_item("zt_btn", label="Скачивание ZT...", enabled=False)
+    success, message = install_zerotier()
+
+    if success:
+        dpg.configure_item("zt_btn", label="ZT Установлен", enabled=False)
+        time.sleep(2)
+        _connect_to_zt_network(is_retry=True)
+    else:
+        dpg.configure_item("zt_btn", label=f"Ошибка: {message}", enabled=True)
+
+
+def _trigger_zt_install_thread():
+    threading.Thread(target=_start_zt_install, daemon=True).start()
 
 
 def _connect_to_zt_network(is_retry=False):
-    from utils import run_zt_command, install_zerotier
-    from config import zerotier_id
-
     try:
         dpg.configure_item("zt_btn", enabled=False)
 
@@ -80,15 +91,12 @@ def _connect_to_zt_network(is_retry=False):
             )
             return
 
-        dpg.configure_item("zt_btn", label="Скачивание ZT...", enabled=False)
-        success, message = install_zerotier()
+        from ui import admin_warning_ui
 
-        if success:
-            dpg.configure_item("zt_btn", label="ZT Установлен", enabled=False)
-            time.sleep(2)
-            _connect_to_zt_network(is_retry=True)
+        if admin_check() == 1:
+            admin_warning_ui(on_ignore=_trigger_zt_install_thread)
         else:
-            dpg.configure_item("zt_btn", label=f"Ошибка: {message}", enabled=True)
+            _trigger_zt_install_thread()
 
 
 def action_connect_zt(sender, app_data):
