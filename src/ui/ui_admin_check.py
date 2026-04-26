@@ -43,11 +43,6 @@ def admin_warning_ui(on_ignore=None):
 def _action_close_launcher(sender, app_data, user_data):
     dpg.stop_dearpygui()
 
-    if sys.platform == "darwin":
-        dpg.destroy_context()
-
-    sys.exit(0)
-
 
 def _action_ignore_warning(sender, app_data, user_data):
     if dpg.does_item_exist("admin_warning_modal"):
