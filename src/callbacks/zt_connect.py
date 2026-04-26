@@ -94,7 +94,8 @@ def _connect_to_zt_network(is_retry=False):
         from ui import admin_warning_ui
 
         if admin_check() == 1:
-            admin_warning_ui(on_ignore=_trigger_zt_install_thread)
+            admin_warning_ui()
+            dpg.configure_item("zt_btn", label="Недостаточно прав", enabled=True)
         else:
             _trigger_zt_install_thread()
 

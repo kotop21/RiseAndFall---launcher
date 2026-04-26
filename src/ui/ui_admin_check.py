@@ -33,7 +33,7 @@ def admin_warning_ui(on_ignore=None):
                 callback=_action_close_launcher,
             )
             dpg.add_button(
-                label="Игнорировать",
+                label="Отменить",
                 width=200,
                 callback=_action_ignore_warning,
                 user_data=on_ignore,
