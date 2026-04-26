@@ -1,4 +1,4 @@
-name: Build RELEASE (Optimized)
+name: Build RELEASE (PyInstaller)
 
 on:
   push:
@@ -37,7 +37,6 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync
-          # Ставим PyInstaller вместо Nuitka
           uv add pyinstaller python-multipart requests fastapi uvicorn
         shell: powershell
 
@@ -51,7 +50,6 @@ jobs:
 
       - name: Build EXE
         run: |
-          # Добавили флаг --upx-dir для жесткого сжатия файла
           uv run pyinstaller --noconfirm --onefile --windowed --upx-dir "C:\ProgramData\chocolatey\bin" `
             --name "Raf-Launcher" `
             --icon "assets/icon.ico" `
