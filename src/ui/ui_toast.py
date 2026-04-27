@@ -30,7 +30,7 @@ def show_toast(
     vp_width = vp_width if vp_width > 0 else 850
     vp_height = vp_height if vp_height > 0 else 550
 
-    pos_x = vp_width - 830
+    pos_x = 20
     pos_y = vp_height - 120
 
     with dpg.window(
