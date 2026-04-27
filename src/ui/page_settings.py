@@ -6,7 +6,7 @@ from callbacks import (
     action_save_launch_args,
     action_open_dgvoodoo,
 )
-from utils.launcher_big_font import set_big_font
+from utils.launcher.launcher_ui_big_font import set_big_font
 
 
 def settings_content():

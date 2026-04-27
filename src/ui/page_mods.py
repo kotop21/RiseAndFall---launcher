@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from callbacks.game_mods import action_install_mods
-from utils.launcher_big_font import set_big_font
+from utils.launcher.launcher_ui_big_font import set_big_font
 
 
 def mods_content():
@@ -12,7 +12,7 @@ def mods_content():
     dpg.add_spacer(height=15)
 
     with dpg.group(horizontal=True):
-        btn_gfm = dpg.add_button(
+        _btn_gfm = dpg.add_button(
             label="GFM-raf",
             width=180,
             height=45,
@@ -23,7 +23,7 @@ def mods_content():
             dpg.add_spacer()
             dpg.add_text("Ребаланс игры", color=(180, 180, 180))
     with dpg.group(horizontal=True):
-        dgvoodoo = dpg.add_button(
+        _dgvoodoo = dpg.add_button(
             label="DgVoodoo2",
             width=180,
             height=45,
@@ -43,7 +43,7 @@ def mods_content():
     dpg.add_separator()
     dpg.add_spacer(height=15)
     with dpg.group(horizontal=True):
-        ultimate_asi_loader = dpg.add_button(
+        _ultimate_asi_loader = dpg.add_button(
             label="Asi loader",
             width=180,
             height=45,
@@ -57,7 +57,7 @@ def mods_content():
                 color=(180, 180, 180),
             )
     with dpg.group(horizontal=True):
-        raf_loader = dpg.add_button(
+        _raf_loader = dpg.add_button(
             label="RafLoader",
             width=180,
             height=45,
@@ -77,7 +77,7 @@ def mods_content():
     dpg.add_separator()
     dpg.add_spacer(height=15)
     with dpg.group(horizontal=True):
-        crash_fix = dpg.add_button(
+        _crash_fix = dpg.add_button(
             label="Crash Fixer",
             width=180,
             height=45,

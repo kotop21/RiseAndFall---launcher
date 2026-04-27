@@ -6,7 +6,7 @@ from callbacks import (
 )
 
 
-def render_update_modal(new_version, release_url):
+def update_modal_ui(new_version, release_url):
     if dpg.does_item_exist("update_modal"):
         dpg.delete_item("update_modal")
 

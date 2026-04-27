@@ -1,6 +1,6 @@
 import os
 import sys
-from utils import ConfigManager
+from utils.launcher import ConfigManager
 from typing import Union, Optional
 
 zerotier_id = "ebe7fbd445156789"
@@ -28,7 +28,7 @@ try:
 
     project_version = f"v{PROJECT_VERSION}"
 except ImportError:
-    project_version = " dev-build"
+    project_version = "dev-build"
 
 
 def get_exe_path():

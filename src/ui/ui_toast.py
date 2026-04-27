@@ -1,12 +1,18 @@
 import dearpygui.dearpygui as dpg
 import threading
-from .launcher_big_font import set_big_font
+from utils.launcher import set_big_font
 
 _current_toast_tag = None
 _current_timer = None
 
 
-def show_toast(message, title="Уведомление", duration=1.5, color=(0, 255, 0)):
+def show_toast(
+    message,
+    description=None,
+    title="Уведомление",
+    duration=1.5,
+    color=(0, 255, 0),
+):
     global _current_toast_tag, _current_timer
 
     if _current_toast_tag and dpg.does_item_exist(_current_toast_tag):
@@ -24,7 +30,7 @@ def show_toast(message, title="Уведомление", duration=1.5, color=(0, 
     vp_width = vp_width if vp_width > 0 else 850
     vp_height = vp_height if vp_height > 0 else 550
 
-    pos_x = vp_width - 830
+    pos_x = 20
     pos_y = vp_height - 120
 
     with dpg.window(
@@ -38,11 +44,17 @@ def show_toast(message, title="Уведомление", duration=1.5, color=(0, 
         pos=[pos_x, pos_y],
         tag=tag,
     ):
-        set_big_font(tag)
-        with dpg.group(horizontal=True):
+        with dpg.group(horizontal=True, tag=f"{tag}_top"):
             dpg.add_text("V", color=color)
             dpg.add_text(f"{title}: {message}")
             dpg.add_spacer(width=5)
+
+        set_big_font(f"{tag}_top")
+
+        if description:
+            dpg.add_text(description)
+
+    dpg.focus_item(tag)
 
     def _close_toast(t_tag):
         if dpg.does_item_exist(t_tag):

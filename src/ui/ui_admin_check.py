@@ -1,4 +1,3 @@
-import sys
 import dearpygui.dearpygui as dpg
 
 

@@ -23,26 +23,21 @@ jobs:
           python-version: '3.13'
 
       - name: Install uv
-        run: |
-          powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-        shell: powershell
-
-      - name: Add uv to PATH
-        run: echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        shell: powershell
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Install dependencies
         run: |
           uv sync
-          uv add pyinstaller python-multipart requests fastapi uvicorn
+          uv add pyinstaller
         shell: powershell
 
-      - name: Inject version into code
+      - name: Inject version
         run: |
-          $content = Get-Content pyproject.toml -Raw
-          $version = [regex]::match($content, '(?m)^version\s*=\s*["'']([^"'']+)["'']').Groups[1].Value
+          $version = Select-String -Path pyproject.toml -Pattern 'version\s*=\s*"([^"]+)"' | ForEach-Object { $_.Matches.Groups[1].Value }
           if (-not $version) { $version = "0.0.0" }
-          Set-Content -Path src/version.py -Value "PROJECT_VERSION = '$version'" -Encoding utf8
+          "PROJECT_VERSION = '$version'" | Out-File -FilePath src/version.py -Encoding utf8
         shell: powershell
 
       - name: Build EXE
@@ -52,6 +47,9 @@ jobs:
             --icon "assets/icon.ico" `
             --add-data "assets;assets" `
             --paths "src" `
+            --clean `
+            --exclude-module tkinter `
+            --exclude-module unittest `
             src/main.py
         shell: powershell
 
@@ -60,4 +58,5 @@ jobs:
         with:
           name: Raf-Launcher-Dev
           path: dist/Raf-Launcher-Dev.exe
-          retention-days: 5
+          compression-level: 0
+          retention-days: 1

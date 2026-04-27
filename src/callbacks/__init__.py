@@ -8,7 +8,7 @@ from .game_runner import action_run_game
 
 from .server_transfer_logic import action_start_transfer
 
-from .launcher_update_actions import (
+from .launcher_update import (
     action_update_launcher,
     action_remind_later,
     action_skip_update,
