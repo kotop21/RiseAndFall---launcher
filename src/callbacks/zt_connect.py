@@ -26,7 +26,12 @@ def get_zt_ip(zerotier_id):
 def _copy_my_ip(sender, app_data, user_data):
     if user_data:
         dpg.set_clipboard_text(user_data)
-        show_toast("IP скопирован", title="Буфер обмена", duration=1.5)
+        show_toast(
+            "IP скопирован",
+            description=f"Айпи: {user_data}",
+            title="Буфер обмена",
+            duration=1.5,
+        )
 
 
 def _start_zt_install():
