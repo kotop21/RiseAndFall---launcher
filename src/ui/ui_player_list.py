@@ -96,11 +96,11 @@ def players_list_content():
         modal=True,
         show=False,
         tag="add_player_modal",
-        width=300,
+        width=305,
         no_resize=True,
     ):
-        dpg.add_input_text(label="Имя", tag="new_player_name")
-        dpg.add_input_text(label="IP", tag="new_player_ip")
+        dpg.add_input_text(label="Имя", tag="new_player_name", hint="Name")
+        dpg.add_input_text(label="IP", tag="new_player_ip", hint="0.0.0.0")
         dpg.add_spacer(height=5)
         with dpg.group(horizontal=True):
             dpg.add_button(label="Сохранить", callback=_validate_and_save, width=140)
