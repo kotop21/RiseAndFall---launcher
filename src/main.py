@@ -4,8 +4,9 @@ from config import FONT_PATH, ICON_PATH, res, project_version
 
 from ui import render_header
 from ui import render_views
+from ui import update_modal_ui
 from utils.web_server import run_server
-from utils import run_update_checker
+from utils.launcher import run_update_checker
 
 
 def main():
@@ -39,7 +40,7 @@ def main():
 
     threading.Thread(target=run_server, daemon=True).start()
 
-    run_update_checker()
+    run_update_checker(on_update_available=update_modal_ui)
 
     dpg.start_dearpygui()
     dpg.destroy_context()

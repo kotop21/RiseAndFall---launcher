@@ -25,8 +25,7 @@ def _is_newer_version(latest, current):
         return latest != current
 
 
-def _check_github_logic():
-    from ui import render_update_modal
+def _check_github_logic(on_update_available):
     from config import cfg, project_version
 
     try:
@@ -51,7 +50,8 @@ def _check_github_logic():
             if _is_newer_version(latest_clean, current_clean):
                 if latest_clean != ignored_version:
                     print("[Updater] Найдена новая версия!")
-                    render_update_modal(latest_tag, release_url)
+                    if on_update_available:
+                        on_update_available(latest_tag, release_url)
                 else:
                     print(
                         "[Updater] Обновление найдено, но пользователь ранее нажал 'Пропустить'."
@@ -67,6 +67,8 @@ def _check_github_logic():
         print(f"[Updater] Критическая ошибка в фоновом потоке: {e}")
 
 
-def run_update_checker():
+def run_update_checker(on_update_available=None):
     print("[Updater] Запуск потока проверки обновлений...")
-    threading.Thread(target=_check_github_logic, daemon=True).start()
+    threading.Thread(
+        target=_check_github_logic, args=(on_update_available,), daemon=True
+    ).start()

@@ -1,7 +1,7 @@
 import sys
 import subprocess
 import dearpygui.dearpygui as dpg
-from utils import get_short_path, show_toast
+from utils import get_short_path
 
 
 def _ask_file_subprocess():
@@ -51,6 +51,8 @@ def action_set_game_dir(sender, app_data):
 
 
 def wrapped_set_game_dir(sender, app_data):
+    from ui.ui_toast import show_toast
+
     action_set_game_dir(sender, app_data)
     if dpg.does_alias_exist("no_path_modal"):
         dpg.configure_item("no_path_modal", show=False)

@@ -1,4 +1,5 @@
 import dearpygui.dearpygui as dpg
+import ipaddress
 
 from callbacks.player_list import (
     action_save_player,
@@ -10,13 +11,34 @@ from callbacks.player_list import (
 
 
 def _delete_and_close(sender, app_data, user_data):
-    dpg.configure_item(dpg.get_item_parent(sender), show=False)
+    parent = dpg.get_item_parent(sender)
+    if parent is not None:
+        dpg.configure_item(parent, show=False)
     action_delete_player(sender, app_data, user_data)
 
 
 def _send_saves_and_close(sender, app_data, user_data):
-    dpg.configure_item(dpg.get_item_parent(sender), show=False)
+    parent = dpg.get_item_parent(sender)
+    if parent is not None:
+        dpg.configure_item(parent, show=False)
     action_send_saves(sender, app_data, user_data)
+
+
+def _validate_and_save(sender, app_data, user_data):
+    ip = dpg.get_value("new_player_ip")
+    try:
+        ipaddress.ip_address(ip)
+        action_save_player(sender, app_data, user_data)
+    except ValueError:
+        from ui.ui_toast import show_toast
+
+        show_toast(
+            "Неверный формат IP",
+            description="Правильный формат: 0.0.0.0",
+            duration=2.5,
+            title="Ошибка",
+            color=(255, 0, 0),
+        )
 
 
 def update_players_ui():
@@ -68,7 +90,7 @@ def update_players_ui():
                 )
 
 
-def render_players_list():
+def players_list_content():
     with dpg.window(
         label="Новый игрок",
         modal=True,
@@ -81,7 +103,7 @@ def render_players_list():
         dpg.add_input_text(label="IP", tag="new_player_ip")
         dpg.add_spacer(height=5)
         with dpg.group(horizontal=True):
-            dpg.add_button(label="Сохранить", callback=action_save_player, width=140)
+            dpg.add_button(label="Сохранить", callback=_validate_and_save, width=140)
             dpg.add_button(
                 label="Отмена",
                 callback=lambda: dpg.configure_item("add_player_modal", show=False),
