@@ -2,9 +2,8 @@ import dearpygui.dearpygui as dpg
 from callbacks import (
     action_connect_zt,
     action_run_game,
-    select_game_dir_native,
-    select_install_dir_native,
 )
+from ui.components.ui_no_path import show_no_path_modal
 
 
 def try_run_game():
@@ -13,11 +12,7 @@ def try_run_game():
     game_dir = cfg.get("game_dir")
 
     if not game_dir or game_dir == 0:
-        vw = dpg.get_viewport_client_width()
-        vh = dpg.get_viewport_client_height()
-        dpg.configure_item(
-            "no_path_modal", show=True, pos=[(vw - 385) // 2, (vh - 200) // 2]
-        )
+        show_no_path_modal()
     else:
         action_run_game()
 
@@ -31,45 +26,6 @@ def main_content():
                 dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (39, 174, 96))
                 dpg.add_theme_color(dpg.mvThemeCol_Text, (0, 0, 0))
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
-
-    if not dpg.does_alias_exist("no_path_modal"):
-        with dpg.window(
-            label="Игра не найдена",
-            modal=True,
-            show=False,
-            tag="no_path_modal",
-            no_resize=True,
-            width=385,
-        ):
-            dpg.add_text(
-                "Похоже, путь к игре еще не установлен.",
-                wrap=300,
-            )
-            dpg.add_spacer(height=10)
-
-            with dpg.group(horizontal=True):
-                dpg.add_button(
-                    label="Установить игру",
-                    width=200,
-                    callback=lambda: [
-                        dpg.configure_item("no_path_modal", show=False),
-                        select_install_dir_native(),
-                    ],
-                )
-                dpg.add_button(
-                    label="Выбрать путь",
-                    width=160,
-                    callback=lambda: [
-                        dpg.configure_item("no_path_modal", show=False),
-                        select_game_dir_native(),
-                    ],
-                )
-
-            dpg.add_button(
-                label="Отмена",
-                width=-1,
-                callback=lambda: dpg.configure_item("no_path_modal", show=False),
-            )
 
     with dpg.child_window(border=False):
         dpg.add_spacer(height=10)

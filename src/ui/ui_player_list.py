@@ -1,13 +1,12 @@
 import dearpygui.dearpygui as dpg
-import ipaddress
 
 from callbacks.player_list import (
-    action_save_player,
     action_delete_player,
     action_send_saves,
-    copy_ip_to_clipboard,
     open_add_player_modal,
 )
+from callbacks import action_copy_ip
+from ui.components.ui_add_player import AddPlayerModal
 
 
 def _delete_and_close(sender, app_data, user_data):
@@ -22,23 +21,6 @@ def _send_saves_and_close(sender, app_data, user_data):
     if parent is not None:
         dpg.configure_item(parent, show=False)
     action_send_saves(sender, app_data, user_data)
-
-
-def _validate_and_save(sender, app_data, user_data):
-    ip = dpg.get_value("new_player_ip")
-    try:
-        ipaddress.ip_address(ip)
-        action_save_player(sender, app_data, user_data)
-    except ValueError:
-        from ui.ui_toast import show_toast
-
-        show_toast(
-            "Неверный формат IP",
-            description="Правильный формат: 0.0.0.0",
-            duration=2.5,
-            title="Ошибка",
-            color=(255, 0, 0),
-        )
 
 
 def update_players_ui():
@@ -67,7 +49,7 @@ def update_players_ui():
             btn = dpg.add_button(
                 label=player["name"],
                 width=-1,
-                callback=copy_ip_to_clipboard,
+                callback=action_copy_ip,
                 user_data=player,
                 parent="players_list_group",
             )
@@ -91,24 +73,7 @@ def update_players_ui():
 
 
 def players_list_content():
-    with dpg.window(
-        label="Новый игрок",
-        modal=True,
-        show=False,
-        tag="add_player_modal",
-        width=305,
-        no_resize=True,
-    ):
-        dpg.add_input_text(label="Имя", tag="new_player_name", hint="Name")
-        dpg.add_input_text(label="IP", tag="new_player_ip", hint="0.0.0.0")
-        dpg.add_spacer(height=5)
-        with dpg.group(horizontal=True):
-            dpg.add_button(label="Сохранить", callback=_validate_and_save, width=140)
-            dpg.add_button(
-                label="Отмена",
-                callback=lambda: dpg.configure_item("add_player_modal", show=False),
-                width=140,
-            )
+    AddPlayerModal().show(is_shown=False)
 
     with dpg.child_window(width=200, border=True, tag="players_container"):
         with dpg.group(horizontal=True):

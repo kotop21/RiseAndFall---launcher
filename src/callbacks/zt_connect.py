@@ -2,11 +2,12 @@ import threading
 import time
 import re
 import dearpygui.dearpygui as dpg
+
 from utils import run_zt_command, install_zerotier
 from utils.launcher import admin_check
+from .launcher_copy_ip import action_copy_ip
 from config import zerotier_id
-from ui.ui_toast import show_toast
-from ui.ui_admin_check import admin_warning_ui
+from ui.components.ui_admin_check import admin_warning_ui
 
 
 def get_zt_ip(zerotier_id):
@@ -21,17 +22,6 @@ def get_zt_ip(zerotier_id):
     except Exception:
         pass
     return None
-
-
-def _copy_my_ip(sender, app_data, user_data):
-    if user_data:
-        dpg.set_clipboard_text(user_data)
-        show_toast(
-            "IP скопирован",
-            description=f"Айпи: {user_data}",
-            title="Буфер обмена",
-            duration=1.5,
-        )
 
 
 def _start_zt_install():
@@ -63,7 +53,7 @@ def _connect_to_zt_network(is_retry=False):
                 "zt_btn",
                 label="Уже в сети",
                 enabled=True,
-                callback=_copy_my_ip,
+                callback=action_copy_ip,
                 user_data=ip,
             )
             return
@@ -86,7 +76,7 @@ def _connect_to_zt_network(is_retry=False):
                 "zt_btn",
                 label="Уже в сети",
                 enabled=True,
-                callback=_copy_my_ip,
+                callback=action_copy_ip,
                 user_data=ip,
             )
         else:

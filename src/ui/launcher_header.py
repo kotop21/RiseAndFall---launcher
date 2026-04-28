@@ -26,9 +26,8 @@ def render_header():
     if not dpg.does_alias_exist("active_nav_btn_theme"):
         with dpg.theme(tag="active_nav_btn_theme"):
             with dpg.theme_component(dpg.mvButton):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, (55, 86, 115, 255))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (70, 100, 130, 255))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (45, 75, 100, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (34, 83, 118, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (34, 83, 118, 255))
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 4)
 
     with dpg.group(horizontal=True):

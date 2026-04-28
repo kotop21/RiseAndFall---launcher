@@ -20,3 +20,4 @@ from .game_installer import (
 )
 
 from .game_open_dgvoodoo import action_open_dgvoodoo
+from .launcher_copy_ip import action_copy_ip
