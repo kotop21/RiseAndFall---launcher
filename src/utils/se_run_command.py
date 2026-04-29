@@ -7,6 +7,10 @@ from utils.se_get_path import get_se_path
 
 def run_se_command(args):
     cmd = get_se_path()
+
+    if cmd is None:
+        raise FileNotFoundError("vpncmd not found on system")
+
     kwargs: Dict[str, Any] = {"capture_output": True, "text": True}
 
     if platform.system() == "Windows":

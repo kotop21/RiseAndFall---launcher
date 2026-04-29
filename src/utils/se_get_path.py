@@ -32,4 +32,4 @@ def get_se_path():
             if os.path.exists(p):
                 return p
 
-    return "vpncmd"
+    return None
