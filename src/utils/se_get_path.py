@@ -1,14 +1,9 @@
 import os
 import platform
-import shutil
 import subprocess
 
 
 def get_se_path():
-    cmd = shutil.which("vpncmd")
-    if cmd:
-        return cmd
-
     system = platform.system()
 
     if system == "Windows":
