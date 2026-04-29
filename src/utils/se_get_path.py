@@ -13,6 +13,8 @@ def get_se_path():
 
     if system == "Windows":
         paths = [
+            r"C:\Program Files\SoftEther VPN Client Developer Edition\vpncmd.exe",
+            r"C:\Program Files (x86)\SoftEther VPN Client Developer Edition\vpncmd.exe",
             r"C:\Program Files\SoftEther VPN Client\vpncmd.exe",
             r"C:\Program Files (x86)\SoftEther VPN Client\vpncmd.exe",
         ]
