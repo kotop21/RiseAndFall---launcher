@@ -8,7 +8,7 @@ _prefix = "[Admin_check] "
 # 1 - Not Admin
 def admin_check():
     if sys.platform != "win32":
-        return 1
+        return 0
 
     try:
         if ctypes.windll.shell32.IsUserAnAdmin() != 0:

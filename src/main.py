@@ -9,6 +9,15 @@ from utils.web_server import run_server
 from utils.launcher import run_update_checker
 
 
+def on_launcher_exit():
+    from utils.se_run_command import run_se_command
+
+    try:
+        run_se_command(["AccountDisconnect", "GameNetwork"])
+    except Exception:
+        pass
+
+
 def main():
     dpg.create_context()
 
@@ -42,6 +51,9 @@ def main():
 
     if project_version != "dev-build":
         run_update_checker(on_update_available=update_modal_ui)
+
+    # Регистрируем хук на закрытие программы
+    dpg.set_exit_callback(on_launcher_exit)
 
     dpg.start_dearpygui()
     dpg.destroy_context()

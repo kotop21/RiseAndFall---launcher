@@ -3,7 +3,13 @@ import sys
 from utils.launcher import ConfigManager
 from typing import Union, Optional
 
-zerotier_id = "ebe7fbd445156789"
+try:
+    from credentials import SE_HOST, SE_HUB, SE_USER, SE_PASS
+except ImportError:
+    SE_HOST = "localhost:443"
+    SE_HUB = "DEFAULT"
+    SE_USER = "user"
+    SE_PASS = "password"
 
 
 def resource_path(relative_path):

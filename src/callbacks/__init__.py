@@ -3,7 +3,7 @@ from .game_dir_action import (
     select_game_dir_native,
     select_install_dir_native,
 )
-from .zt_connect import action_connect_zt
+from .se_connect import action_connect_se
 from .game_runner import action_run_game
 
 from .server_transfer_logic import action_start_transfer

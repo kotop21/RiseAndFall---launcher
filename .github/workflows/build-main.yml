@@ -48,6 +48,15 @@ jobs:
           Set-Content -Path src/version.py -Value "PROJECT_VERSION = '$version'" -Encoding utf8
         shell: powershell
 
+      - name: Generate credentials
+        run: |
+          $content = "SE_HOST = '${{ secrets.SE_HOST }}'`n" +
+                     "SE_HUB = '${{ secrets.SE_HUB }}'`n" +
+                     "SE_USER = '${{ secrets.SE_USER }}'`n" +
+                     "SE_PASS = '${{ secrets.SE_PASS }}'"
+          Set-Content -Path src/credentials.py -Value $content -Encoding utf8
+        shell: powershell
+
       - name: Build EXE
         run: |
           uv run pyinstaller --noconfirm --onefile --windowed --upx-dir "C:\ProgramData\chocolatey\bin" `

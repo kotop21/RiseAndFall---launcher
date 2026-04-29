@@ -1,8 +1,6 @@
 import dearpygui.dearpygui as dpg
-from callbacks import (
-    action_connect_zt,
-    action_run_game,
-)
+from callbacks.se_connect import action_connect_se
+from callbacks import action_run_game
 from ui.components.ui_no_path import show_no_path_modal
 
 
@@ -42,15 +40,9 @@ def main_content():
         dpg.add_separator()
         dpg.add_spacer(height=5)
 
-        with dpg.group(horizontal=True):
-            dpg.add_button(
-                label="Подключиться к сети",
-                callback=action_connect_zt,
-                width=250,
-                tag="zt_btn",
-            )
-            dpg.add_text(
-                "Твой IP: Ожидание...",
-                tag="zt_status_ip",
-                color=[200, 200, 200],
-            )
+        dpg.add_button(
+            label="Подключиться к сети",
+            callback=action_connect_se,
+            width=-1,
+            tag="vpn_btn",
+        )

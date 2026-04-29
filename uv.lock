@@ -92,7 +92,7 @@ wheels = [
 
 [[package]]
 name = "raf-launcher"
-version = "0.1.12"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "dearpygui" },
