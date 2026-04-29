@@ -30,7 +30,7 @@ def _start_se_install():
         dpg.configure_item("vpn_btn", label="Ошибка установки", enabled=True)
         show_toast(
             "Ошибка",
-            description=message,
+            description="Не удалось загрузить сетевые компоненты",
             title="Настройка сети",
             duration=3.5,
             color=(255, 0, 0),
@@ -60,19 +60,32 @@ def _connect_to_se_network(is_retry=False):
             )
             return
 
-        dpg.configure_item("vpn_btn", label="Подключение...", enabled=False)
+        dpg.configure_item("vpn_btn", label="Инициализация...", enabled=False)
 
-        run_se_command(["NicCreate", nic_name])
+        nic_check = run_se_command(["NicList"])
+        if nic_name not in nic_check.stdout:
+            run_se_command(["NicCreate", nic_name])
+            time.sleep(4)
+
+        target_host = SE_HOST
+        if ":" not in target_host:
+            target_host = f"{target_host}:443"
+
+        dpg.configure_item("vpn_btn", label="Маршрутизация...", enabled=False)
+
+        run_se_command(["AccountDelete", account_name])
+
         run_se_command(
             [
                 "AccountCreate",
                 account_name,
-                f"/SERVER:{SE_HOST}",
+                f"/SERVER:{target_host}",
                 f"/HUB:{SE_HUB}",
                 f"/USERNAME:{SE_USER}",
                 f"/NICNAME:{nic_name}",
             ]
         )
+
         run_se_command(
             [
                 "AccountPasswordSet",
@@ -82,9 +95,14 @@ def _connect_to_se_network(is_retry=False):
             ]
         )
 
-        join_proc = run_se_command(["AccountConnect", account_name])
+        dpg.configure_item("vpn_btn", label="Синхронизация...", enabled=False)
 
-        if join_proc.returncode == 0:
+        run_se_command(["AccountConnect", account_name])
+        time.sleep(3)
+
+        verify_proc = run_se_command(["AccountList"])
+
+        if account_name in verify_proc.stdout and "Connected" in verify_proc.stdout:
             dpg.configure_item("vpn_btn", label="Подключено", enabled=False)
             show_toast(
                 "Успешно",
@@ -96,17 +114,15 @@ def _connect_to_se_network(is_retry=False):
             dpg.configure_item("vpn_btn", label="Ошибка сети", enabled=True)
             show_toast(
                 "Ошибка",
-                description="Не удалось подключиться к серверу сети",
-                title="Сеть",
-                duration=3.0,
+                description="Не удалось установить соединение с сервером",
+                title="Сбой сети",
+                duration=4.0,
                 color=(255, 0, 0),
             )
 
     except FileNotFoundError:
         if is_retry:
-            dpg.configure_item(
-                "vpn_btn", label="Перезапустите приложение", enabled=False
-            )
+            dpg.configure_item("vpn_btn", label="Требуется перезапуск", enabled=False)
             show_toast(
                 "Ошибка",
                 description="Что-то пошло не так. Перезапустите лаунчер.",
