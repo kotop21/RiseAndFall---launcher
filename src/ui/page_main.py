@@ -44,10 +44,10 @@ def main_content():
     if not dpg.does_alias_exist("vpn_theme_connected"):
         with dpg.theme(tag="vpn_theme_connected"):
             with dpg.theme_component(dpg.mvButton):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, (0, 0, 0, 0))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (255, 255, 255, 15))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (255, 255, 255, 5))
-                dpg.add_theme_color(dpg.mvThemeCol_Text, (140, 140, 140))
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (45, 55, 65))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (55, 65, 75))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (35, 45, 55))
+                dpg.add_theme_color(dpg.mvThemeCol_Text, (180, 190, 200))
 
     with dpg.child_window(border=False):
         dpg.add_spacer(height=10)

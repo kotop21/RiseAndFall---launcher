@@ -55,14 +55,31 @@ def _connect_to_se_network(is_retry=False):
 
         if account_name in check_proc.stdout and "Connected" in check_proc.stdout:
             status_proc = run_se_command(["AccountStatusGet", account_name])
-            ip_match = re.search(
-                r"IP Address.*?\|\s*(\d{1,3}(?:\.\d{1,3}){3})",
-                status_proc.stdout,
-                re.IGNORECASE,
-            )
 
-            if ip_match:
-                ip = ip_match.group(1)
+            ip = None
+            for line in status_proc.stdout.splitlines():
+                if (
+                    "Adapter" in line
+                    or "адаптер" in line
+                    or "Client IP" in line
+                    or "клиент" in line.lower()
+                ):
+                    match = re.search(r"(\d{1,3}(?:\.\d{1,3}){3})", line)
+                    if match:
+                        ip = match.group(1)
+                        break
+
+            if not ip:
+                all_ips = re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", status_proc.stdout)
+                valid_ips = [
+                    i
+                    for i in all_ips
+                    if not i.startswith("127.") and not i.startswith("0.")
+                ]
+                if valid_ips:
+                    ip = valid_ips[-1]
+
+            if ip:
                 dpg.set_clipboard_text(ip)
                 show_toast(
                     "IP скопирован",
@@ -102,6 +119,9 @@ def _connect_to_se_network(is_retry=False):
             if match:
                 nic_name = match.group(1)
 
+        run_se_command(["NicEnable", nic_name])
+        time.sleep(1)
+
         target_host = SE_HOST
         if ":" not in target_host:
             target_host = f"{target_host}:443"
@@ -133,7 +153,7 @@ def _connect_to_se_network(is_retry=False):
         dpg.configure_item("vpn_btn", label="Синхронизация...", enabled=False)
 
         run_se_command(["AccountConnect", account_name])
-        time.sleep(3)
+        time.sleep(6)
 
         verify_proc = run_se_command(["AccountList"])
 
