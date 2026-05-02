@@ -35,7 +35,7 @@ def action_install_mods(sender, app_data, user_data):
         description=f"Скачивание и распаковка файлов для «{mods_name}».",
         title="Менеджер модов",
         duration=2.5,
-        color=(255, 0, 0),
+        color=(26, 82, 118),
     )
     print(f"{_prefix} Скачивание {mods_name}...")
 

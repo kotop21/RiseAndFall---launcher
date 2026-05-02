@@ -1,5 +1,6 @@
 import threading
 import time
+import re
 import dearpygui.dearpygui as dpg
 
 from utils import run_se_command
@@ -14,6 +15,7 @@ def _start_se_install():
     dpg.configure_item(
         "vpn_btn", label="Загрузка сетевых компонентов...", enabled=False
     )
+    dpg.bind_item_theme("vpn_btn", "vpn_theme_loading")
     success, message = install_softether()
 
     if success:
@@ -28,6 +30,7 @@ def _start_se_install():
         _connect_to_se_network(is_retry=True)
     else:
         dpg.configure_item("vpn_btn", label="Ошибка установки", enabled=True)
+        dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
         show_toast(
             "Ошибка",
             description="Не удалось загрузить сетевые компоненты",
@@ -44,28 +47,60 @@ def _trigger_se_install_thread():
 def _connect_to_se_network(is_retry=False):
     try:
         dpg.configure_item("vpn_btn", enabled=False)
+        dpg.bind_item_theme("vpn_btn", "vpn_theme_loading")
 
         account_name = "GameNetwork"
-        nic_name = "GameNet"
 
         check_proc = run_se_command(["AccountList"])
 
         if account_name in check_proc.stdout and "Connected" in check_proc.stdout:
-            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=False)
-            show_toast(
-                "Статус",
-                description="Вы уже подключены к игровой сети",
-                title="Сеть",
-                duration=2.0,
+            status_proc = run_se_command(["AccountStatusGet", account_name])
+            ip_match = re.search(
+                r"IP Address.*?\|\s*(\d{1,3}(?:\.\d{1,3}){3})",
+                status_proc.stdout,
+                re.IGNORECASE,
             )
+
+            if ip_match:
+                ip = ip_match.group(1)
+                dpg.set_clipboard_text(ip)
+                show_toast(
+                    "IP скопирован",
+                    description=f"Ваш сетевой IP: {ip}",
+                    title="Буфер обмена",
+                    duration=2.5,
+                )
+            else:
+                show_toast(
+                    "Статус",
+                    description="Вы уже подключены к игровой сети",
+                    title="Сеть",
+                    duration=2.0,
+                )
+
+            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
+            dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
             return
 
         dpg.configure_item("vpn_btn", label="Инициализация...", enabled=False)
 
         nic_check = run_se_command(["NicList"])
-        if nic_name not in nic_check.stdout:
-            run_se_command(["NicCreate", nic_name])
-            time.sleep(4)
+        nic_name = "GameNet"
+
+        match = re.search(
+            r"Adapter Name\s*\|\s*([a-zA-Z0-9_-]+)", nic_check.stdout, re.IGNORECASE
+        )
+        if match:
+            nic_name = match.group(1)
+        else:
+            run_se_command(["NicCreate", "GameNet"])
+            time.sleep(3)
+            nic_check = run_se_command(["NicList"])
+            match = re.search(
+                r"Adapter Name\s*\|\s*([a-zA-Z0-9_-]+)", nic_check.stdout, re.IGNORECASE
+            )
+            if match:
+                nic_name = match.group(1)
 
         target_host = SE_HOST
         if ":" not in target_host:
@@ -103,7 +138,8 @@ def _connect_to_se_network(is_retry=False):
         verify_proc = run_se_command(["AccountList"])
 
         if account_name in verify_proc.stdout and "Connected" in verify_proc.stdout:
-            dpg.configure_item("vpn_btn", label="Подключено", enabled=False)
+            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
+            dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
             show_toast(
                 "Успешно",
                 description="Соединение с игровой сетью установлено",
@@ -112,6 +148,7 @@ def _connect_to_se_network(is_retry=False):
             )
         else:
             dpg.configure_item("vpn_btn", label="Ошибка сети", enabled=True)
+            dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
             show_toast(
                 "Ошибка",
                 description="Не удалось установить соединение с сервером",
@@ -123,6 +160,7 @@ def _connect_to_se_network(is_retry=False):
     except FileNotFoundError:
         if is_retry:
             dpg.configure_item("vpn_btn", label="Требуется перезапуск", enabled=False)
+            dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
             show_toast(
                 "Ошибка",
                 description="Что-то пошло не так. Перезапустите лаунчер.",
@@ -135,6 +173,7 @@ def _connect_to_se_network(is_retry=False):
         if admin_check() == 1:
             admin_warning_ui()
             dpg.configure_item("vpn_btn", label="Недостаточно прав", enabled=True)
+            dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
         else:
             _trigger_se_install_thread()
 

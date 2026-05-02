@@ -1,9 +1,9 @@
-import threading
 import dearpygui.dearpygui as dpg
 
 from config import cfg
 from callbacks.player_list.plist_send_saves import action_send_saves
-from utils.network_scanner import get_active_ips
+from callbacks.launcher_copy_ip import action_copy_ip
+from ui.components.ui_add_player import AddPlayerModal
 
 
 def _send_saves_and_close(sender, app_data, user_data):
@@ -39,11 +39,7 @@ def open_add_player_modal():
     )
 
 
-def _refresh_players_thread():
-    if dpg.does_item_exist("refresh_players_btn"):
-        dpg.configure_item("refresh_players_btn", enabled=False, label="Поиск...")
-
-    active_ips = get_active_ips()
+def update_players_ui(sender=None, app_data=None):
     players = cfg.get("custom_players", [])
 
     if dpg.does_item_exist("players_list_group"):
@@ -51,33 +47,25 @@ def _refresh_players_thread():
 
     if isinstance(players, list):
         for player in players:
-            is_online = player["ip"] in active_ips
-
             btn = dpg.add_button(
                 label=player["name"],
                 width=-1,
                 parent="players_list_group",
+                callback=action_copy_ip,
+                user_data=player,
             )
 
-            # Красим кнопку в зависимости от статуса
-            if is_online:
-                dpg.bind_item_theme(btn, "player_online_theme")
-            else:
-                dpg.bind_item_theme(btn, "player_offline_theme")
+            dpg.bind_item_theme(btn, "player_online_theme")
 
-            # Контекстное меню
             with dpg.popup(btn, mousebutton=dpg.mvMouseButton_Right) as popup_id:
                 dpg.bind_item_theme(popup_id, "popup_compact_theme")
 
-                if is_online:
-                    dpg.add_button(
-                        label="Передать сохранения",
-                        callback=_send_saves_and_close,
-                        user_data=player,
-                        width=270,
-                    )
-                else:
-                    dpg.add_text("Игрок не в сети", color=[150, 150, 150])
+                dpg.add_button(
+                    label="Передать сохранения",
+                    callback=_send_saves_and_close,
+                    user_data=player,
+                    width=270,
+                )
 
                 dpg.add_separator()
                 dpg.add_button(
@@ -90,9 +78,43 @@ def _refresh_players_thread():
     if not players:
         dpg.add_text("Список пуст", color=[150, 150, 150], parent="players_list_group")
 
-    if dpg.does_item_exist("refresh_players_btn"):
-        dpg.configure_item("refresh_players_btn", enabled=True, label="Обновить")
 
+def players_list_content():
+    AddPlayerModal().show(is_shown=False)
 
-def update_players_ui(sender=None, app_data=None):
-    threading.Thread(target=_refresh_players_thread, daemon=True).start()
+    if not dpg.does_item_exist("player_online_theme"):
+        with dpg.theme(tag="player_online_theme"):
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 0, 0, 0])
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [46, 204, 113, 30])
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [46, 204, 113, 60])
+                dpg.add_theme_color(dpg.mvThemeCol_Text, [46, 204, 113, 255])
+                dpg.add_theme_style(dpg.mvStyleVar_ButtonTextAlign, 0.0, 0.5)
+
+    if not dpg.does_item_exist("player_offline_theme"):
+        with dpg.theme(tag="player_offline_theme"):
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 0, 0, 0])
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [231, 76, 60, 30])
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [231, 76, 60, 60])
+                dpg.add_theme_color(dpg.mvThemeCol_Text, [231, 76, 60, 255])
+                dpg.add_theme_style(dpg.mvStyleVar_ButtonTextAlign, 0.0, 0.5)
+
+    if not dpg.does_item_exist("popup_compact_theme"):
+        with dpg.theme(tag="popup_compact_theme"):
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 4.0, 4.0)
+                dpg.add_theme_style(dpg.mvStyleVar_ItemSpacing, 4.0, 4.0)
+
+    with dpg.child_window(width=240, border=True, tag="players_container"):
+        with dpg.group(horizontal=True):
+            dpg.add_text("Игроки")
+            dpg.add_button(label="+", callback=open_add_player_modal)
+            dpg.add_button(
+                label="Обновить", tag="refresh_players_btn", callback=update_players_ui
+            )
+
+        dpg.add_separator()
+        dpg.add_group(tag="players_list_group")
+
+        update_players_ui()

@@ -25,6 +25,30 @@ def main_content():
                 dpg.add_theme_color(dpg.mvThemeCol_Text, (0, 0, 0))
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
 
+    if not dpg.does_alias_exist("vpn_theme_default"):
+        with dpg.theme(tag="vpn_theme_default"):
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (26, 82, 118))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (31, 97, 141))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (21, 67, 96))
+                dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 255))
+
+    if not dpg.does_alias_exist("vpn_theme_loading"):
+        with dpg.theme(tag="vpn_theme_loading"):
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (166, 108, 0))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (186, 128, 20))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (146, 88, 0))
+                dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 255))
+
+    if not dpg.does_alias_exist("vpn_theme_connected"):
+        with dpg.theme(tag="vpn_theme_connected"):
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (0, 0, 0, 0))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (255, 255, 255, 15))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (255, 255, 255, 5))
+                dpg.add_theme_color(dpg.mvThemeCol_Text, (140, 140, 140))
+
     with dpg.child_window(border=False):
         dpg.add_spacer(height=10)
 
@@ -40,9 +64,10 @@ def main_content():
         dpg.add_separator()
         dpg.add_spacer(height=5)
 
-        dpg.add_button(
+        btn_vpn = dpg.add_button(
             label="Подключиться к сети",
             callback=action_connect_se,
             width=-1,
             tag="vpn_btn",
         )
+        dpg.bind_item_theme(btn_vpn, "vpn_theme_default")
