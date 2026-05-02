@@ -60,12 +60,6 @@ def _connect_to_se_network(is_retry=False):
             run_se_command(["NicCreate", nic_name])
             time.sleep(2)
 
-        dpg.configure_item("vpn_btn", label="Перезапуск адаптера...", enabled=False)
-        run_se_command(["NicDisable", nic_name])
-        time.sleep(2)
-        run_se_command(["NicEnable", nic_name])
-        time.sleep(2)
-
         dpg.configure_item("vpn_btn", label="Настройка сети...", enabled=False)
         run_se_command(["AccountDelete", account_name])
 
