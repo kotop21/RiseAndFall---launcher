@@ -45,20 +45,26 @@ def _connect_to_se_network(is_retry=False):
 
         account_name = "GameNetwork"
 
-        check_proc = run_se_command(["AccountList"])
-        if account_name in check_proc.stdout and "Connected" in check_proc.stdout:
-            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=False)
-            dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
-            return
+        run_se_command(["AccountDisconnect", account_name])
+        time.sleep(1)
 
         nic_check = run_se_command(["NicList"])
-        match = re.search(r"(\w+)\s*\|\s*Enabled", nic_check.stdout, re.IGNORECASE)
+        match = re.search(
+            r"Adapter Name\s*\|\s*([a-zA-Z0-9_-]+)", nic_check.stdout, re.IGNORECASE
+        )
+
         if match:
             nic_name = match.group(1)
         else:
             nic_name = "VPN"
             run_se_command(["NicCreate", nic_name])
             time.sleep(2)
+
+        dpg.configure_item("vpn_btn", label="Перезапуск адаптера...", enabled=False)
+        run_se_command(["NicDisable", nic_name])
+        time.sleep(2)
+        run_se_command(["NicEnable", nic_name])
+        time.sleep(2)
 
         dpg.configure_item("vpn_btn", label="Настройка сети...", enabled=False)
         run_se_command(["AccountDelete", account_name])
@@ -88,7 +94,7 @@ def _connect_to_se_network(is_retry=False):
         run_se_command(["AccountConnect", account_name])
 
         dpg.configure_item("vpn_btn", label="Авторизация...", enabled=False)
-        time.sleep(5)
+        time.sleep(6)
 
         verify_proc = run_se_command(["AccountList"])
 
