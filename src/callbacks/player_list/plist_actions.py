@@ -1,6 +1,7 @@
 import threading
 import subprocess
 import platform
+import time
 import dearpygui.dearpygui as dpg
 
 from config import cfg
@@ -74,6 +75,9 @@ def _refresh_players_thread():
         for player in players:
             is_online = _check_ping(player["ip"])
 
+            if not dpg.does_item_exist("players_list_group"):
+                break
+
             btn = dpg.add_button(
                 label=player["name"],
                 width=-1,
@@ -108,14 +112,29 @@ def _refresh_players_thread():
                     width=270,
                 )
     else:
-        dpg.add_text("Список пуст", color=[150, 150, 150], parent="players_list_group")
+        if dpg.does_item_exist("players_list_group"):
+            dpg.add_text(
+                "Список пуст", color=[150, 150, 150], parent="players_list_group"
+            )
 
     if dpg.does_item_exist("refresh_players_btn"):
         dpg.configure_item("refresh_players_btn", enabled=True, label="Обновить")
 
 
 def update_players_ui(sender=None, app_data=None):
+    if dpg.does_item_exist("refresh_players_btn"):
+        if dpg.get_item_label("refresh_players_btn") == "Поиск...":
+            return
     threading.Thread(target=_refresh_players_thread, daemon=True).start()
+
+
+def _auto_refresh_loop():
+    time.sleep(20)
+    while True:
+        if not dpg.does_item_exist("players_list_group"):
+            break
+        update_players_ui()
+        time.sleep(20)
 
 
 def players_list_content():
@@ -157,3 +176,4 @@ def players_list_content():
         dpg.add_group(tag="players_list_group")
 
         update_players_ui()
+        threading.Thread(target=_auto_refresh_loop, daemon=True).start()

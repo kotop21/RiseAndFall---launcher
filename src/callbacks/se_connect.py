@@ -40,7 +40,7 @@ def _start_se_install():
 
 def _connect_to_se_network(is_retry=False):
     try:
-        dpg.configure_item("vpn_btn", enabled=False)
+        dpg.configure_item("vpn_btn", label="Подготовка...", enabled=False)
         dpg.bind_item_theme("vpn_btn", "vpn_theme_loading")
 
         account_name = "GameNetwork"
