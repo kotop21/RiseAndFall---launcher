@@ -18,12 +18,10 @@ def _start_se_install():
     )
     dpg.bind_item_theme("vpn_btn", "vpn_theme_loading")
     success, message = install_softether()
-
     if success:
-        dpg.configure_item("vpn_btn", label="Компоненты установлены", enabled=False)
         show_toast(
             "Готово",
-            description="Сетевые компоненты успешно установлены",
+            description="Компоненты установлены",
             title="Игровая сеть",
             duration=2.5,
         )
@@ -34,45 +32,18 @@ def _start_se_install():
         dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
         show_toast(
             "Ошибка",
-            description="Не удалось загрузить сетевые компоненты",
-            title="Настройка сети",
+            description="Не удалось загрузить компоненты",
+            title="Игровая сеть",
             duration=3.5,
             color=(255, 0, 0),
         )
 
 
-def _trigger_se_install_thread():
-    threading.Thread(target=_start_se_install, daemon=True).start()
-
-
-def _get_active_ip(account_name):
-    status_proc = run_se_command(["AccountStatusGet", account_name])
-    ip = None
-    for line in status_proc.stdout.splitlines():
-        if any(
-            x in line.lower() for x in ["ip address", "client ip", "адрес", "клиент"]
-        ):
-            match = re.search(r"(\d{1,3}(?:\.\d{1,3}){3})", line)
-            if match:
-                ip = match.group(1)
-                if not ip.startswith("169.254"):
-                    break
-                else:
-                    ip = None
-
-    if not ip:
-        all_ips = re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", status_proc.stdout)
-        valid_ips = [
-            i
-            for i in all_ips
-            if not i.startswith("127.")
-            and not i.startswith("0.")
-            and not i.startswith("169.254")
-        ]
-        if valid_ips:
-            ip = valid_ips[-1]
-
-    return ip
+def _get_active_ip_fast():
+    proc = run_se_command(["IpConfig"])
+    all_ips = re.findall(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", proc.stdout)
+    valid_ips = [ip for ip in all_ips if not ip.startswith(("127.", "0.", "169.254"))]
+    return valid_ips[-1] if valid_ips else None
 
 
 def _connect_to_se_network(is_retry=False):
@@ -81,41 +52,30 @@ def _connect_to_se_network(is_retry=False):
         dpg.bind_item_theme("vpn_btn", "vpn_theme_loading")
 
         account_name = "GameNetwork"
-        nic_name = "VPN"
 
         check_proc = run_se_command(["AccountList"])
-
         if account_name in check_proc.stdout and "Connected" in check_proc.stdout:
-            ip = _get_active_ip(account_name)
+            ip = _get_active_ip_fast()
             if ip:
                 action_copy_ip(None, None, ip)
                 dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
                 dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
                 return
 
-        dpg.configure_item("vpn_btn", label="Настройка адаптера...", enabled=False)
-
         nic_check = run_se_command(["NicList"])
-        match = re.search(
-            r"Adapter Name\s*\|\s*([a-zA-Z0-9_-]+)", nic_check.stdout, re.IGNORECASE
-        )
-
+        match = re.search(r"(\w+)\s*\|\s*Enabled", nic_check.stdout, re.IGNORECASE)
         if match:
-            found_nic = match.group(1)
-            if found_nic.upper() != "VPN":
-                run_se_command(["NicDelete", found_nic])
-                run_se_command(["NicCreate", "VPN"])
-                time.sleep(2)
+            nic_name = match.group(1)
         else:
-            run_se_command(["NicCreate", "VPN"])
+            nic_name = "VPN"
+            run_se_command(["NicCreate", nic_name])
             time.sleep(2)
 
-        run_se_command(["NicEnable", nic_name])
+        dpg.configure_item("vpn_btn", label="Настройка сети...", enabled=False)
+        run_se_command(["AccountDelete", account_name])
 
         target_host = SE_HOST if ":" in SE_HOST else f"{SE_HOST}:443"
 
-        dpg.configure_item("vpn_btn", label="Авторизация...", enabled=False)
-        run_se_command(["AccountDelete", account_name])
         run_se_command(
             [
                 "AccountCreate",
@@ -138,12 +98,12 @@ def _connect_to_se_network(is_retry=False):
         dpg.configure_item("vpn_btn", label="Подключение...", enabled=False)
         run_se_command(["AccountConnect", account_name])
 
-        dpg.configure_item("vpn_btn", label="Получение IP...", enabled=False)
+        dpg.configure_item("vpn_btn", label="Получение адреса...", enabled=False)
 
         final_ip = None
-        for _ in range(15):
+        for _ in range(12):
             time.sleep(2)
-            final_ip = _get_active_ip(account_name)
+            final_ip = _get_active_ip_fast()
             if final_ip:
                 break
 
@@ -153,16 +113,16 @@ def _connect_to_se_network(is_retry=False):
             dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
             show_toast(
                 "Успешно",
-                description="Соединение установлено",
-                title="Сеть",
-                duration=2.5,
+                description=f"Сеть активна: {final_ip}",
+                title="Игровая сеть",
+                duration=3.0,
             )
         else:
-            dpg.configure_item("vpn_btn", label="IP не получен", enabled=True)
+            dpg.configure_item("vpn_btn", label="Проверить IP", enabled=True)
             dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
             show_toast(
                 "Внимание",
-                description="Соединение есть, но IP еще не назначен. Нажмите кнопку позже для копирования.",
+                description="Авторизация прошла, но адрес задерживается. Нажми еще раз через 5 сек.",
                 title="Ожидание сети",
                 duration=5.0,
             )
@@ -174,7 +134,7 @@ def _connect_to_se_network(is_retry=False):
         if admin_check() == 1:
             admin_warning_ui()
         else:
-            _trigger_se_install_thread()
+            threading.Thread(target=_start_se_install, daemon=True).start()
 
 
 def action_connect_se(sender, app_data):
