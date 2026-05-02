@@ -9,7 +9,6 @@ from utils.launcher import admin_check
 from config import SE_HOST, SE_HUB, SE_USER, SE_PASS
 from ui.components import admin_warning_ui
 from ui.ui_toast import show_toast
-from callbacks.launcher_copy_ip import action_copy_ip
 
 
 def _start_se_install():
@@ -39,13 +38,6 @@ def _start_se_install():
         )
 
 
-def _get_active_ip_fast():
-    proc = run_se_command(["IpConfig"])
-    all_ips = re.findall(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", proc.stdout)
-    valid_ips = [ip for ip in all_ips if not ip.startswith(("127.", "0.", "169.254"))]
-    return valid_ips[-1] if valid_ips else None
-
-
 def _connect_to_se_network(is_retry=False):
     try:
         dpg.configure_item("vpn_btn", enabled=False)
@@ -55,12 +47,9 @@ def _connect_to_se_network(is_retry=False):
 
         check_proc = run_se_command(["AccountList"])
         if account_name in check_proc.stdout and "Connected" in check_proc.stdout:
-            ip = _get_active_ip_fast()
-            if ip:
-                action_copy_ip(None, None, ip)
-                dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
-                dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
-                return
+            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=False)
+            dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
+            return
 
         nic_check = run_se_command(["NicList"])
         match = re.search(r"(\w+)\s*\|\s*Enabled", nic_check.stdout, re.IGNORECASE)
@@ -98,31 +87,26 @@ def _connect_to_se_network(is_retry=False):
         dpg.configure_item("vpn_btn", label="Подключение...", enabled=False)
         run_se_command(["AccountConnect", account_name])
 
-        dpg.configure_item("vpn_btn", label="Получение адреса...", enabled=False)
+        dpg.configure_item("vpn_btn", label="Авторизация...", enabled=False)
+        time.sleep(5)
 
-        final_ip = None
-        for _ in range(12):
-            time.sleep(2)
-            final_ip = _get_active_ip_fast()
-            if final_ip:
-                break
+        verify_proc = run_se_command(["AccountList"])
 
-        if final_ip:
-            action_copy_ip(None, None, final_ip)
-            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
+        if account_name in verify_proc.stdout and "Connected" in verify_proc.stdout:
+            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=False)
             dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
             show_toast(
                 "Успешно",
-                description=f"Сеть активна: {final_ip}",
+                description="Соединение с игровой сетью установлено",
                 title="Игровая сеть",
                 duration=3.0,
             )
         else:
-            dpg.configure_item("vpn_btn", label="Проверить IP", enabled=True)
+            dpg.configure_item("vpn_btn", label="Проверить соединение", enabled=True)
             dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
             show_toast(
                 "Внимание",
-                description="Авторизация прошла, но адрес задерживается. Нажми еще раз через 5 сек.",
+                description="Авторизация задерживается. Нажмите еще раз через пару секунд.",
                 title="Ожидание сети",
                 duration=5.0,
             )
