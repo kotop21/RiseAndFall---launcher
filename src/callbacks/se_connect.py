@@ -9,6 +9,7 @@ from utils.launcher import admin_check
 from config import SE_HOST, SE_HUB, SE_USER, SE_PASS
 from ui.components import admin_warning_ui
 from ui.ui_toast import show_toast
+from callbacks.launcher_copy_ip import action_copy_ip
 
 
 def _start_se_install():
@@ -44,6 +45,32 @@ def _trigger_se_install_thread():
     threading.Thread(target=_start_se_install, daemon=True).start()
 
 
+def _get_active_ip(account_name):
+    status_proc = run_se_command(["AccountStatusGet", account_name])
+    ip = None
+    for line in status_proc.stdout.splitlines():
+        if (
+            "Adapter" in line
+            or "адаптер" in line
+            or "Client IP" in line
+            or "клиент" in line.lower()
+        ):
+            match = re.search(r"(\d{1,3}(?:\.\d{1,3}){3})", line)
+            if match:
+                ip = match.group(1)
+                break
+
+    if not ip:
+        all_ips = re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", status_proc.stdout)
+        valid_ips = [
+            i for i in all_ips if not i.startswith("127.") and not i.startswith("0.")
+        ]
+        if valid_ips:
+            ip = valid_ips[-1]
+
+    return ip
+
+
 def _connect_to_se_network(is_retry=False):
     try:
         dpg.configure_item("vpn_btn", enabled=False)
@@ -54,50 +81,16 @@ def _connect_to_se_network(is_retry=False):
         check_proc = run_se_command(["AccountList"])
 
         if account_name in check_proc.stdout and "Connected" in check_proc.stdout:
-            status_proc = run_se_command(["AccountStatusGet", account_name])
-
-            ip = None
-            for line in status_proc.stdout.splitlines():
-                if (
-                    "Adapter" in line
-                    or "адаптер" in line
-                    or "Client IP" in line
-                    or "клиент" in line.lower()
-                ):
-                    match = re.search(r"(\d{1,3}(?:\.\d{1,3}){3})", line)
-                    if match:
-                        ip = match.group(1)
-                        break
-
-            if not ip:
-                all_ips = re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", status_proc.stdout)
-                valid_ips = [
-                    i
-                    for i in all_ips
-                    if not i.startswith("127.") and not i.startswith("0.")
-                ]
-                if valid_ips:
-                    ip = valid_ips[-1]
+            ip = _get_active_ip(account_name)
 
             if ip:
-                dpg.set_clipboard_text(ip)
-                show_toast(
-                    "IP скопирован",
-                    description=f"Ваш сетевой IP: {ip}",
-                    title="Буфер обмена",
-                    duration=2.5,
-                )
+                action_copy_ip(None, None, ip)
+                dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
+                dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
+                return
             else:
-                show_toast(
-                    "Статус",
-                    description="Вы уже подключены к игровой сети",
-                    title="Сеть",
-                    duration=2.0,
-                )
-
-            dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
-            dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
-            return
+                run_se_command(["AccountDisconnect", account_name])
+                time.sleep(1)
 
         dpg.configure_item("vpn_btn", label="Инициализация...", enabled=False)
 
@@ -119,8 +112,10 @@ def _connect_to_se_network(is_retry=False):
             if match:
                 nic_name = match.group(1)
 
+        run_se_command(["NicDisable", nic_name])
+        time.sleep(2)
         run_se_command(["NicEnable", nic_name])
-        time.sleep(1)
+        time.sleep(2)
 
         target_host = SE_HOST
         if ":" not in target_host:
@@ -153,11 +148,28 @@ def _connect_to_se_network(is_retry=False):
         dpg.configure_item("vpn_btn", label="Синхронизация...", enabled=False)
 
         run_se_command(["AccountConnect", account_name])
-        time.sleep(6)
+
+        dpg.configure_item("vpn_btn", label="Получение IP...", enabled=False)
+
+        ip_assigned = False
+        final_ip = None
+        for _ in range(10):
+            time.sleep(1.5)
+            final_ip = _get_active_ip(account_name)
+            if final_ip:
+                ip_assigned = True
+                break
 
         verify_proc = run_se_command(["AccountList"])
 
-        if account_name in verify_proc.stdout and "Connected" in verify_proc.stdout:
+        if (
+            account_name in verify_proc.stdout
+            and "Connected" in verify_proc.stdout
+            and ip_assigned
+        ):
+            if final_ip:
+                action_copy_ip(None, None, final_ip)
+
             dpg.configure_item("vpn_btn", label="Уже в сети", enabled=True)
             dpg.bind_item_theme("vpn_btn", "vpn_theme_connected")
             show_toast(
@@ -167,12 +179,13 @@ def _connect_to_se_network(is_retry=False):
                 duration=2.5,
             )
         else:
-            dpg.configure_item("vpn_btn", label="Ошибка сети", enabled=True)
+            run_se_command(["AccountDisconnect", account_name])
+            dpg.configure_item("vpn_btn", label="Сетевая ошибка", enabled=True)
             dpg.bind_item_theme("vpn_btn", "vpn_theme_default")
             show_toast(
-                "Ошибка",
-                description="Не удалось установить соединение с сервером",
-                title="Сбой сети",
+                "Сбой подключения",
+                description="Адаптер не получил IP-адрес. Попробуйте еще раз.",
+                title="Ошибка сети",
                 duration=4.0,
                 color=(255, 0, 0),
             )

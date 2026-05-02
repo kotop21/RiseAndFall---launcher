@@ -1,3 +1,6 @@
+import threading
+import subprocess
+import platform
 import dearpygui.dearpygui as dpg
 
 from config import cfg
@@ -39,14 +42,38 @@ def open_add_player_modal():
     )
 
 
-def update_players_ui(sender=None, app_data=None):
+def _check_ping(ip):
+    try:
+        param = "-n" if platform.system().lower() == "windows" else "-c"
+        timeout_param = "-w" if platform.system().lower() == "windows" else "-W"
+        timeout_val = "1000" if platform.system().lower() == "windows" else "1"
+        command = ["ping", param, "1", timeout_param, timeout_val, ip]
+
+        kwargs = {}
+        if platform.system().lower() == "windows":
+            kwargs["creationflags"] = 0x08000000
+
+        result = subprocess.run(
+            command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, **kwargs
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+def _refresh_players_thread():
+    if dpg.does_item_exist("refresh_players_btn"):
+        dpg.configure_item("refresh_players_btn", enabled=False, label="Поиск...")
+
     players = cfg.get("custom_players", [])
 
     if dpg.does_item_exist("players_list_group"):
         dpg.delete_item("players_list_group", children_only=True)
 
-    if isinstance(players, list):
+    if isinstance(players, list) and players:
         for player in players:
+            is_online = _check_ping(player["ip"])
+
             btn = dpg.add_button(
                 label=player["name"],
                 width=-1,
@@ -55,17 +82,23 @@ def update_players_ui(sender=None, app_data=None):
                 user_data=player,
             )
 
-            dpg.bind_item_theme(btn, "player_online_theme")
+            if is_online:
+                dpg.bind_item_theme(btn, "player_online_theme")
+            else:
+                dpg.bind_item_theme(btn, "player_offline_theme")
 
             with dpg.popup(btn, mousebutton=dpg.mvMouseButton_Right) as popup_id:
                 dpg.bind_item_theme(popup_id, "popup_compact_theme")
 
-                dpg.add_button(
-                    label="Передать сохранения",
-                    callback=_send_saves_and_close,
-                    user_data=player,
-                    width=270,
-                )
+                if is_online:
+                    dpg.add_button(
+                        label="Передать сохранения",
+                        callback=_send_saves_and_close,
+                        user_data=player,
+                        width=270,
+                    )
+                else:
+                    dpg.add_text("Игрок не в сети", color=[150, 150, 150])
 
                 dpg.add_separator()
                 dpg.add_button(
@@ -74,9 +107,15 @@ def update_players_ui(sender=None, app_data=None):
                     user_data=player,
                     width=270,
                 )
-
-    if not players:
+    else:
         dpg.add_text("Список пуст", color=[150, 150, 150], parent="players_list_group")
+
+    if dpg.does_item_exist("refresh_players_btn"):
+        dpg.configure_item("refresh_players_btn", enabled=True, label="Обновить")
+
+
+def update_players_ui(sender=None, app_data=None):
+    threading.Thread(target=_refresh_players_thread, daemon=True).start()
 
 
 def players_list_content():
