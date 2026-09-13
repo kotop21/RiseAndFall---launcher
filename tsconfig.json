@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@gpuix/react",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["bun"],
+    "paths": {
+      "@/*": ["./*"],
+      "@/app/*": ["./app/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/ui": ["./components/ui/index.ts"],
+      "@/ui/*": ["./components/ui/*"],
+      "@/icon": ["./components/icon/index.ts"],
+      "@/icon/*": ["./components/icon/*"],
+      "@/components/*": ["./components/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

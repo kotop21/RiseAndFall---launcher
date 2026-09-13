@@ -1,0 +1,43 @@
+{
+  "name": "bungpuix-raf-launcher",
+  "module": "index.tsx",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun index.tsx",
+    "dev:check": "bun index.tsx",
+    "typecheck": "tsc --noEmit",
+    "prebuild": "bun run typecheck",
+    "build": "bun build index.tsx --outdir ./dist --target bun --minify",
+    "start": "./dist/app",
+    "hermes:build": "bun hermes/build.ts",
+    "hermes:bundle": "./hermes-node/cmake-build-release/bin/hermes-node --build-bundle=hermes/dist/launcher.bundle hermes/dist/launcher.cjs",
+    "hermes:exe": "./hermes-node/cmake-build-release/bin/hermes-node --build-exe=hermes/dist/raf-launcher --kit=./hermes-node/cmake-build-release/kit hermes/dist/launcher.bundle",
+    "hermes:copy-native": "cp node_modules/@gpuix/native*/*.node hermes/dist/ 2>/dev/null || true",
+    "hermes:pack": "bun run hermes:build; bun run hermes:bundle; bun run hermes:exe; bun run hermes:copy-native",
+    "hermes:start": "./hermes-node/cmake-build-release/bin/hermes-node --no-compile-cache hermes/dist/launcher.cjs"
+  },
+  "devDependencies": {
+    "@gpuix/native-win32-x64-msvc": "^0.7.0",
+    "@types/bun": "latest",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.28.2",
+    "lucide-static": "^1.45.0"
+  },
+  "peerDependencies": {
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@gpuix/native": "^0.7.0",
+    "@gpuix/react": "^0.7.0",
+    "msgpackr": "^2.1.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "sideEffects": false,
+  "overrides": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  }
+}

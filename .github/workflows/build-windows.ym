@@ -1,0 +1,62 @@
+name: Build Windows Launcher
+
+on:
+  push:
+    branches: [ v2-gpuix-hermes ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          bun install --frozen-lockfile || bun install
+
+      - name: Fetch Windows Native Addon (@gpuix/native)
+        shell: bash
+        run: |
+          mkdir -p hermes/dist
+          npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination hermes/dist
+          tar -xzf hermes/dist/*.tgz -C hermes/dist
+          mv hermes/dist/package/gpuix-native.win32-x64-msvc.node hermes/dist/
+          rm -rf hermes/dist/package hermes/dist/*.tgz
+
+      - name: Build CJS Bundle (esbuild)
+        run: |
+          bun run hermes:build
+
+      - name: Setup CMake & Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Clone and Build hermes-node on Windows
+        shell: bash
+        run: |
+          git clone --depth 1 --recurse-submodules https://github.com/tmikov/hermes-node.git hermes-node-src
+          cmake -B hermes-node-src/build -S hermes-node-src -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build hermes-node-src/build --config Release --target hermes-node
+
+      - name: Create Hermes Bytecode Bundle & Pack Exe
+        shell: bash
+        run: |
+          ./hermes-node-src/build/bin/hermes-node.exe --build-bundle=hermes/dist/launcher.bundle hermes/dist/launcher.cjs
+          ./hermes-node-src/build/bin/hermes-node.exe --build-exe=hermes/dist/raf-launcher.exe --kit=hermes-node-src/build/kit hermes/dist/launcher.bundle
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: raf-launcher-windows-x64
+          path: |
+            hermes/dist/raf-launcher.exe
+            hermes/dist/gpuix-native.win32-x64-msvc.node
