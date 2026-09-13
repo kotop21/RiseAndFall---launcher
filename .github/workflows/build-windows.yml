@@ -23,59 +23,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          bun install --frozen-lockfile || bun install
+          bun install
 
-      - name: Inject Native Loader & Build Executable
-        shell: bash
+      - name: Build Executable
         run: |
-          mkdir -p dist
-          cat << 'EOF' > entry-loader.ts
-          import path from "node:path";
-          import fs from "node:fs";
-
-          process.on("uncaughtException", (err) => {
-            const log = path.join(path.dirname(process.execPath), "crash.log");
-            fs.writeFileSync(log, (err && err.stack) || String(err), "utf8");
-            console.error("FATAL ERROR:", err);
-          });
-
-          const Module = require("node:module");
-          const origRequire = Module.prototype.require;
-          Module.prototype.require = function (id: string) {
-            if (id === "@gpuix/native" || id.startsWith("@gpuix/native-")) {
-              const nativePath = path.join(path.dirname(process.execPath), "gpuix-native.win32-x64-msvc.node");
-              if (fs.existsSync(nativePath)) {
-                const mod = { exports: {} };
-                process.dlopen(mod, nativePath);
-                return mod.exports;
-              }
-            }
-            return origRequire.apply(this, arguments);
-          };
-
-          import "./index.tsx";
-          EOF
-
-          bun build entry-loader.ts \
-            --compile \
-            --target=bun-windows-x64 \
-            --minify \
-            --sourcemap=none \
-            --external=@gpuix/native \
-            --outfile=dist/raf-launcher.exe
-
-          rm -f entry-loader.ts
-
-      - name: Fetch Windows Native Addon (@gpuix/native)
-        shell: bash
-        run: |
-          npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination dist
-          tar -xzf dist/*.tgz -C dist
-          mv dist/package/gpuix-native.win32-x64-msvc.node dist/
-          rm -rf dist/package dist/*.tgz
+          mkdir dist
+          bun build --compile index.tsx --outfile dist/raf-launcher.exe
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: raf-launcher-windows-x64
-          path: dist/
+          path: dist/raf-launcher.exe
