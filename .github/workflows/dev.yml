@@ -1,19 +1,18 @@
-name: Build Windows Launcher
+name: Build Dev Launcher
 
 on:
   push:
-    branches: [ v2-gpuix-hermes ]
+    branches: [ develop ]
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build-dev:
     runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: v2-gpuix-hermes
           submodules: recursive
 
       - name: Setup Bun
@@ -25,13 +24,14 @@ jobs:
         run: |
           bun install
 
-      - name: Build Executable
+      - name: Build Windows Dev Executable (With Console)
+        shell: bash
         run: |
-          mkdir dist
+          mkdir -p dist
           bun build --compile index.tsx --outfile dist/raf-launcher.exe
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: raf-launcher-windows-x64
+          name: raf-launcher-windows-dev-x64
           path: dist/raf-launcher.exe
