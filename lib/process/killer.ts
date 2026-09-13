@@ -3,16 +3,15 @@ import { promisify } from "node:util";
 
 const execAsync = promisify(exec);
 
-export async function isProcessNotResponding(pid: number): Promise<boolean> {
-  if (process.platform !== "win32") return false;
+export async function getProcessCpuUsage(pid: number): Promise<string> {
+  if (process.platform !== "win32") return "";
   try {
     const { stdout } = await execAsync(
-      `tasklist /FI "PID eq ${pid}" /FI "STATUS eq NOT RESPONDING" /FO CSV /NH`,
+      `wmic process where ProcessId=${pid} get UserModeTime,KernelTime /Value`,
     );
-    const trimmed = stdout.trim();
-    return trimmed.length > 0 && trimmed.includes(String(pid));
+    return stdout.trim();
   } catch {
-    return false;
+    return "";
   }
 }
 

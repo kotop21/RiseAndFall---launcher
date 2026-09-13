@@ -1,5 +1,5 @@
 import type { ChildProcess } from "node:child_process";
-import { isProcessNotResponding, killProcessTree } from "./killer";
+import { getProcessCpuUsage, killProcessTree } from "./killer";
 
 export interface ProcessDaemonResult {
   elapsedSeconds: number;
@@ -16,7 +16,8 @@ export async function watchProcessDaemon(
   let terminatedDueToHang = false;
 
   let pollInterval: ReturnType<typeof setInterval> | null = null;
-  let hangStartTime: number | null = null;
+  let lastCpuSignature = "";
+  let freezeStartTime: number | null = null;
 
   const cleanup = () => {
     if (pollInterval) {
@@ -27,23 +28,33 @@ export async function watchProcessDaemon(
 
   if (pid && pid > 0 && process.platform === "win32") {
     pollInterval = setInterval(async () => {
-      const hanging = await isProcessNotResponding(pid);
+      if (proc.exitCode !== null) {
+        cleanup();
+        return;
+      }
 
-      if (hanging) {
-        if (!hangStartTime) {
-          hangStartTime = Date.now();
-        } else if (Date.now() - hangStartTime >= 5000) {
+      const currentCpuSignature = await getProcessCpuUsage(pid);
+
+      if (!currentCpuSignature) {
+        return;
+      }
+
+      if (currentCpuSignature === lastCpuSignature) {
+        if (!freezeStartTime) {
+          freezeStartTime = Date.now();
+        } else if (Date.now() - freezeStartTime >= 5000) {
           terminatedDueToHang = true;
           console.warn(
-            `Daemon: Process [PID: ${pid}] not responding for 5s. Terminating forcefully...`,
+            `Daemon: Process [PID: ${pid}] frozen (CPU unresponsive) for 5s. Terminating...`,
           );
           cleanup();
           await killProcessTree(pid);
         }
       } else {
-        hangStartTime = null;
+        lastCpuSignature = currentCpuSignature;
+        freezeStartTime = null;
       }
-    }, 2500);
+    }, 2000);
   }
 
   try {
@@ -58,8 +69,8 @@ export async function watchProcessDaemon(
 
     const endTime = Date.now();
     const elapsedMs = Math.max(0, endTime - startTime);
-    const elapsedSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
-    const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+    const elapsedSeconds = Math.max(1, Math.floor(elapsedMs / 1000));
+    const elapsedMinutes = Math.max(1, Math.floor(elapsedSeconds / 60));
 
     const result: ProcessDaemonResult = {
       elapsedSeconds,
