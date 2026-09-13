@@ -34,9 +34,11 @@ jobs:
           mv hermes/dist/package/gpuix-native.win32-x64-msvc.node hermes/dist/
           rm -rf hermes/dist/package hermes/dist/*.tgz
 
-      - name: Build CJS Bundle (esbuild)
+      - name: Build Launcher Bundle
+        shell: bash
         run: |
-          bun run hermes:build
+          bun hermes/build.ts
+          perl -pi -e 's/\bimport\(/require(/g' hermes/dist/launcher.cjs
 
       - name: Setup MSVC Dev Environment
         uses: ilammy/msvc-dev-cmd@v1
@@ -55,8 +57,10 @@ jobs:
           cmake -B C:/hn/build -S C:/hn -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=cl \
-            -DCMAKE_CXX_COMPILER=cl
+            -DCMAKE_CXX_COMPILER=cl \
+            -DHERMES_NODE_ENABLE_COMPILE_CACHE=OFF
           cmake --build C:/hn/build --config Release --target hermes-node
+          cmake --build C:/hn/build --config Release --target hermes-node-kit
 
       - name: Create Hermes Bytecode Bundle & Pack Exe
         shell: bash
