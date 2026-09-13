@@ -49,21 +49,21 @@ jobs:
       - name: Clone and Build hermes-node on Windows
         shell: bash
         run: |
-          git clone --depth 1 --recurse-submodules https://github.com/tmikov/hermes-node.git hermes-node-src
-          cmake -B hermes-node-src/build -S hermes-node-src -G Ninja \
+          git clone --depth 1 --recurse-submodules https://github.com/tmikov/hermes-node.git C:/hn
+          grep -rn "node-api-tests" C:/hn/CMakeLists.txt C:/hn/hermes/CMakeLists.txt || true
+          sed -i -E 's/(.*node-api-tests.*)/# \1/g' C:/hn/CMakeLists.txt 2>/dev/null || true
+          sed -i -E 's/(.*node-api-tests.*)/# \1/g' C:/hn/hermes/CMakeLists.txt 2>/dev/null || true
+          cmake -B C:/hn/build -S C:/hn -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=cl \
-            -DCMAKE_CXX_COMPILER=cl \
-            -DHERMES_ENABLE_TEST_SUITE=OFF \
-            -DHERMES_BUILD_TESTS=OFF \
-            -DENABLE_TESTING=OFF
-          cmake --build hermes-node-src/build --config Release --target hermes-node
+            -DCMAKE_CXX_COMPILER=cl
+          cmake --build C:/hn/build --config Release --target hermes-node
 
       - name: Create Hermes Bytecode Bundle & Pack Exe
         shell: bash
         run: |
-          ./hermes-node-src/build/bin/hermes-node.exe --build-bundle=hermes/dist/launcher.bundle hermes/dist/launcher.cjs
-          ./hermes-node-src/build/bin/hermes-node.exe --build-exe=hermes/dist/raf-launcher.exe --kit=hermes-node-src/build/kit hermes/dist/launcher.bundle
+          C:/hn/build/bin/hermes-node.exe --build-bundle=hermes/dist/launcher.bundle hermes/dist/launcher.cjs
+          C:/hn/build/bin/hermes-node.exe --build-exe=hermes/dist/raf-launcher.exe --kit=C:/hn/build/kit hermes/dist/launcher.bundle
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
