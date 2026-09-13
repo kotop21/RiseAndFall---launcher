@@ -36,6 +36,43 @@ jobs:
           bun hermes/build.ts
           perl -pi -e 's/\bimport\(/require(/g' hermes/dist/launcher.cjs
 
+      - name: Inject Node Native Resolver and Crash Logger
+        shell: bash
+        run: |
+          cat << 'EOF' > hermes/dist/bootstrap.cjs
+          const path = require('path');
+          const fs = require('fs');
+
+          process.on('uncaughtException', (err) => {
+            const logPath = path.join(path.dirname(process.execPath), 'crash.log');
+            fs.writeFileSync(logPath, (err && err.stack) || String(err), 'utf8');
+            try {
+              const { execSync } = require('child_process');
+              const msg = ((err && err.message) || String(err)).replace(/"/g, "'");
+              execSync(`msg * "Launcher Error: ${msg}"`);
+            } catch (e) {}
+            process.exit(1);
+          });
+
+          const Module = require('module');
+          const origRequire = Module.prototype.require;
+          Module.prototype.require = function(id) {
+            if (id === '@gpuix/native' || id.startsWith('@gpuix/native-')) {
+              const nativePath = path.join(path.dirname(process.execPath), 'gpuix-native.win32-x64-msvc.node');
+              if (fs.existsSync(nativePath)) {
+                return process.dlopen ? (function() {
+                  const mod = { exports: {} };
+                  process.dlopen(mod, nativePath);
+                  return mod.exports;
+                })() : origRequire.call(this, nativePath);
+              }
+            }
+            return origRequire.apply(this, arguments);
+          };
+
+          require('./launcher.cjs');
+          EOF
+
       - name: Download Node.js Runtime & Setup SEA Tools
         shell: bash
         run: |
@@ -47,7 +84,7 @@ jobs:
         run: |
           cat << 'EOF' > sea-config.json
           {
-            "main": "hermes/dist/launcher.cjs",
+            "main": "hermes/dist/bootstrap.cjs",
             "output": "sea-prep.blob",
             "disableExperimentalSEAWarning": true,
             "useCodeCache": true
