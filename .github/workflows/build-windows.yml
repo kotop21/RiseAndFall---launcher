@@ -30,86 +30,27 @@ jobs:
         with:
           arch: x64
 
-      - name: Build Launcher Bundle
+      - name: Build and Optimize Executable (Bun)
         shell: bash
         run: |
-          bun hermes/build.ts
-          perl -pi -e 's/\bimport\(/require(/g' hermes/dist/launcher.cjs
-
-      - name: Inject Node Native Resolver and Crash Logger
-        shell: bash
-        run: |
-          cat << 'EOF' > hermes/dist/bootstrap.cjs
-          const path = require('path');
-          const fs = require('fs');
-
-          process.on('uncaughtException', (err) => {
-            const logPath = path.join(path.dirname(process.execPath), 'crash.log');
-            fs.writeFileSync(logPath, (err && err.stack) || String(err), 'utf8');
-            try {
-              const { execSync } = require('child_process');
-              const msg = ((err && err.message) || String(err)).replace(/"/g, "'");
-              execSync(`msg * "Launcher Error: ${msg}"`);
-            } catch (e) {}
-            process.exit(1);
-          });
-
-          const Module = require('module');
-          const origRequire = Module.prototype.require;
-          Module.prototype.require = function(id) {
-            if (id === '@gpuix/native' || id.startsWith('@gpuix/native-')) {
-              const nativePath = path.join(path.dirname(process.execPath), 'gpuix-native.win32-x64-msvc.node');
-              if (fs.existsSync(nativePath)) {
-                return process.dlopen ? (function() {
-                  const mod = { exports: {} };
-                  process.dlopen(mod, nativePath);
-                  return mod.exports;
-                })() : origRequire.call(this, nativePath);
-              }
-            }
-            return origRequire.apply(this, arguments);
-          };
-
-          require('./launcher.cjs');
-          EOF
-
-      - name: Download Node.js Runtime & Setup SEA Tools
-        shell: bash
-        run: |
-          curl -fsSL https://nodejs.org/dist/v22.14.0/win-x64/node.exe -o node-base.exe
-          npm install -g postject
-
-      - name: Pack JS Bundle directly into Executable (Node SEA)
-        shell: bash
-        run: |
-          cat << 'EOF' > sea-config.json
-          {
-            "main": "hermes/dist/bootstrap.cjs",
-            "output": "sea-prep.blob",
-            "disableExperimentalSEAWarning": true,
-            "useCodeCache": true
-          }
-          EOF
-
-          ./node-base.exe --experimental-sea-config sea-config.json
-
           mkdir -p dist
-          cp node-base.exe dist/raf-launcher.exe
+          bun build index.tsx \
+            --compile \
+            --target=bun-windows-x64 \
+            --minify \
+            --sourcemap=none \
+            --external=@gpuix/native \
+            --outfile=dist/raf-launcher.exe
 
-          postject dist/raf-launcher.exe NODE_SEA_BLOB sea-prep.blob \
-            --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+          editbin /nologo /subsystem:windows dist/raf-launcher.exe
 
-          editbin /subsystem:windows dist/raf-launcher.exe
-
-      - name: Fetch and Strip Windows Native Addon
+      - name: Fetch Windows Native Addon (@gpuix/native)
         shell: bash
         run: |
           npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination dist
           tar -xzf dist/*.tgz -C dist
           mv dist/package/gpuix-native.win32-x64-msvc.node dist/
-          rm -rf dist/package dist/*.tgz node-base.exe sea-config.json sea-prep.blob
-
-          /c/mingw64/bin/strip.exe --strip-unneeded dist/gpuix-native.win32-x64-msvc.node || true
+          rm -rf dist/package dist/*.tgz
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
