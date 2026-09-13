@@ -25,18 +25,46 @@ jobs:
         run: |
           bun install --frozen-lockfile || bun install
 
-      - name: Build and Optimize Executable (Bun)
+      - name: Inject Native Loader & Build Executable
         shell: bash
         run: |
           mkdir -p dist
-          bun build index.tsx \
+          cat << 'EOF' > entry-loader.ts
+          import path from "node:path";
+          import fs from "node:fs";
+
+          process.on("uncaughtException", (err) => {
+            const log = path.join(path.dirname(process.execPath), "crash.log");
+            fs.writeFileSync(log, (err && err.stack) || String(err), "utf8");
+            console.error("FATAL ERROR:", err);
+          });
+
+          const Module = require("node:module");
+          const origRequire = Module.prototype.require;
+          Module.prototype.require = function (id: string) {
+            if (id === "@gpuix/native" || id.startsWith("@gpuix/native-")) {
+              const nativePath = path.join(path.dirname(process.execPath), "gpuix-native.win32-x64-msvc.node");
+              if (fs.existsSync(nativePath)) {
+                const mod = { exports: {} };
+                process.dlopen(mod, nativePath);
+                return mod.exports;
+              }
+            }
+            return origRequire.apply(this, arguments);
+          };
+
+          import "./index.tsx";
+          EOF
+
+          bun build entry-loader.ts \
             --compile \
             --target=bun-windows-x64 \
-            --windows-subsystem=windows \
             --minify \
             --sourcemap=none \
             --external=@gpuix/native \
             --outfile=dist/raf-launcher.exe
+
+          rm -f entry-loader.ts
 
       - name: Fetch Windows Native Addon (@gpuix/native)
         shell: bash
