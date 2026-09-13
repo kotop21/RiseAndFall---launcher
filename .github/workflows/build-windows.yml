@@ -53,6 +53,8 @@ jobs:
 
       - name: Compile Lightweight Windowless Launcher
         shell: bash
+        env:
+          MSYS2_ARG_CONV_EXCL: "*"
         run: |
           cat << 'EOF' > launcher.c
           #define WIN32_LEAN_AND_MEAN
@@ -86,7 +88,7 @@ jobs:
           }
           EOF
 
-          cl.exe /O2 /GL /GS- /Fe:dist/raf-launcher.exe launcher.c /link /SUBSYSTEM:WINDOWS /INCREMENTAL:NO user32.lib kernel32.lib
+          cl.exe -O2 -GL -GS- -Fe:dist/raf-launcher.exe launcher.c -link -subsystem:windows -incremental:no user32.lib kernel32.lib
           rm -f launcher.c launcher.obj
 
       - name: Upload Windows Artifacts
