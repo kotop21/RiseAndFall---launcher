@@ -25,14 +25,10 @@ jobs:
         run: |
           bun install --frozen-lockfile || bun install
 
-      - name: Fetch Windows Native Addon (@gpuix/native)
-        shell: bash
-        run: |
-          mkdir -p hermes/dist
-          npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination hermes/dist
-          tar -xzf hermes/dist/*.tgz -C hermes/dist
-          mv hermes/dist/package/gpuix-native.win32-x64-msvc.node hermes/dist/
-          rm -rf hermes/dist/package hermes/dist/*.tgz
+      - name: Setup MSVC Dev Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Build Launcher Bundle
         shell: bash
@@ -40,50 +36,61 @@ jobs:
           bun hermes/build.ts
           perl -pi -e 's/\bimport\(/require(/g' hermes/dist/launcher.cjs
 
-      - name: Setup MSVC Dev Environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Setup CMake & Ninja
-        uses: lukka/get-cmake@latest
-
-      - name: Clone and Patch hermes-node on Windows
+      - name: Fetch Windows Native Addon (@gpuix/native)
         shell: bash
         run: |
-          git clone --depth 1 --recurse-submodules https://github.com/tmikov/hermes-node.git C:/hn
+          mkdir -p dist/bin
+          npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination dist
+          tar -xzf dist/*.tgz -C dist
+          mv dist/package/gpuix-native.win32-x64-msvc.node dist/
+          rm -rf dist/package dist/*.tgz
+          cp hermes/dist/launcher.cjs dist/
 
-          find C:/hn -name "node-api-tests" -type d -exec rm -rf {} + 2>/dev/null || true
-          find C:/hn -type f -name "CMakeLists.txt" -exec sed -i -E '/node-api-tests/d' {} +
+      - name: Download Portable Node Runtime
+        shell: bash
+        run: |
+          curl -fsSL https://nodejs.org/dist/v22.14.0/win-x64/node.exe -o dist/bin/node.exe
 
-          find C:/hn -type f -name "CMakeLists.txt" -exec sed -i -E '/compile-cache/d' {} +
+      - name: Compile Lightweight Windowless Launcher
+        shell: bash
+        run: |
+          cat << 'EOF' > launcher.c
+          #define WIN32_LEAN_AND_MEAN
+          #include <windows.h>
 
-          cat << 'EOF' > C:/hn/lib/compile-cache/compile_cache.cpp
-          #include <string>
-          namespace hermes_node {
-          namespace compile_cache {
-          void init(const std::string &) {}
-          }
+          int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+              STARTUPINFOA si;
+              PROCESS_INFORMATION pi;
+              ZeroMemory(&si, sizeof(si));
+              si.cb = sizeof(si);
+              ZeroMemory(&pi, sizeof(pi));
+
+              char cmd[] = "bin\\node.exe launcher.cjs";
+
+              if (CreateProcessA(
+                      NULL,
+                      cmd,
+                      NULL,
+                      NULL,
+                      FALSE,
+                      CREATE_NO_WINDOW,
+                      NULL,
+                      NULL,
+                      &si,
+                      &pi)) {
+                  CloseHandle(pi.hProcess);
+                  CloseHandle(pi.hThread);
+                  return 0;
+              }
+              return 1;
           }
           EOF
 
-          cmake -B C:/hn/build -S C:/hn -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=cl \
-            -DCMAKE_CXX_COMPILER=cl
-          cmake --build C:/hn/build --config Release --target hermes-node
-          cmake --build C:/hn/build --config Release --target hermes-node-kit
-
-      - name: Create Hermes Bytecode Bundle & Pack Exe
-        shell: bash
-        run: |
-          C:/hn/build/bin/hermes-node.exe --build-bundle=hermes/dist/launcher.bundle hermes/dist/launcher.cjs
-          C:/hn/build/bin/hermes-node.exe --build-exe=hermes/dist/raf-launcher.exe --kit=C:/hn/build/kit hermes/dist/launcher.bundle
+          cl.exe /O2 /GL /GS- /Fe:dist/raf-launcher.exe launcher.c /link /SUBSYSTEM:WINDOWS /INCREMENTAL:NO user32.lib kernel32.lib
+          rm -f launcher.c launcher.obj
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: raf-launcher-windows-x64
-          path: |
-            hermes/dist/raf-launcher.exe
-            hermes/dist/gpuix-native.win32-x64-msvc.node
+          path: dist/
