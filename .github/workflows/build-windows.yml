@@ -64,13 +64,15 @@ jobs:
 
           editbin /subsystem:windows dist/raf-launcher.exe
 
-      - name: Fetch Windows Native Addon (@gpuix/native)
+      - name: Fetch and Strip Windows Native Addon
         shell: bash
         run: |
           npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination dist
           tar -xzf dist/*.tgz -C dist
           mv dist/package/gpuix-native.win32-x64-msvc.node dist/
           rm -rf dist/package dist/*.tgz node-base.exe sea-config.json sea-prep.blob
+
+          /c/mingw64/bin/strip.exe --strip-unneeded dist/gpuix-native.win32-x64-msvc.node || true
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
