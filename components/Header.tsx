@@ -107,8 +107,8 @@ export function Header({
           }
 
           toast({
-            title: "Game Session Ended",
-            description: `Played: ${daemonResult.elapsedMinutes} min (${daemonResult.elapsedSeconds}s)`,
+            title: "Game Closed",
+            description: `Session playtime: ${daemonResult.elapsedMinutes} min`,
             type: "info",
           });
         },
@@ -141,8 +141,8 @@ export function Header({
       }
 
       toast({
-        title: "Game Initialized",
-        description: `Rise and Fall running [PID: ${res.pid}]`,
+        title: "Game Started",
+        description: "Rise and Fall is running.",
         type: "info",
       });
     } catch {

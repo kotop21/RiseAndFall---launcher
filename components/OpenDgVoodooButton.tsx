@@ -91,8 +91,8 @@ export function OpenDgVoodooButton({
     }
 
     toast({
-      title: "Control Panel Opened",
-      description: `dgVoodoo active [PID: ${res.pid}]`,
+      title: "dgVoodoo Opened",
+      description: "Control panel is running.",
       type: "info",
     });
   };

@@ -1,8 +1,9 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 
 export async function openExplorer(targetPath: string): Promise<boolean> {
   const cleanPath = targetPath.trim();
-  if (!cleanPath) {
+  if (!cleanPath || !existsSync(cleanPath)) {
     return false;
   }
 
@@ -15,7 +16,7 @@ export async function openExplorer(targetPath: string): Promise<boolean> {
       args = [cleanPath];
       break;
     case "win32":
-      cmd = "explorer.exe";
+      cmd = "explorer";
       args = [cleanPath];
       break;
     default:
@@ -31,9 +32,20 @@ export async function openExplorer(targetPath: string): Promise<boolean> {
         detached: true,
       });
 
-      proc.on("error", () => resolve(false));
-      proc.on("close", (code) => resolve(code === 0));
+      let hasError = false;
+
+      proc.on("error", () => {
+        hasError = true;
+        resolve(false);
+      });
+
       proc.unref();
+
+      setTimeout(() => {
+        if (!hasError) {
+          resolve(true);
+        }
+      }, 100);
     } catch {
       resolve(false);
     }
