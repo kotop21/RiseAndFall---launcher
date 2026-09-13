@@ -50,9 +50,8 @@ jobs:
         shell: bash
         run: |
           git clone --depth 1 --recurse-submodules https://github.com/tmikov/hermes-node.git C:/hn
-          grep -rn "node-api-tests" C:/hn/CMakeLists.txt C:/hn/hermes/CMakeLists.txt || true
-          sed -i -E 's/(.*node-api-tests.*)/# \1/g' C:/hn/CMakeLists.txt 2>/dev/null || true
-          sed -i -E 's/(.*node-api-tests.*)/# \1/g' C:/hn/hermes/CMakeLists.txt 2>/dev/null || true
+          find C:/hn -name "node-api-tests" -type d -exec rm -rf {} + 2>/dev/null || true
+          find C:/hn -type f -name "CMakeLists.txt" -exec sed -i -E '/node-api-tests/d' {} +
           cmake -B C:/hn/build -S C:/hn -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=cl \
