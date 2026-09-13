@@ -25,11 +25,6 @@ jobs:
         run: |
           bun install --frozen-lockfile || bun install
 
-      - name: Setup MSVC Dev Environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
       - name: Build and Optimize Executable (Bun)
         shell: bash
         run: |
@@ -37,12 +32,11 @@ jobs:
           bun build index.tsx \
             --compile \
             --target=bun-windows-x64 \
+            --windows-subsystem=windows \
             --minify \
             --sourcemap=none \
             --external=@gpuix/native \
             --outfile=dist/raf-launcher.exe
-
-          editbin /nologo /subsystem:windows dist/raf-launcher.exe
 
       - name: Fetch Windows Native Addon (@gpuix/native)
         shell: bash
