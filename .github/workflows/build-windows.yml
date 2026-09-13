@@ -38,6 +38,11 @@ jobs:
         run: |
           bun run hermes:build
 
+      - name: Setup MSVC Dev Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Setup CMake & Ninja
         uses: lukka/get-cmake@latest
 
@@ -45,7 +50,13 @@ jobs:
         shell: bash
         run: |
           git clone --depth 1 --recurse-submodules https://github.com/tmikov/hermes-node.git hermes-node-src
-          cmake -B hermes-node-src/build -S hermes-node-src -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -B hermes-node-src/build -S hermes-node-src -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=cl \
+            -DCMAKE_CXX_COMPILER=cl \
+            -DHERMES_ENABLE_TEST_SUITE=OFF \
+            -DHERMES_BUILD_TESTS=OFF \
+            -DENABLE_TESTING=OFF
           cmake --build hermes-node-src/build --config Release --target hermes-node
 
       - name: Create Hermes Bytecode Bundle & Pack Exe
