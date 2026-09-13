@@ -48,17 +48,29 @@ jobs:
       - name: Setup CMake & Ninja
         uses: lukka/get-cmake@latest
 
-      - name: Clone and Build hermes-node on Windows
+      - name: Clone and Patch hermes-node on Windows
         shell: bash
         run: |
           git clone --depth 1 --recurse-submodules https://github.com/tmikov/hermes-node.git C:/hn
+
           find C:/hn -name "node-api-tests" -type d -exec rm -rf {} + 2>/dev/null || true
           find C:/hn -type f -name "CMakeLists.txt" -exec sed -i -E '/node-api-tests/d' {} +
+
+          find C:/hn -type f -name "CMakeLists.txt" -exec sed -i -E '/compile-cache/d' {} +
+
+          cat << 'EOF' > C:/hn/lib/compile-cache/compile_cache.cpp
+          #include <string>
+          namespace hermes_node {
+          namespace compile_cache {
+          void init(const std::string &) {}
+          }
+          }
+          EOF
+
           cmake -B C:/hn/build -S C:/hn -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=cl \
-            -DCMAKE_CXX_COMPILER=cl \
-            -DHERMES_NODE_ENABLE_COMPILE_CACHE=OFF
+            -DCMAKE_CXX_COMPILER=cl
           cmake --build C:/hn/build --config Release --target hermes-node
           cmake --build C:/hn/build --config Release --target hermes-node-kit
 
