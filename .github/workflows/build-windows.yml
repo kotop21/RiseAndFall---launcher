@@ -36,60 +36,41 @@ jobs:
           bun hermes/build.ts
           perl -pi -e 's/\bimport\(/require(/g' hermes/dist/launcher.cjs
 
-      - name: Fetch Windows Native Addon (@gpuix/native)
+      - name: Download Node.js Runtime & Setup SEA Tools
         shell: bash
         run: |
-          mkdir -p dist/bin
-          npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination dist
-          tar -xzf dist/*.tgz -C dist
-          mv dist/package/gpuix-native.win32-x64-msvc.node dist/
-          rm -rf dist/package dist/*.tgz
-          cp hermes/dist/launcher.cjs dist/
+          curl -fsSL https://nodejs.org/dist/v22.14.0/win-x64/node.exe -o node-base.exe
+          npm install -g postject
 
-      - name: Download Portable Node Runtime
+      - name: Pack JS Bundle directly into Executable (Node SEA)
         shell: bash
         run: |
-          curl -fsSL https://nodejs.org/dist/v22.14.0/win-x64/node.exe -o dist/bin/node.exe
-
-      - name: Compile Lightweight Windowless Launcher
-        shell: bash
-        env:
-          MSYS2_ARG_CONV_EXCL: "*"
-        run: |
-          cat << 'EOF' > launcher.c
-          #define WIN32_LEAN_AND_MEAN
-          #include <windows.h>
-
-          int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-              STARTUPINFOA si;
-              PROCESS_INFORMATION pi;
-              ZeroMemory(&si, sizeof(si));
-              si.cb = sizeof(si);
-              ZeroMemory(&pi, sizeof(pi));
-
-              char cmd[] = "bin\\node.exe launcher.cjs";
-
-              if (CreateProcessA(
-                      NULL,
-                      cmd,
-                      NULL,
-                      NULL,
-                      FALSE,
-                      CREATE_NO_WINDOW,
-                      NULL,
-                      NULL,
-                      &si,
-                      &pi)) {
-                  CloseHandle(pi.hProcess);
-                  CloseHandle(pi.hThread);
-                  return 0;
-              }
-              return 1;
+          cat << 'EOF' > sea-config.json
+          {
+            "main": "hermes/dist/launcher.cjs",
+            "output": "sea-prep.blob",
+            "disableExperimentalSEAWarning": true,
+            "useCodeCache": true
           }
           EOF
 
-          cl.exe -O2 -GL -GS- -Fe:dist/raf-launcher.exe launcher.c -link -subsystem:windows -incremental:no user32.lib kernel32.lib
-          rm -f launcher.c launcher.obj
+          ./node-base.exe --experimental-sea-config sea-config.json
+
+          mkdir -p dist
+          cp node-base.exe dist/raf-launcher.exe
+
+          postject dist/raf-launcher.exe NODE_SEA_BLOB sea-prep.blob \
+            --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+
+          editbin /subsystem:windows dist/raf-launcher.exe
+
+      - name: Fetch Windows Native Addon (@gpuix/native)
+        shell: bash
+        run: |
+          npm pack @gpuix/native-win32-x64-msvc@0.7.0 --pack-destination dist
+          tar -xzf dist/*.tgz -C dist
+          mv dist/package/gpuix-native.win32-x64-msvc.node dist/
+          rm -rf dist/package dist/*.tgz node-base.exe sea-config.json sea-prep.blob
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
