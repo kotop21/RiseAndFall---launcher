@@ -3,6 +3,12 @@
   "module": "index.tsx",
   "type": "module",
   "private": true,
+  "exclude": [
+    "node_modules",
+    "hermes-node",
+    "hermes/dist",
+    "native-win"
+  ],
   "scripts": {
     "dev": "bun index.tsx",
     "dev:check": "bun index.tsx",
