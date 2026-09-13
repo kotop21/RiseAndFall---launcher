@@ -23,7 +23,6 @@ async function fileExists(path: string): Promise<boolean> {
 
 export async function initConfig(): Promise<LauncherConfig> {
   const filePath = getConfigPath();
-  console.log(`Config: Target path: ${filePath}`);
 
   try {
     await mkdir(dirname(filePath), { recursive: true });
@@ -34,10 +33,8 @@ export async function initConfig(): Promise<LauncherConfig> {
   const exists = await fileExists(filePath);
 
   if (!exists) {
-    console.warn(`Config: File not found. Generating default binary config...`);
     try {
       await writeFile(filePath, pack(DEFAULT_CONFIG));
-      console.log(`Config: Default binary config successfully written.`);
     } catch (err) {
       console.error(`Config: Failed to write default binary config:`, err);
     }
@@ -46,9 +43,6 @@ export async function initConfig(): Promise<LauncherConfig> {
 
   try {
     const rawBytes = await readFile(filePath);
-    console.log(
-      `Config: Reading binary config (${rawBytes.byteLength} bytes)...`,
-    );
     const data = unpack(rawBytes) as Partial<LauncherConfig>;
 
     return {
@@ -63,12 +57,11 @@ export async function initConfig(): Promise<LauncherConfig> {
     };
   } catch (err) {
     console.error(
-      `Config: Failed to decode binary config or corrupted file. Resetting to default:`,
+      `Config: Failed to decode binary config. Resetting to default:`,
       err,
     );
     try {
       await writeFile(filePath, pack(DEFAULT_CONFIG));
-      console.log(`Config: Reset complete. Default binary config restored.`);
     } catch (writeErr) {
       console.error(`Config: Failed to restore default config:`, writeErr);
     }

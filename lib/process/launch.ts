@@ -6,6 +6,7 @@ import { isWindows } from "@/lib/utils/os";
 export interface LaunchExeOptions {
   cwd?: string;
   args?: string[];
+  rawArgs?: string;
   trackSession?: boolean;
   onSessionEnd?: (res: ProcessDaemonResult) => void | Promise<void>;
 }
@@ -25,6 +26,11 @@ async function checkFileExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export function sanitizeGameArgs(raw: string): string {
+  if (!raw || !raw.trim()) return "";
+  return raw.replace(/(?<!\\)\\"/g, '\\\\"');
 }
 
 export async function launchExe(
@@ -51,15 +57,25 @@ export async function launchExe(
       0,
       Math.max(cleanExePath.lastIndexOf("/"), cleanExePath.lastIndexOf("\\")),
     );
-  const rawArgs = options.args ?? [];
+
   const trackSession = Boolean(options.trackSession);
 
   if (isWindows()) {
     try {
-      const proc = spawn(cleanExePath, rawArgs, {
+      const sourceArgs =
+        options.rawArgs ?? (options.args ? options.args.join(" ") : "");
+      const formattedArgs = sanitizeGameArgs(sourceArgs);
+
+      const commandLine = formattedArgs
+        ? `"${cleanExePath}" ${formattedArgs}`
+        : `"${cleanExePath}"`;
+
+      const proc = spawn(commandLine, {
         cwd: workingDir,
         stdio: "ignore",
         detached: true,
+        shell: true,
+        windowsVerbatimArguments: true,
       });
 
       if (trackSession) {
@@ -70,9 +86,6 @@ export async function launchExe(
         proc.unref();
       }
 
-      console.log(
-        `Process: Successfully launched ${cleanExePath} [PID: ${proc.pid}]`,
-      );
       return {
         success: true,
         pid: proc.pid ?? 0,
@@ -85,6 +98,7 @@ export async function launchExe(
   }
 
   try {
+    const rawArgs = options.args ?? parseArgs(options.rawArgs ?? "");
     const proc = spawn("wine", [cleanExePath, ...rawArgs], {
       cwd: workingDir,
       stdio: "ignore",
@@ -103,7 +117,6 @@ export async function launchExe(
     });
 
     if (hasSpawnError) {
-      console.error("Process: Wine is not installed or not in PATH.");
       return {
         success: false,
         error: "unsupported_os",
@@ -119,14 +132,12 @@ export async function launchExe(
       proc.unref();
     }
 
-    console.log(`Process: Spawned via Wine [PID: ${proc.pid}]`);
     return {
       success: true,
       pid: proc.pid ?? 0,
       trackingSession: trackSession,
     };
   } catch (err) {
-    console.error("Process: Wine spawn failed:", err);
     return { success: false, error: "spawn_failed", details: String(err) };
   }
 }

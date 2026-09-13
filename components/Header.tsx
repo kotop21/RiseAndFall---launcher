@@ -11,7 +11,7 @@ import {
   theme,
 } from "@/ui";
 import { Play, Users, Clock, Settings } from "@/icon";
-import { launchExe, parseArgs } from "@/lib/process/launch";
+import { launchExe } from "@/lib/process/launch";
 import { recordGameSession } from "@/lib/config/session";
 import { isWindows } from "@/lib/utils/os";
 import { hasRiseAndFallExe } from "@/lib/utils/game-files";
@@ -87,11 +87,10 @@ export function Header({
 
     try {
       const exePath = join(root, "RiseAndFall.exe");
-      const args = parseArgs(config.gameArg);
 
       const res = await launchExe(exePath, {
         cwd: root,
-        args,
+        rawArgs: config.gameArg,
         trackSession: true,
         onSessionEnd: async (daemonResult) => {
           setIsRunning(false);
