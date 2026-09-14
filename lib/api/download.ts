@@ -24,6 +24,56 @@ export async function fetchAvailableFiles(): Promise<Record<
   }
 }
 
+export async function downloadSingleFileStream(
+  key: string,
+  signal?: AbortSignal,
+): Promise<{
+  ok: boolean;
+  stream?: ReadableStream<Uint8Array>;
+  error?: string;
+}> {
+  const url = API_ROUTES.download(key);
+  console.log(`Download: requesting single file stream for key "${key}"`);
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      signal,
+    });
+
+    if (!res.ok) {
+      let message = `Server returned ${res.status}`;
+      try {
+        const errJson = (await res.json()) as {
+          error?: string;
+          missing?: string[];
+        };
+        if (errJson.error) {
+          message = errJson.missing
+            ? `${errJson.error}: ${errJson.missing.join(", ")}`
+            : errJson.error;
+        }
+      } catch {}
+      console.log(`Download: single stream failed - ${message}`);
+      return { ok: false, error: message };
+    }
+
+    if (!res.body) {
+      return { ok: false, error: "Response body is empty" };
+    }
+
+    console.log(`Download: stream established for "${key}"`);
+    return { ok: true, stream: res.body };
+  } catch (err: unknown) {
+    const isAbort = err instanceof Error && err.name === "AbortError";
+    const msg = isAbort
+      ? "Download aborted by user"
+      : "Network connection failure";
+    console.log(`Download: ${msg}`);
+    return { ok: false, error: msg };
+  }
+}
+
 export async function downloadFilesStream(
   keys: string[],
   signal?: AbortSignal,

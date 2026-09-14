@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { API_ROUTES, type OnlineResponse } from "./client";
 
 const HEARTBEAT_INTERVAL_MS = 45 * 1000;
-const RETRY_INTERVAL_MS = 10 * 1000;
-const REQUEST_TIMEOUT_MS = 5 * 1000;
+const RETRY_INTERVAL_MS = 15 * 1000;
+const REQUEST_TIMEOUT_MS = 15 * 1000;
 const SESSION_STORAGE_KEY = "raf_session_key";
 
 let inMemoryKey: string | null = null;
@@ -129,7 +129,7 @@ export function startOnlineTracker() {
 
 export function stopOnlineTracker() {
   if (timerId) {
-    clearInterval(timerId);
+    clearTimeout(timerId);
     timerId = null;
   }
   isStarted = false;
