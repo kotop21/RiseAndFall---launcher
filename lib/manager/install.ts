@@ -67,9 +67,8 @@ export async function installGamePackage({
     await cleanGameDirectory(cleanDir);
   }
 
-  const langKey = `${lang}:lang`;
-  const mapsKey = `${lang}:maps`;
-  const requestedKeys = ["game", langKey, mapsKey];
+  const langKey = `lang:${lang}`;
+  const requestedKeys = ["game", langKey, "mod:bfm"];
 
   console.log(
     `Install: started download into ${cleanDir} with [${requestedKeys.join(", ")}]`,
