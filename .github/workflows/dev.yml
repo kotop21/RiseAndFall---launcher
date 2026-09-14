@@ -26,10 +26,12 @@ jobs:
 
       - name: Build Windows Dev Executable (With Console)
         shell: bash
+        env:
+          API_URL: ${{ secrets.API_URL }}
         run: |
           mkdir -p dist
           bun run scripts/generate-version.ts
-          bun build --compile index.tsx --outfile dist/raf-launcher.exe
+          bun build --compile --define process.env.API_URL="\"${API_URL}\"" index.tsx --outfile dist/raf-launcher.exe
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4

@@ -28,10 +28,12 @@ jobs:
 
       - name: Build Windows Release Executable (No Console)
         shell: bash
+        env:
+          API_URL: ${{ secrets.API_URL }}
         run: |
           mkdir -p dist
           bun run scripts/generate-version.ts
-          bun build --compile --windows-subsystem=windows index.tsx --outfile dist/raf-launcher.exe
+          bun build --compile --windows-subsystem=windows --define process.env.API_URL="\"${API_URL}\"" index.tsx --outfile dist/raf-launcher.exe
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
