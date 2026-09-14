@@ -8,10 +8,10 @@ export async function cleanGameDirectory(targetDir: string): Promise<boolean> {
     return false;
   }
 
-  const savedGamesPath = resolve(join(cleanRoot, "Data", "Saved Game"));
+  const savedGamesPath = resolve(join(cleanRoot, "Data", "Saved Games"));
 
   console.log(
-    `Clean: preparing directory ${cleanRoot} (preserving Data/Saved Game)`,
+    `Clean: preparing directory ${cleanRoot} (preserving Data/Saved Games)`,
   );
 
   try {

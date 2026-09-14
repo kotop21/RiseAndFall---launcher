@@ -60,27 +60,38 @@ export function SettingsView({
     setIsPickingFolder(true);
 
     try {
+      const current = formState.gameDir.trim();
+      const parentDir =
+        current.includes("/") || current.includes("\\")
+          ? current.replace(/[\\/][^\\/]+[\\/]?$/, "")
+          : undefined;
+
       const selected = await pickFolder({
         title: "Select Game Directory",
-        defaultPath: formState.gameDir.trim() || undefined,
+        defaultPath: parentDir || undefined,
         requiredFile: "RiseAndFall.exe",
       });
 
       if (!selected) return;
 
-      if (typeof selected === "object") {
-        if (!selected.isValid) {
-          toast({
-            title: "Invalid Game Directory",
-            description: "RiseAndFall.exe not found in the selected folder.",
-            type: "error",
-          });
-          return;
-        }
-        setFormState((prev) => ({ ...prev, gameDir: selected.path }));
-      } else {
-        setFormState((prev) => ({ ...prev, gameDir: selected }));
+      const pickedPath =
+        typeof selected === "object" ? selected.path : selected;
+      const isValid = typeof selected === "object" ? selected.isValid : true;
+
+      if (!isValid) {
+        toast({
+          title: "Invalid Game Directory",
+          description: "RiseAndFall.exe not found in the selected folder.",
+          type: "error",
+        });
+        return;
       }
+
+      if (pickedPath) {
+        setFormState((prev) => ({ ...prev, gameDir: pickedPath }));
+      }
+    } catch (err) {
+      console.error("Settings: failed to pick folder", err);
     } finally {
       setIsPickingFolder(false);
     }

@@ -50,6 +50,7 @@ export function InstallView({
   const [status, setStatus] = useState<InstallStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("");
   const [confirmReinstall, setConfirmReinstall] = useState(false);
+  const [isPickingFolder, setIsPickingFolder] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const resetConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -64,21 +65,35 @@ export function InstallView({
   }, []);
 
   const handleBrowseFolder = async () => {
+    if (isPickingFolder || isInstalling) return;
+    setIsPickingFolder(true);
+
     try {
+      const current = installPath.trim();
+      const parentDir =
+        current.includes("/") || current.includes("\\")
+          ? current.replace(/[\\/][^\\/]+[\\/]?$/, "")
+          : undefined;
+
       const selected = await pickFolder({
         title: "Select Game Installation Directory",
-        defaultPath: installPath.trim() || undefined,
+        defaultPath: parentDir || undefined,
       });
 
       if (!selected) return;
 
-      if (typeof selected === "object") {
-        setInstallPath((selected as { path: string }).path);
-      } else {
-        setInstallPath(selected);
+      const pickedPath =
+        typeof selected === "object"
+          ? (selected as { path: string }).path
+          : selected;
+
+      if (pickedPath) {
+        setInstallPath(pickedPath);
       }
-    } catch {
-      console.log("Install: failed to open folder picker");
+    } catch (err) {
+      console.error("Install: failed to open folder picker", err);
+    } finally {
+      setIsPickingFolder(false);
     }
   };
 
@@ -192,7 +207,7 @@ export function InstallView({
             </H2>
             <Muted>
               {isReinstall
-                ? "Cleans existing game files except Data/Saved Game and downloads fresh copy"
+                ? "Cleans existing game files except Data/Saved Games and downloads fresh copy"
                 : "Download and extract game assets, localized audio, and map packs"}
             </Muted>
           </Column>
@@ -219,7 +234,7 @@ export function InstallView({
             <Row gap={6} align="center">
               <AlertTriangle size={14} color={theme.colors.mutedFg} />
               <Muted>
-                All game files will be refreshed. Saves in Data/Saved Game are
+                All game files will be refreshed. Saves in Data/Saved Games are
                 preserved.
               </Muted>
             </Row>
@@ -238,7 +253,7 @@ export function InstallView({
               </div>
               <Button
                 variant="secondary"
-                disabled={isInstalling}
+                disabled={isInstalling || isPickingFolder}
                 onClick={handleBrowseFolder}
               >
                 <Row gap={8} align="center">
