@@ -13,21 +13,24 @@ import {
   useToast,
   theme,
 } from "@/ui";
-import { ArrowLeft, Folder, RefreshCw, RotateCcw, Check } from "@/icon";
+import { ArrowLeft, Folder, RotateCcw, Check } from "@/icon";
 import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
+import { DownloadGameButton } from "@/components/DownloadGameButton";
 import type { LauncherConfig } from "@/lib/config/types";
 
 interface SettingsViewProps {
   config: LauncherConfig;
   onChangeConfig: (nextConfig: LauncherConfig) => Promise<void> | void;
   onBack?: () => void;
+  onOpenInstall?: () => void;
 }
 
 export function SettingsView({
   config,
   onChangeConfig,
   onBack,
+  onOpenInstall,
 }: SettingsViewProps) {
   const { pickFolder } = useFileDialog();
   const { toast } = useToast();
@@ -225,17 +228,12 @@ export function SettingsView({
 
             <Row gap={10} align="center" style={{ width: "100%" }}>
               <div style={{ flexGrow: 1 }}>
-                <Button
-                  variant="destructive"
+                <DownloadGameButton
+                  variant="reinstall"
                   size="sm"
-                  onClick={() => {}}
+                  onClick={onOpenInstall}
                   style={{ width: "100%" }}
-                >
-                  <Row gap={8} align="center" justify="center">
-                    <RefreshCw size={14} color={theme.colors.destructiveFg} />
-                    Reinstall Game
-                  </Row>
-                </Button>
+                />
               </div>
             </Row>
           </Column>

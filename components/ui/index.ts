@@ -5,6 +5,7 @@ export { Checkbox, type CheckboxProps } from "./elements/checkbox";
 export { Switch, type SwitchProps } from "./elements/switch";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./elements/card";
 export { Separator } from "./elements/separator";
+export { Skeleton } from "./elements/skeleton";
 export { ScrollArea, type ScrollAreaProps } from "./elements/scroll-area";
 export { Popover, PopoverItem, type PopoverProps, type PopoverItemProps, type PopoverTriggerProps, type PopoverSide, type PopoverAlign } from "./elements/popover";
 export { openFileDialog, openFolderDialog, useFileDialog, FilePickerTrigger, type FileDialogOptions, type FilePickerTriggerProps } from "./elements/file-picker";

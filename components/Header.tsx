@@ -15,30 +15,47 @@ import { launchExe } from "@/lib/process/launch";
 import { recordGameSession } from "@/lib/config/session";
 import { isWindows } from "@/lib/utils/os";
 import { hasRiseAndFallExe } from "@/lib/utils/game-files";
+import { useOnlineTracker } from "@/lib/api/online";
+import { DownloadGameButton } from "./DownloadGameButton";
 import type { LauncherConfig } from "@/lib/config/types";
 
 interface HeaderProps {
   config: LauncherConfig;
   onConfigChange?: (updatedConfig: LauncherConfig) => void;
   onOpenSettings?: () => void;
+  onOpenInstall?: () => void;
 }
 
 export function Header({
   config,
   onConfigChange,
   onOpenSettings,
+  onOpenInstall,
 }: HeaderProps) {
   const { toast } = useToast();
+  const onlineCount = useOnlineTracker();
   const [isRunning, setIsRunning] = useState(false);
   const [gameExists, setGameExists] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const isWin = isWindows();
+
+  const isPathConfigured = Boolean(
+    config.gameDir && config.gameDir.trim().length > 0,
+  );
 
   useEffect(() => {
     let isMounted = true;
     setIsValidating(true);
 
     (async () => {
+      if (!isPathConfigured) {
+        if (isMounted) {
+          setGameExists(false);
+          setIsValidating(false);
+        }
+        return;
+      }
+
       const exists = await hasRiseAndFallExe(config.gameDir);
       if (isMounted) {
         setGameExists(exists);
@@ -49,7 +66,7 @@ export function Header({
     return () => {
       isMounted = false;
     };
-  }, [config.gameDir]);
+  }, [config.gameDir, isPathConfigured]);
 
   const formatPlaytime = (totalMinutes: number): string => {
     if (!totalMinutes || totalMinutes <= 0) return "0 min";
@@ -206,7 +223,17 @@ export function Header({
             <Row gap={8} align="center">
               <Users size={14} color={theme.colors.mutedFg} />
               <Muted>Current Online:</Muted>
-              <P style={{ fontWeight: "bold" }}>42</P>
+              <P
+                style={{
+                  fontWeight: "bold",
+                  color:
+                    onlineCount !== null
+                      ? theme.colors.fg
+                      : theme.colors.mutedFg,
+                }}
+              >
+                {onlineCount !== null ? onlineCount : "Unavailable"}
+              </P>
             </Row>
             <Row gap={8} align="center">
               <Clock size={14} color={theme.colors.mutedFg} />
@@ -218,35 +245,42 @@ export function Header({
           </Column>
         </Row>
 
-        <Button
-          size="lg"
-          disabled={isButtonDisabled}
-          onClick={handleStartGame}
-          style={{
-            height: 46,
-            paddingLeft: 24,
-            paddingRight: 24,
-          }}
-        >
-          <Row gap={10} align="center">
-            <Play
-              size={18}
-              color={
-                isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg
-              }
-            />
-            <P
-              style={{
-                color: isActionReady
-                  ? theme.colors.primaryFg
-                  : theme.colors.mutedFg,
-                fontWeight: "bold",
-              }}
-            >
-              {getButtonText()}
-            </P>
-          </Row>
-        </Button>
+        {!isPathConfigured || (!isValidating && !gameExists) ? (
+          <DownloadGameButton
+            onClick={onOpenInstall}
+            disabled={isValidating || isRunning}
+          />
+        ) : (
+          <Button
+            size="lg"
+            disabled={isButtonDisabled}
+            onClick={handleStartGame}
+            style={{
+              height: 46,
+              paddingLeft: 24,
+              paddingRight: 24,
+            }}
+          >
+            <Row gap={10} align="center">
+              <Play
+                size={18}
+                color={
+                  isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg
+                }
+              />
+              <P
+                style={{
+                  color: isActionReady
+                    ? theme.colors.primaryFg
+                    : theme.colors.mutedFg,
+                  fontWeight: "bold",
+                }}
+              >
+                {getButtonText()}
+              </P>
+            </Row>
+          </Button>
+        )}
       </Row>
     </UiHeader>
   );

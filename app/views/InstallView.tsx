@@ -1,0 +1,360 @@
+import { useState, useRef, useEffect } from "react";
+import {
+  ScrollArea,
+  Column,
+  Row,
+  H2,
+  Label,
+  Muted,
+  Input,
+  Button,
+  Separator,
+  P,
+  useFileDialog,
+  useToast,
+  theme,
+} from "@/ui";
+import {
+  NavigationRoot,
+  SegmentedNav,
+} from "@/components/ui/elements/navigation";
+import {
+  ArrowLeft,
+  Folder,
+  Globe,
+  Download,
+  RefreshCw,
+  CheckCircle,
+  AlertTriangle,
+} from "@/icon";
+import { installGamePackage, type InstallStatus } from "@/lib/manager/install";
+
+interface InstallViewProps {
+  defaultInstallPath?: string;
+  isReinstall?: boolean;
+  onInstalled?: (installedPath: string) => void;
+  onCancel?: () => void;
+}
+
+export function InstallView({
+  defaultInstallPath = "",
+  isReinstall = false,
+  onInstalled,
+  onCancel,
+}: InstallViewProps) {
+  const { toast } = useToast();
+  const { pickFolder } = useFileDialog();
+
+  const [installPath, setInstallPath] = useState(defaultInstallPath);
+  const [selectedLang, setSelectedLang] = useState<string>("en");
+  const [status, setStatus] = useState<InstallStatus>("idle");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [confirmReinstall, setConfirmReinstall] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const resetConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isInstalling = status === "downloading" || status === "extracting";
+
+  useEffect(() => {
+    return () => {
+      if (resetConfirmTimer.current) {
+        clearTimeout(resetConfirmTimer.current);
+      }
+    };
+  }, []);
+
+  const handleBrowseFolder = async () => {
+    try {
+      const selected = await pickFolder({
+        title: "Select Game Installation Directory",
+        defaultPath: installPath.trim() || undefined,
+      });
+
+      if (!selected) return;
+
+      if (typeof selected === "object") {
+        setInstallPath((selected as { path: string }).path);
+      } else {
+        setInstallPath(selected);
+      }
+    } catch {
+      console.log("Install: failed to open folder picker");
+    }
+  };
+
+  const triggerInstallation = async () => {
+    const target = installPath.trim();
+    if (!target) {
+      toast({
+        title: "Invalid Path",
+        description: "Target game folder is missing.",
+        type: "warn",
+      });
+      return;
+    }
+
+    abortControllerRef.current = new AbortController();
+    setStatus("downloading");
+    setStatusMessage(
+      isReinstall ? "Preparing reinstall..." : "Starting installation...",
+    );
+
+    const res = await installGamePackage({
+      targetDir: target,
+      lang: selectedLang === "ru" ? "ru" : "en",
+      cleanBeforeInstall: isReinstall,
+      signal: abortControllerRef.current.signal,
+      onProgress: (p) => {
+        setStatus(p.status);
+        setStatusMessage(p.message);
+      },
+    });
+
+    if (res.success) {
+      toast({
+        title: isReinstall ? "Reinstall Finished" : "Installation Finished",
+        description: "Game files and assets updated successfully.",
+        type: "info",
+      });
+      onInstalled?.(target);
+    } else {
+      toast({
+        title: isReinstall ? "Reinstall Failed" : "Installation Failed",
+        description: res.error || "Unknown error",
+        type: "error",
+      });
+    }
+  };
+
+  const handleActionClick = () => {
+    if (isReinstall) {
+      if (!confirmReinstall) {
+        setConfirmReinstall(true);
+        if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
+        resetConfirmTimer.current = setTimeout(() => {
+          setConfirmReinstall(false);
+        }, 4000);
+        return;
+      }
+      if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
+      setConfirmReinstall(false);
+    }
+
+    triggerInstallation();
+  };
+
+  const handleAbort = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  };
+
+  const langNavItems = [
+    { id: "en", label: "English" },
+    { id: "ru", label: "Russian" },
+  ];
+
+  return (
+    <ScrollArea
+      direction="vertical"
+      style={{
+        flexGrow: 1,
+        width: "100%",
+        height: "100%",
+      }}
+    >
+      <Column
+        gap={20}
+        style={{
+          width: "100%",
+          padding: 24,
+        }}
+      >
+        <Row gap={12} align="center">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isInstalling}
+            onClick={onCancel}
+            style={{
+              width: 36,
+              height: 36,
+              paddingLeft: 0,
+              paddingRight: 0,
+            }}
+          >
+            <ArrowLeft size={18} color={theme.colors.fg} />
+          </Button>
+          <Column gap={2}>
+            <H2 style={{ color: theme.colors.fg }}>
+              {isReinstall ? "Reinstall Rise and Fall" : "Install Game"}
+            </H2>
+            <Muted>
+              {isReinstall
+                ? "Cleans existing game files except Data/Saved Game and downloads fresh copy"
+                : "Download and extract game assets, localized audio, and map packs"}
+            </Muted>
+          </Column>
+        </Row>
+
+        <Separator orientation="horizontal" />
+
+        {isReinstall ? (
+          <Column
+            gap={8}
+            style={{
+              width: "100%",
+              backgroundColor: theme.colors.card,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.md,
+              padding: 14,
+            }}
+          >
+            <Label>Target Installation Directory</Label>
+            <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>
+              {installPath}
+            </P>
+            <Row gap={6} align="center">
+              <AlertTriangle size={14} color={theme.colors.mutedFg} />
+              <Muted>
+                All game files will be refreshed. Saves in Data/Saved Game are
+                preserved.
+              </Muted>
+            </Row>
+          </Column>
+        ) : (
+          <Column gap={8} style={{ width: "100%" }}>
+            <Label>Installation Directory</Label>
+            <Row gap={8} align="center" style={{ width: "100%" }}>
+              <div style={{ flexGrow: 1 }}>
+                <Input
+                  value={installPath}
+                  onChange={setInstallPath}
+                  placeholder="C:\Games\Rise and Fall"
+                  disabled={isInstalling}
+                />
+              </div>
+              <Button
+                variant="secondary"
+                disabled={isInstalling}
+                onClick={handleBrowseFolder}
+              >
+                <Row gap={8} align="center">
+                  <Folder size={14} color={theme.colors.fg} />
+                  Browse
+                </Row>
+              </Button>
+            </Row>
+          </Column>
+        )}
+
+        <Column gap={8} style={{ width: "100%" }}>
+          <Row gap={8} align="center">
+            <Globe size={14} color={theme.colors.mutedFg} />
+            <Label>Language Pack</Label>
+          </Row>
+          <NavigationRoot
+            value={selectedLang}
+            onValueChange={(val) => {
+              if (!isInstalling) {
+                setSelectedLang(val);
+              }
+            }}
+          >
+            <SegmentedNav
+              items={langNavItems}
+              itemWidth={100}
+              itemHeight={32}
+            />
+          </NavigationRoot>
+        </Column>
+
+        {status !== "idle" && (
+          <Column
+            gap={6}
+            style={{
+              width: "100%",
+              backgroundColor: theme.colors.muted,
+              borderRadius: theme.radius.md,
+              padding: 12,
+            }}
+          >
+            <Row gap={8} align="center">
+              {status === "completed" && (
+                <CheckCircle size={16} color={theme.colors.success} />
+              )}
+              <P style={{ fontWeight: "bold" }}>
+                {status === "completed" ? "Ready" : "Processing"}
+              </P>
+            </Row>
+            <Muted>{statusMessage}</Muted>
+          </Column>
+        )}
+
+        <Separator orientation="horizontal" />
+
+        <Row
+          gap={10}
+          justify="between"
+          align="center"
+          style={{ width: "100%" }}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={isInstalling}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+
+          {isInstalling ? (
+            <Button variant="destructive" size="sm" onClick={handleAbort}>
+              Abort
+            </Button>
+          ) : (
+            <Button
+              variant={confirmReinstall ? "destructive" : "default"}
+              size="sm"
+              disabled={!installPath.trim()}
+              onClick={handleActionClick}
+            >
+              <Row gap={8} align="center">
+                {isReinstall ? (
+                  <RefreshCw
+                    size={14}
+                    color={
+                      confirmReinstall
+                        ? theme.colors.destructiveFg
+                        : theme.colors.primaryFg
+                    }
+                  />
+                ) : (
+                  <Download size={14} color={theme.colors.primaryFg} />
+                )}
+                <P
+                  style={{
+                    color: confirmReinstall
+                      ? theme.colors.destructiveFg
+                      : theme.colors.primaryFg,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {isReinstall
+                    ? confirmReinstall
+                      ? "Confirm Reinstall (Click Again)"
+                      : "Reinstall Game"
+                    : status === "completed"
+                      ? "Reinstall"
+                      : "Download & Install"}
+                </P>
+              </Row>
+            </Button>
+          )}
+        </Row>
+      </Column>
+    </ScrollArea>
+  );
+}

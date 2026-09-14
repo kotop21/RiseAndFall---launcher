@@ -14,6 +14,7 @@ import { UpdateList } from "@/components/UpdateList";
 import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
 import { hasDgVoodooCplExe } from "@/lib/utils/game-files";
+import { getLauncherVersion } from "@/lib/utils/version";
 
 const QUOTES = [
   "«Command from above. Conquer on foot.»",
@@ -22,6 +23,9 @@ const QUOTES = [
   "«For honor and the empire!»",
   "«Stand firm, warriors of antiquity!»",
 ];
+
+const rawVersion = getLauncherVersion().trim().replace(/^v/i, "");
+const launcherLabel = `Launcher v${rawVersion}`;
 
 interface MainViewProps {
   gameDir?: string;
@@ -71,7 +75,7 @@ export function MainView({ gameDir = "" }: MainViewProps) {
             <Badge variant="secondary">
               <Row gap={6} align="center">
                 <Tag size={12} color={theme.colors.mutedFg} />
-                Launcher v1.5.0
+                {launcherLabel}
               </Row>
             </Badge>
 

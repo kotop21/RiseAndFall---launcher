@@ -27,7 +27,7 @@ export async function initConfig(): Promise<LauncherConfig> {
   try {
     await mkdir(dirname(filePath), { recursive: true });
   } catch (err) {
-    console.error(`Config: Failed to create config directory:`, err);
+    console.error("Config: failed to create config directory:", err);
   }
 
   const exists = await fileExists(filePath);
@@ -35,8 +35,9 @@ export async function initConfig(): Promise<LauncherConfig> {
   if (!exists) {
     try {
       await writeFile(filePath, pack(DEFAULT_CONFIG));
+      console.log("Config: initialized and loaded default config");
     } catch (err) {
-      console.error(`Config: Failed to write default binary config:`, err);
+      console.error("Config: failed to write default binary config:", err);
     }
     return DEFAULT_CONFIG;
   }
@@ -45,7 +46,7 @@ export async function initConfig(): Promise<LauncherConfig> {
     const rawBytes = await readFile(filePath);
     const data = unpack(rawBytes) as Partial<LauncherConfig>;
 
-    return {
+    const loadedConfig: LauncherConfig = {
       gameDir: data.gameDir ?? DEFAULT_CONFIG.gameDir,
       gameArg: data.gameArg ?? DEFAULT_CONFIG.gameArg,
       launcherLang: data.launcherLang ?? DEFAULT_CONFIG.launcherLang,
@@ -55,15 +56,19 @@ export async function initConfig(): Promise<LauncherConfig> {
           : DEFAULT_CONFIG.totalPlaytimeMinutes,
       lastLaunchDate: data.lastLaunchDate ?? DEFAULT_CONFIG.lastLaunchDate,
     };
+
+    console.log("Config: loaded successfully");
+    return loadedConfig;
   } catch (err) {
     console.error(
-      `Config: Failed to decode binary config. Resetting to default:`,
+      "Config: failed to decode binary config. Resetting to default:",
       err,
     );
     try {
       await writeFile(filePath, pack(DEFAULT_CONFIG));
+      console.log("Config: restored default config successfully");
     } catch (writeErr) {
-      console.error(`Config: Failed to restore default config:`, writeErr);
+      console.error("Config: failed to restore default config:", writeErr);
     }
     return DEFAULT_CONFIG;
   }
