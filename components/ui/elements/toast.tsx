@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  type ReactNode,
+} from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { motion } from "@gpuix/react";
 import { theme } from "../theme";
@@ -51,11 +58,13 @@ export interface ToastProviderProps {
 
 export function ToastProvider({
   children,
-  defaultPosition = "bottom-right",
+  defaultPosition = "top-right",
 }: ToastProviderProps) {
   const [currentToast, setCurrentToast] = useState<ToastItem | null>(null);
   const [position, setPosition] = useState<ToastPosition>(defaultPosition);
-  const [animStage, setAnimStage] = useState<"initial" | "entered" | "exiting">("initial");
+  const [animStage, setAnimStage] = useState<"initial" | "entered" | "exiting">(
+    "initial",
+  );
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,7 +135,7 @@ export function ToastProvider({
         }
       }
     },
-    [dismissToast, currentToast]
+    [dismissToast, currentToast],
   );
 
   const isTop = position.startsWith("top");
@@ -134,8 +143,8 @@ export function ToastProvider({
   const alignStyle: StyleDesc = position.endsWith("center")
     ? { left: 0, right: 0, alignItems: "center" }
     : position.endsWith("left")
-    ? { left: 20, alignItems: "flex-start" }
-    : { right: 20, alignItems: "flex-end" };
+      ? { left: 20, alignItems: "flex-start" }
+      : { right: 20, alignItems: "flex-end" };
 
   const getBarColor = (type: ToastType = "info") => {
     switch (type) {
@@ -163,7 +172,9 @@ export function ToastProvider({
       };
 
   return (
-    <ToastContext.Provider value={{ toast, removeToast: dismissToast, setPosition }}>
+    <ToastContext.Provider
+      value={{ toast, removeToast: dismissToast, setPosition }}
+    >
       <div
         style={{
           position: "relative",

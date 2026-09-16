@@ -1,7 +1,6 @@
 import { join } from "node:path";
-import { unlink, readFile } from "node:fs/promises";
-import { createWriteStream, existsSync } from "node:fs";
-import { Readable } from "node:stream";
+import { unlink, readFile, open } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { unpack } from "msgpackr";
 import { downloadSingleFileStream } from "@/lib/api/download";
 import { ensureDirectory } from "@/lib/explorer/create";
@@ -11,18 +10,15 @@ import { getConfigPath } from "@/lib/config/dir";
 import { saveConfig } from "@/lib/config/save";
 import { DEFAULT_CONFIG } from "@/lib/config/init";
 import type { LauncherConfig } from "@/lib/config/types";
+import { createLauncherError, normalizeError, type LauncherAppError } from "@/lib/errors";
 
-export type InstallStatus =
-  | "idle"
-  | "downloading"
-  | "extracting"
-  | "completed"
-  | "error";
+export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" | "error";
 
 export interface InstallProgress {
   status: InstallStatus;
   message: string;
   bytesDownloaded?: number;
+  totalBytes?: number;
 }
 
 export interface InstallGameOptions {
@@ -31,11 +27,6 @@ export interface InstallGameOptions {
   cleanBeforeInstall?: boolean;
   signal?: AbortSignal;
   onProgress?: (progress: InstallProgress) => void;
-}
-
-interface PackageStep {
-  key: string;
-  label: string;
 }
 
 export async function installGamePackage({
@@ -47,20 +38,20 @@ export async function installGamePackage({
 }: InstallGameOptions): Promise<{
   success: boolean;
   config?: LauncherConfig;
-  error?: string;
+  error?: LauncherAppError;
 }> {
   const cleanDir = targetDir.trim();
   if (!cleanDir) {
-    console.log("Install: target directory path is empty");
-    return { success: false, error: "Target directory path is empty" };
-  }
-
-  const okDir = await ensureDirectory(cleanDir);
-  if (!okDir) {
-    console.log(`Install: failed to access target directory at ${cleanDir}`);
     return {
       success: false,
-      error: "Cannot create or access target directory",
+      error: createLauncherError("TARGET_DIR_REQUIRED"),
+    };
+  }
+
+  if (!(await ensureDirectory(cleanDir))) {
+    return {
+      success: false,
+      error: createLauncherError("TARGET_DIR_INVALID", `Cannot access or create directory: ${cleanDir}`),
     };
   }
 
@@ -69,10 +60,15 @@ export async function installGamePackage({
       status: "extracting",
       message: "Cleaning previous installation...",
     });
-    await cleanGameDirectory(cleanDir);
+    if (!(await cleanGameDirectory(cleanDir))) {
+      return {
+        success: false,
+        error: createLauncherError("FS_ACCESS_DENIED", `Cannot clean directory: ${cleanDir}`),
+      };
+    }
   }
 
-  const packages: PackageStep[] = [
+  const packages = [
     { key: "game", label: "Base Game" },
     { key: `lang:${lang}`, label: `Language Pack (${lang.toUpperCase()})` },
     { key: "mod:bfm", label: "BFM Mod" },
@@ -81,10 +77,16 @@ export async function installGamePackage({
   let cumulativeBytes = 0;
 
   for (let i = 0; i < packages.length; i++) {
+    if (signal?.aborted) {
+      try {
+        await cleanGameDirectory(cleanDir);
+      } catch {}
+      return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+    }
+
     const pkg = packages[i];
     const stepLabel = `[${i + 1}/${packages.length}] ${pkg.label}`;
 
-    console.log(`Install: requesting ${pkg.key} (${stepLabel})`);
     onProgress?.({
       status: "downloading",
       message: `Connecting for ${stepLabel}...`,
@@ -93,61 +95,102 @@ export async function installGamePackage({
 
     const streamRes = await downloadSingleFileStream(pkg.key, signal);
     if (!streamRes.ok || !streamRes.stream) {
-      const errMsg = streamRes.error || `Failed to download ${pkg.label}`;
-      console.log(`Install: ${pkg.key} download failed - ${errMsg}`);
-      onProgress?.({ status: "error", message: errMsg });
-      return { success: false, error: errMsg };
+      const err = streamRes.error ?? createLauncherError("DOWNLOAD_FAILED", `Failed downloading ${pkg.label}`);
+      onProgress?.({ status: "error", message: err.description });
+      return { success: false, error: err };
     }
 
-    const tempArchiveName = `pkg_${i}_${Date.now()}.zip`;
-    const tempArchivePath = join(cleanDir, tempArchiveName);
+    const currentFileTotal = streamRes.totalBytes || 0;
+    const tempArchivePath = join(cleanDir, `pkg_${i}_${Date.now()}.zip`);
+
+    let fileHandle = null;
+    let reader = null;
 
     try {
-      const fileStream = createWriteStream(tempArchivePath);
-      const nodeReadable = Readable.fromWeb(streamRes.stream as any);
+      fileHandle = await open(tempArchivePath, "w");
+      reader = streamRes.stream.getReader();
 
       let stepBytes = 0;
-      nodeReadable.on("data", (chunk: Buffer) => {
-        stepBytes += chunk.length;
-        onProgress?.({
-          status: "downloading",
-          message: `${stepLabel}: ${(stepBytes / 1024 / 1024).toFixed(1)} MB`,
-          bytesDownloaded: cumulativeBytes + stepBytes,
-        });
-      });
+      let lastProgressUpdate = Date.now();
 
-      await new Promise<void>((resolve, reject) => {
-        nodeReadable.pipe(fileStream);
-        fileStream.on("finish", () => resolve());
-        fileStream.on("error", (err) => reject(err));
-        nodeReadable.on("error", (err) => reject(err));
-      });
+      while (true) {
+        if (signal?.aborted) throw createLauncherError("INSTALL_CANCELLED");
+
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        if (value) {
+          await fileHandle.write(value);
+          stepBytes += value.length;
+
+          const now = Date.now();
+          if (now - lastProgressUpdate > 150) {
+            lastProgressUpdate = now;
+            const currentMB = (stepBytes / 1024 / 1024).toFixed(1);
+            const totalMB = currentFileTotal > 0 ? `${(currentFileTotal / 1024 / 1024).toFixed(1)} MB` : "Unknown";
+
+            onProgress?.({
+              status: "downloading",
+              message: `${stepLabel}: ${currentMB} / ${totalMB}`,
+              bytesDownloaded: cumulativeBytes + stepBytes,
+              totalBytes: currentFileTotal,
+            });
+
+            await new Promise((r) => setTimeout(r, 0));
+          }
+        }
+      }
+
+      await fileHandle.close();
+      fileHandle = null;
 
       cumulativeBytes += stepBytes;
 
-      console.log(`Install: downloaded ${pkg.key}, extracting...`);
+      if (signal?.aborted) throw createLauncherError("INSTALL_CANCELLED");
+
       onProgress?.({
         status: "extracting",
         message: `Extracting ${stepLabel}...`,
         bytesDownloaded: cumulativeBytes,
       });
 
-      const unpacked = await extractZip(tempArchivePath, cleanDir);
-      if (!unpacked) {
-        throw new Error(`Failed to extract ${pkg.label}`);
+      if (!(await extractZip(tempArchivePath, cleanDir))) {
+        throw createLauncherError("EXTRACTION_FAILED", `Failed extracting ${pkg.label}`);
       }
     } catch (err: unknown) {
-      const isAbort = err instanceof Error && err.name === "AbortError";
-      const errorMsg = isAbort
-        ? "Installation cancelled"
-        : (err as Error).message || `Failed processing ${pkg.label}`;
-      console.log(`Install: error - ${errorMsg}`);
-      onProgress?.({ status: "error", message: errorMsg });
+      if (reader) {
+        try {
+          await reader.cancel();
+        } catch {}
+      }
+
+      if (fileHandle) {
+        try {
+          await fileHandle.close();
+        } catch {}
+      }
+
       try {
         await unlink(tempArchivePath);
       } catch {}
-      return { success: false, error: errorMsg };
+
+      const normalized = normalizeError(err, "EXTRACTION_FAILED");
+      if (normalized.code === "INSTALL_CANCELLED" || signal?.aborted) {
+        try {
+          await cleanGameDirectory(cleanDir);
+        } catch {}
+        return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+      }
+
+      const launchErr = createLauncherError(normalized.code, normalized.description, err);
+      onProgress?.({ status: "error", message: launchErr.description });
+      return { success: false, error: launchErr };
     } finally {
+      if (fileHandle) {
+        try {
+          await fileHandle.close();
+        } catch {}
+      }
       try {
         await unlink(tempArchivePath);
       } catch {}
@@ -159,16 +202,8 @@ export async function installGamePackage({
   if (existsSync(cfgPath)) {
     try {
       const raw = await readFile(cfgPath);
-      currentCfg = {
-        ...DEFAULT_CONFIG,
-        ...(unpack(raw) as Partial<LauncherConfig>),
-      };
-    } catch (err) {
-      console.error(
-        "Install: error reading existing config, using defaults:",
-        err,
-      );
-    }
+      currentCfg = { ...DEFAULT_CONFIG, ...(unpack(raw) as Partial<LauncherConfig>) };
+    } catch {}
   }
 
   const updatedConfig: LauncherConfig = {
@@ -178,7 +213,6 @@ export async function installGamePackage({
   };
 
   await saveConfig(updatedConfig);
-  console.log(`Install: gameDir saved to config (${cleanDir})`);
 
   onProgress?.({
     status: "completed",

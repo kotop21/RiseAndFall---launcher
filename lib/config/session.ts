@@ -7,19 +7,13 @@ export async function recordGameSession(
   launchDate: Date = new Date(),
 ): Promise<LauncherConfig> {
   const currentConfig = await initConfig();
-
   const nextConfig: LauncherConfig = {
     ...currentConfig,
     totalPlaytimeMinutes:
-      Math.max(0, currentConfig.totalPlaytimeMinutes) +
-      Math.max(0, playtimeMinutes),
+      Math.max(0, currentConfig.totalPlaytimeMinutes) + Math.max(0, playtimeMinutes),
     lastLaunchDate: launchDate.toISOString(),
   };
 
   await saveConfig(nextConfig);
-  console.log(
-    `Config: Recorded session. Added: ${playtimeMinutes} min, Total: ${nextConfig.totalPlaytimeMinutes} min`,
-  );
-
   return nextConfig;
 }

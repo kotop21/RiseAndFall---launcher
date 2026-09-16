@@ -1,20 +1,10 @@
 import { useEffect, useState } from "react";
-import {
-  Column,
-  Row,
-  Card,
-  Badge,
-  P,
-  Muted,
-  Button,
-  Skeleton,
-  useToast,
-  theme,
-} from "@/ui";
+import { Column, Row, Card, Badge, P, Muted, Button, Skeleton, useToast, theme } from "@/ui";
 import { ExternalLink } from "@/icon";
 import { fetchReleases, getCachedReleases } from "@/lib/github/releases";
 import { openBrowser } from "@/lib/browser/open";
 import type { ReleaseItem } from "@/lib/github/types";
+import { formatErrorToast } from "@/lib/errors";
 
 export function UpdateList() {
   const { toast } = useToast();
@@ -32,9 +22,10 @@ export function UpdateList() {
           setIsLoading(false);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (isMounted) {
           setIsLoading(false);
+          toast(formatErrorToast(err, "GITHUB_API_FAILED"));
         }
       });
 
@@ -44,13 +35,16 @@ export function UpdateList() {
   }, []);
 
   const handleOpenRelease = async (url: string) => {
-    const ok = await openBrowser(url);
-    if (!ok) {
-      toast({
-        title: "Browser Error",
-        description: "Failed to open default web browser.",
-        type: "error",
-      });
+    try {
+      if (!(await openBrowser(url))) {
+        toast({
+          title: "Browser Error",
+          description: "Failed to launch default web browser for changelog link.",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      toast(formatErrorToast(err, "BROWSER_FAILED"));
     }
   };
 
@@ -77,13 +71,7 @@ export function UpdateList() {
           >
             <Row justify="between" align="center" style={{ width: "100%" }}>
               <Row gap={12} align="center">
-                <Skeleton
-                  style={{
-                    width: 58,
-                    height: 22,
-                    borderRadius: theme.radius.sm,
-                  }}
-                />
+                <Skeleton style={{ width: 58, height: 22, borderRadius: theme.radius.sm }} />
                 <Skeleton
                   style={{
                     width: idx === 0 ? 160 : 120,
@@ -92,24 +80,11 @@ export function UpdateList() {
                   }}
                 />
               </Row>
-
               <Row gap={8} align="center">
                 {idx === 0 && (
-                  <Skeleton
-                    style={{
-                      width: 90,
-                      height: 22,
-                      borderRadius: theme.radius.sm,
-                    }}
-                  />
+                  <Skeleton style={{ width: 90, height: 22, borderRadius: theme.radius.sm }} />
                 )}
-                <Skeleton
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: theme.radius.md,
-                  }}
-                />
+                <Skeleton style={{ width: 28, height: 28, borderRadius: theme.radius.md }} />
               </Row>
             </Row>
           </Card>
@@ -158,12 +133,7 @@ export function UpdateList() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleOpenRelease(release.url)}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    paddingLeft: 0,
-                    paddingRight: 0,
-                  }}
+                  style={{ width: 28, height: 28, paddingLeft: 0, paddingRight: 0 }}
                 >
                   <ExternalLink size={14} />
                 </Button>

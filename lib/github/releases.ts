@@ -1,8 +1,7 @@
 import type { ReleaseItem } from "./types";
 import { MOCK_RELEASES } from "./mock";
 
-const RELEASES_API_URL =
-  "https://api.github.com/repos/kotop21/RiseAndFall---launcher/releases";
+const RELEASES_API_URL = "https://api.github.com/repos/kotop21/RiseAndFall---launcher/releases";
 
 interface GitHubReleaseRaw {
   tag_name: string;
@@ -15,16 +14,9 @@ interface GitHubReleaseRaw {
 let cachedReleases: ReleaseItem[] | null = null;
 let inFlightRequest: Promise<ReleaseItem[]> | null = null;
 
-export async function fetchReleases(
-  forceRefresh = false,
-): Promise<ReleaseItem[]> {
-  if (!forceRefresh && cachedReleases) {
-    return cachedReleases;
-  }
-
-  if (!forceRefresh && inFlightRequest) {
-    return inFlightRequest;
-  }
+export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]> {
+  if (!forceRefresh && cachedReleases) return cachedReleases;
+  if (!forceRefresh && inFlightRequest) return inFlightRequest;
 
   inFlightRequest = (async () => {
     try {
@@ -41,24 +33,20 @@ export async function fetchReleases(
       }
 
       const data = (await res.json()) as GitHubReleaseRaw[];
-
       if (!Array.isArray(data)) {
         cachedReleases = MOCK_RELEASES.slice(0, 5);
         return cachedReleases;
       }
 
       const sorted = [...data].sort(
-        (a, b) =>
-          new Date(b.published_at).getTime() -
-          new Date(a.published_at).getTime(),
+        (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime(),
       );
 
       cachedReleases = sorted.slice(0, 5).map((item) => {
         const version = item.tag_name;
-        const rawTitle = item.name ? item.name.trim() : null;
+        const rawTitle = item.name?.trim();
 
         let title: string | null = null;
-
         if (rawTitle && rawTitle !== version) {
           title = rawTitle;
         } else if (item.body) {
@@ -68,18 +56,11 @@ export async function fetchReleases(
             .trim();
 
           if (cleanText.length > 0) {
-            title =
-              cleanText.length > 20
-                ? `${cleanText.slice(0, 20)}...`
-                : cleanText;
+            title = cleanText.length > 20 ? `${cleanText.slice(0, 20)}...` : cleanText;
           }
         }
 
-        return {
-          version,
-          title,
-          url: item.html_url,
-        };
+        return { version, title, url: item.html_url };
       });
 
       return cachedReleases;

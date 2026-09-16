@@ -1,25 +1,23 @@
 import { API_ROUTES, type AvailableFilesResponse } from "./client";
+import { createLauncherError, type LauncherAppError } from "@/lib/errors";
 
-export async function fetchAvailableFiles(): Promise<Record<
-  string,
-  string
-> | null> {
-  console.log("Download: requesting available manifest list");
+export interface DownloadStreamResult {
+  ok: boolean;
+  stream?: ReadableStream<Uint8Array>;
+  totalBytes?: number;
+  error?: LauncherAppError;
+}
+
+export async function fetchAvailableFiles(): Promise<Record<string, string> | null> {
   try {
     const res = await fetch(API_ROUTES.download(), {
       method: "GET",
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) {
-      console.log(
-        `Download: failed to fetch manifest with status ${res.status}`,
-      );
-      return null;
-    }
+    if (!res.ok) return null;
     const data = (await res.json()) as AvailableFilesResponse;
     return data.available || null;
-  } catch (err) {
-    console.log("Download: network error fetching available files");
+  } catch {
     return null;
   }
 }
@@ -27,101 +25,87 @@ export async function fetchAvailableFiles(): Promise<Record<
 export async function downloadSingleFileStream(
   key: string,
   signal?: AbortSignal,
-): Promise<{
-  ok: boolean;
-  stream?: ReadableStream<Uint8Array>;
-  error?: string;
-}> {
+): Promise<DownloadStreamResult> {
   const url = API_ROUTES.download(key);
-  console.log(`Download: requesting single file stream for key "${key}"`);
 
   try {
-    const res = await fetch(url, {
-      method: "GET",
-      signal,
-    });
-
+    const res = await fetch(url, { method: "GET", signal });
     if (!res.ok) {
-      let message = `Server returned ${res.status}`;
+      let desc = `Server returned HTTP ${res.status}`;
       try {
-        const errJson = (await res.json()) as {
-          error?: string;
-          missing?: string[];
-        };
+        const errJson = (await res.json()) as { error?: string; missing?: string[] };
         if (errJson.error) {
-          message = errJson.missing
-            ? `${errJson.error}: ${errJson.missing.join(", ")}`
-            : errJson.error;
+          desc = errJson.missing?.length ? `${errJson.error}: ${errJson.missing.join(", ")}` : errJson.error;
         }
       } catch {}
-      console.log(`Download: single stream failed - ${message}`);
-      return { ok: false, error: message };
+      return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", desc) };
     }
 
     if (!res.body) {
-      return { ok: false, error: "Response body is empty" };
+      return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", "Empty response payload stream") };
     }
 
-    console.log(`Download: stream established for "${key}"`);
-    return { ok: true, stream: res.body };
+    const lenHeader = res.headers.get("content-length");
+    return {
+      ok: true,
+      stream: res.body,
+      totalBytes: lenHeader ? parseInt(lenHeader, 10) : undefined,
+    };
   } catch (err: unknown) {
-    const isAbort = err instanceof Error && err.name === "AbortError";
-    const msg = isAbort
-      ? "Download aborted by user"
-      : "Network connection failure";
-    console.log(`Download: ${msg}`);
-    return { ok: false, error: msg };
+    const isAbort =
+      (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError")) ||
+      signal?.aborted;
+    return {
+      ok: false,
+      error: createLauncherError(
+        isAbort ? "INSTALL_CANCELLED" : "NETWORK_OFFLINE",
+        isAbort ? "Download aborted by user" : "Failed establishing network stream connection",
+        err,
+      ),
+    };
   }
 }
 
 export async function downloadFilesStream(
   keys: string[],
   signal?: AbortSignal,
-): Promise<{
-  ok: boolean;
-  stream?: ReadableStream<Uint8Array>;
-  error?: string;
-}> {
+): Promise<DownloadStreamResult> {
   const url = API_ROUTES.download(keys);
-  console.log(
-    `Download: requesting files stream for keys [${keys.join(", ")}]`,
-  );
 
   try {
-    const res = await fetch(url, {
-      method: "GET",
-      signal,
-    });
-
+    const res = await fetch(url, { method: "GET", signal });
     if (!res.ok) {
-      let message = `Server returned ${res.status}`;
+      let desc = `Server returned HTTP ${res.status}`;
       try {
-        const errJson = (await res.json()) as {
-          error?: string;
-          missing?: string[];
-        };
+        const errJson = (await res.json()) as { error?: string; missing?: string[] };
         if (errJson.error) {
-          message = errJson.missing
-            ? `${errJson.error}: ${errJson.missing.join(", ")}`
-            : errJson.error;
+          desc = errJson.missing?.length ? `${errJson.error}: ${errJson.missing.join(", ")}` : errJson.error;
         }
       } catch {}
-      console.log(`Download: stream failed - ${message}`);
-      return { ok: false, error: message };
+      return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", desc) };
     }
 
     if (!res.body) {
-      return { ok: false, error: "Response body is empty" };
+      return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", "Empty response payload stream") };
     }
 
-    console.log("Download: stream connection established");
-    return { ok: true, stream: res.body };
+    const lenHeader = res.headers.get("content-length");
+    return {
+      ok: true,
+      stream: res.body,
+      totalBytes: lenHeader ? parseInt(lenHeader, 10) : undefined,
+    };
   } catch (err: unknown) {
-    const isAbort = err instanceof Error && err.name === "AbortError";
-    const msg = isAbort
-      ? "Download aborted by user"
-      : "Network connection failure";
-    console.log(`Download: ${msg}`);
-    return { ok: false, error: msg };
+    const isAbort =
+      (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError")) ||
+      signal?.aborted;
+    return {
+      ok: false,
+      error: createLauncherError(
+        isAbort ? "INSTALL_CANCELLED" : "NETWORK_OFFLINE",
+        isAbort ? "Download aborted by user" : "Failed establishing network stream connection",
+        err,
+      ),
+    };
   }
 }

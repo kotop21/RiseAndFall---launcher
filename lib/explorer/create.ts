@@ -10,8 +10,7 @@ export async function ensureDirectory(dirPath: string): Promise<boolean> {
       await mkdir(target, { recursive: true });
     }
     return true;
-  } catch (err) {
-    console.error("Explorer: failed to ensure directory:", err);
+  } catch {
     return false;
   }
 }
@@ -23,11 +22,10 @@ export async function createFile(
   const target = filePath.trim();
   if (!target) return false;
   try {
-    await ensureDirectory(dirname(target));
+    if (!(await ensureDirectory(dirname(target)))) return false;
     await writeFile(target, content);
     return true;
-  } catch (err) {
-    console.error("Explorer: failed to write file:", err);
+  } catch {
     return false;
   }
 }

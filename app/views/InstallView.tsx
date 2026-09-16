@@ -14,20 +14,10 @@ import {
   useToast,
   theme,
 } from "@/ui";
-import {
-  NavigationRoot,
-  SegmentedNav,
-} from "@/components/ui/elements/navigation";
-import {
-  ArrowLeft,
-  Folder,
-  Globe,
-  Download,
-  RefreshCw,
-  CheckCircle,
-  AlertTriangle,
-} from "@/icon";
+import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
+import { ArrowLeft, Folder, Globe, Download, RefreshCw, CheckCircle, AlertTriangle } from "@/icon";
 import { installGamePackage, type InstallStatus } from "@/lib/manager/install";
+import { formatErrorToast } from "@/lib/errors";
 
 interface InstallViewProps {
   defaultInstallPath?: string;
@@ -50,17 +40,19 @@ export function InstallView({
   const [status, setStatus] = useState<InstallStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("");
   const [confirmReinstall, setConfirmReinstall] = useState(false);
+  const [confirmAbort, setConfirmAbort] = useState(false);
   const [isPickingFolder, setIsPickingFolder] = useState(false);
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const resetConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetAbortTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isInstalling = status === "downloading" || status === "extracting";
 
   useEffect(() => {
     return () => {
-      if (resetConfirmTimer.current) {
-        clearTimeout(resetConfirmTimer.current);
-      }
+      if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
+      if (resetAbortTimer.current) clearTimeout(resetAbortTimer.current);
     };
   }, []);
 
@@ -77,21 +69,15 @@ export function InstallView({
 
       const selected = await pickFolder({
         title: "Select Game Installation Directory",
-        defaultPath: parentDir || undefined,
+        defaultPath: parentDir,
       });
 
       if (!selected) return;
 
-      const pickedPath =
-        typeof selected === "object"
-          ? (selected as { path: string }).path
-          : selected;
-
-      if (pickedPath) {
-        setInstallPath(pickedPath);
-      }
+      const pickedPath = typeof selected === "object" ? (selected as { path: string }).path : selected;
+      if (pickedPath) setInstallPath(pickedPath);
     } catch (err) {
-      console.error("Install: failed to open folder picker", err);
+      toast(formatErrorToast(err, "FS_ACCESS_DENIED"));
     } finally {
       setIsPickingFolder(false);
     }
@@ -101,7 +87,7 @@ export function InstallView({
     const target = installPath.trim();
     if (!target) {
       toast({
-        title: "Invalid Path",
+        title: "Path Required",
         description: "Target game folder is missing.",
         type: "warn",
       });
@@ -109,10 +95,9 @@ export function InstallView({
     }
 
     abortControllerRef.current = new AbortController();
+    setConfirmAbort(false);
     setStatus("downloading");
-    setStatusMessage(
-      isReinstall ? "Preparing reinstall..." : "Starting installation...",
-    );
+    setStatusMessage(isReinstall ? "Preparing reinstall..." : "Starting installation...");
 
     const res = await installGamePackage({
       targetDir: target,
@@ -120,24 +105,25 @@ export function InstallView({
       cleanBeforeInstall: isReinstall,
       signal: abortControllerRef.current.signal,
       onProgress: (p) => {
-        setStatus(p.status);
-        setStatusMessage(p.message);
+        if (!abortControllerRef.current?.signal.aborted) {
+          setStatus(p.status);
+          setStatusMessage(p.message);
+        }
       },
     });
 
+    if (abortControllerRef.current?.signal.aborted) {
+      setStatus("idle");
+      setStatusMessage("");
+      return;
+    }
+
     if (res.success) {
-      toast({
-        title: isReinstall ? "Reinstall Finished" : "Installation Finished",
-        description: "Game files and assets updated successfully.",
-        type: "info",
-      });
       onInstalled?.(target);
     } else {
-      toast({
-        title: isReinstall ? "Reinstall Failed" : "Installation Failed",
-        description: res.error || "Unknown error",
-        type: "error",
-      });
+      setStatus("idle");
+      setStatusMessage("");
+      toast(formatErrorToast(res.error, "DOWNLOAD_FAILED"));
     }
   };
 
@@ -146,23 +132,33 @@ export function InstallView({
       if (!confirmReinstall) {
         setConfirmReinstall(true);
         if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
-        resetConfirmTimer.current = setTimeout(() => {
-          setConfirmReinstall(false);
-        }, 4000);
+        resetConfirmTimer.current = setTimeout(() => setConfirmReinstall(false), 4000);
         return;
       }
       if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
       setConfirmReinstall(false);
     }
-
     triggerInstallation();
   };
 
   const handleAbort = () => {
+    if (!confirmAbort) {
+      setConfirmAbort(true);
+      if (resetAbortTimer.current) clearTimeout(resetAbortTimer.current);
+      resetAbortTimer.current = setTimeout(() => setConfirmAbort(false), 4000);
+      return;
+    }
+
+    if (resetAbortTimer.current) clearTimeout(resetAbortTimer.current);
+    setConfirmAbort(false);
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+
+    setStatus("idle");
+    setStatusMessage("");
   };
 
   const langNavItems = [
@@ -171,33 +167,15 @@ export function InstallView({
   ];
 
   return (
-    <ScrollArea
-      direction="vertical"
-      style={{
-        flexGrow: 1,
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      <Column
-        gap={20}
-        style={{
-          width: "100%",
-          padding: 24,
-        }}
-      >
+    <ScrollArea direction="vertical" style={{ flexGrow: 1, width: "100%", height: "100%" }}>
+      <Column gap={20} style={{ width: "100%", padding: 24 }}>
         <Row gap={12} align="center">
           <Button
             variant="ghost"
             size="sm"
             disabled={isInstalling}
             onClick={onCancel}
-            style={{
-              width: 36,
-              height: 36,
-              paddingLeft: 0,
-              paddingRight: 0,
-            }}
+            style={{ width: 36, height: 36, paddingLeft: 0, paddingRight: 0 }}
           >
             <ArrowLeft size={18} color={theme.colors.fg} />
           </Button>
@@ -228,15 +206,10 @@ export function InstallView({
             }}
           >
             <Label>Target Installation Directory</Label>
-            <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>
-              {installPath}
-            </P>
+            <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>{installPath}</P>
             <Row gap={6} align="center">
               <AlertTriangle size={14} color={theme.colors.mutedFg} />
-              <Muted>
-                All game files will be refreshed. Saves in Data/Saved Games are
-                preserved.
-              </Muted>
+              <Muted>All game files will be refreshed. Saves in Data/Saved Games are preserved.</Muted>
             </Row>
           </Column>
         ) : (
@@ -247,7 +220,7 @@ export function InstallView({
                 <Input
                   value={installPath}
                   onChange={setInstallPath}
-                  placeholder="C:\Games\Rise and Fall"
+                  placeholder="C:\\Games\\Rise and Fall"
                   disabled={isInstalling}
                 />
               </div>
@@ -273,16 +246,10 @@ export function InstallView({
           <NavigationRoot
             value={selectedLang}
             onValueChange={(val) => {
-              if (!isInstalling) {
-                setSelectedLang(val);
-              }
+              if (!isInstalling) setSelectedLang(val);
             }}
           >
-            <SegmentedNav
-              items={langNavItems}
-              itemWidth={100}
-              itemHeight={32}
-            />
+            <SegmentedNav items={langNavItems} itemWidth={100} itemHeight={32} />
           </NavigationRoot>
         </Column>
 
@@ -297,12 +264,8 @@ export function InstallView({
             }}
           >
             <Row gap={8} align="center">
-              {status === "completed" && (
-                <CheckCircle size={16} color={theme.colors.success} />
-              )}
-              <P style={{ fontWeight: "bold" }}>
-                {status === "completed" ? "Ready" : "Processing"}
-              </P>
+              {status === "completed" && <CheckCircle size={16} color={theme.colors.success} />}
+              <P style={{ fontWeight: "bold" }}>{status === "completed" ? "Ready" : "Processing"}</P>
             </Row>
             <Muted>{statusMessage}</Muted>
           </Column>
@@ -310,24 +273,14 @@ export function InstallView({
 
         <Separator orientation="horizontal" />
 
-        <Row
-          gap={10}
-          justify="between"
-          align="center"
-          style={{ width: "100%" }}
-        >
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={isInstalling}
-            onClick={onCancel}
-          >
+        <Row gap={10} justify="between" align="center" style={{ width: "100%" }}>
+          <Button variant="secondary" size="sm" disabled={isInstalling} onClick={onCancel}>
             Cancel
           </Button>
 
           {isInstalling ? (
             <Button variant="destructive" size="sm" onClick={handleAbort}>
-              Abort
+              {confirmAbort ? "Confirm Abort (Click Again)" : "Abort"}
             </Button>
           ) : (
             <Button
@@ -340,20 +293,14 @@ export function InstallView({
                 {isReinstall ? (
                   <RefreshCw
                     size={14}
-                    color={
-                      confirmReinstall
-                        ? theme.colors.destructiveFg
-                        : theme.colors.primaryFg
-                    }
+                    color={confirmReinstall ? theme.colors.destructiveFg : theme.colors.primaryFg}
                   />
                 ) : (
                   <Download size={14} color={theme.colors.primaryFg} />
                 )}
                 <P
                   style={{
-                    color: confirmReinstall
-                      ? theme.colors.destructiveFg
-                      : theme.colors.primaryFg,
+                    color: confirmReinstall ? theme.colors.destructiveFg : theme.colors.primaryFg,
                     fontWeight: "bold",
                   }}
                 >

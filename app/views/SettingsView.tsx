@@ -18,6 +18,7 @@ import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
 import { DownloadGameButton } from "@/components/DownloadGameButton";
 import type { LauncherConfig } from "@/lib/config/types";
+import { formatErrorToast } from "@/lib/errors";
 
 interface SettingsViewProps {
   config: LauncherConfig;
@@ -47,8 +48,8 @@ export function SettingsView({
     if (hasChanges) {
       toast({
         title: "Unsaved Changes",
-        description: "Save or revert your modifications before leaving.",
-        type: "error",
+        description: "Save or revert modifications before leaving.",
+        type: "warn",
       });
       return;
     }
@@ -68,20 +69,19 @@ export function SettingsView({
 
       const selected = await pickFolder({
         title: "Select Game Directory",
-        defaultPath: parentDir || undefined,
+        defaultPath: parentDir,
         requiredFile: "RiseAndFall.exe",
       });
 
       if (!selected) return;
 
-      const pickedPath =
-        typeof selected === "object" ? selected.path : selected;
+      const pickedPath = typeof selected === "object" ? selected.path : selected;
       const isValid = typeof selected === "object" ? selected.isValid : true;
 
       if (!isValid) {
         toast({
-          title: "Invalid Game Directory",
-          description: "RiseAndFall.exe not found in the selected folder.",
+          title: "Game Missing",
+          description: "RiseAndFall.exe not found in selected folder.",
           type: "error",
         });
         return;
@@ -91,7 +91,7 @@ export function SettingsView({
         setFormState((prev) => ({ ...prev, gameDir: pickedPath }));
       }
     } catch (err) {
-      console.error("Settings: failed to pick folder", err);
+      toast(formatErrorToast(err, "FS_ACCESS_DENIED"));
     } finally {
       setIsPickingFolder(false);
     }
@@ -102,49 +102,29 @@ export function SettingsView({
   };
 
   const handleSave = async () => {
-    await onChangeConfig(formState);
-    toast({
-      title: "Settings Saved",
-      description: "Configuration file updated successfully.",
-      type: "info",
-    });
+    try {
+      await onChangeConfig(formState);
+      onBack?.();
+    } catch (err) {
+      toast(formatErrorToast(err, "CONFIG_WRITE_FAILED"));
+    }
   };
 
   return (
-    <ScrollArea
-      direction="vertical"
-      style={{
-        flexGrow: 1,
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      <Column
-        gap={20}
-        style={{
-          width: "100%",
-          padding: 24,
-        }}
-      >
+    <ScrollArea direction="vertical" style={{ flexGrow: 1, width: "100%", height: "100%" }}>
+      <Column gap={20} style={{ width: "100%", padding: 24 }}>
         <Row gap={12} align="center">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBack}
-            style={{
-              width: 36,
-              height: 36,
-              paddingLeft: 0,
-              paddingRight: 0,
-            }}
+            style={{ width: 36, height: 36, paddingLeft: 0, paddingRight: 0 }}
           >
             <ArrowLeft size={18} color={theme.colors.fg} />
           </Button>
           <Column gap={2}>
             <H2 style={{ color: theme.colors.fg }}>Settings & Diagnostics</H2>
-            <Muted>
-              Manage game installation, executables, and startup hooks
-            </Muted>
+            <Muted>Manage game installation, executables, and startup hooks</Muted>
           </Column>
         </Row>
 
@@ -156,17 +136,11 @@ export function SettingsView({
             <div style={{ flexGrow: 1 }}>
               <Input
                 value={formState.gameDir}
-                onChange={(val) =>
-                  setFormState((prev) => ({ ...prev, gameDir: val }))
-                }
+                onChange={(val) => setFormState((prev) => ({ ...prev, gameDir: val }))}
                 placeholder="/path/to/RiseAndFall"
               />
             </div>
-            <Button
-              variant="secondary"
-              disabled={isPickingFolder}
-              onClick={handleSelectGamePath}
-            >
+            <Button variant="secondary" disabled={isPickingFolder} onClick={handleSelectGamePath}>
               <Row gap={8} align="center">
                 <Folder size={14} color={theme.colors.fg} />
                 Browse
@@ -181,33 +155,21 @@ export function SettingsView({
           </Row>
           <Input
             value={formState.gameArg}
-            onChange={(val) =>
-              setFormState((prev) => ({ ...prev, gameArg: val }))
-            }
-            placeholder='-datapath "Data\" -redistpath "Redist\"'
+            onChange={(val) => setFormState((prev) => ({ ...prev, gameArg: val }))}
+            placeholder='-datapath "Data\\" -redistpath "Redist\\"'
           />
           <Muted>Default engine arguments for proper resource mounting</Muted>
         </Column>
 
         <Row gap={10} justify="end" align="center" style={{ width: "100%" }}>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!hasChanges}
-            onClick={handleRevert}
-          >
+          <Button variant="secondary" size="sm" disabled={!hasChanges} onClick={handleRevert}>
             <Row gap={8} align="center">
               <RotateCcw size={14} color={theme.colors.fg} />
               Revert Changes
             </Row>
           </Button>
 
-          <Button
-            variant="default"
-            size="sm"
-            disabled={!hasChanges}
-            onClick={handleSave}
-          >
+          <Button variant="default" size="sm" disabled={!hasChanges} onClick={handleSave}>
             <Row gap={8} align="center">
               <Check size={14} color={theme.colors.primaryFg} />
               Save
@@ -223,17 +185,11 @@ export function SettingsView({
           <Column gap={8} style={{ width: "100%" }}>
             <Row gap={10} align="center" style={{ width: "100%" }}>
               <div style={{ flexGrow: 1 }}>
-                <OpenGameFolderButton
-                  gameDir={formState.gameDir}
-                  style={{ width: "100%" }}
-                />
+                <OpenGameFolderButton gameDir={formState.gameDir} style={{ width: "100%" }} />
               </div>
 
               <div style={{ flexGrow: 1 }}>
-                <OpenDgVoodooButton
-                  gameDir={formState.gameDir}
-                  style={{ width: "100%" }}
-                />
+                <OpenDgVoodooButton gameDir={formState.gameDir} style={{ width: "100%" }} />
               </div>
             </Row>
 

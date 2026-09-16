@@ -6,21 +6,22 @@ const execAsync = promisify(exec);
 export async function getProcessCpuUsage(pid: number): Promise<string> {
   if (process.platform !== "win32") return "";
   try {
-    const { stdout } = await execAsync(
-      `wmic process where ProcessId=${pid} get UserModeTime,KernelTime /Value`,
-    );
+    const { stdout } = await execAsync(`wmic process where ProcessId=${pid} get UserModeTime,KernelTime /Value`);
     return stdout.trim();
   } catch {
     return "";
   }
 }
 
-export async function killProcessTree(pid: number): Promise<void> {
+export async function killProcessTree(pid: number): Promise<boolean> {
   try {
     if (process.platform === "win32") {
       await execAsync(`taskkill /F /T /PID ${pid}`);
     } else {
       process.kill(pid, "SIGKILL");
     }
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }

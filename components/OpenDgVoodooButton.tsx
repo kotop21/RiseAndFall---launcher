@@ -5,16 +5,14 @@ import { SlidersHorizontal } from "@/icon";
 import { launchExe } from "@/lib/process/launch";
 import { isWindows } from "@/lib/utils/os";
 import { hasDgVoodooCplExe } from "@/lib/utils/game-files";
+import { formatErrorToast } from "@/lib/errors";
 
 interface OpenDgVoodooButtonProps {
   gameDir?: string;
   style?: Record<string, any>;
 }
 
-export function OpenDgVoodooButton({
-  gameDir = "",
-  style,
-}: OpenDgVoodooButtonProps) {
+export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonProps) {
   const { toast } = useToast();
   const [fileExists, setFileExists] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
@@ -25,10 +23,17 @@ export function OpenDgVoodooButton({
     setIsValidating(true);
 
     (async () => {
-      const exists = await hasDgVoodooCplExe(gameDir);
-      if (isMounted) {
-        setFileExists(exists);
-        setIsValidating(false);
+      try {
+        const exists = await hasDgVoodooCplExe(gameDir);
+        if (isMounted) {
+          setFileExists(exists);
+          setIsValidating(false);
+        }
+      } catch {
+        if (isMounted) {
+          setFileExists(false);
+          setIsValidating(false);
+        }
       }
     })();
 
@@ -42,10 +47,19 @@ export function OpenDgVoodooButton({
   const handleOpen = async () => {
     const cleanDir = gameDir.trim();
 
+    if (!cleanDir) {
+      toast({
+        title: "Path Required",
+        description: "Choose game folder first.",
+        type: "warn",
+      });
+      return;
+    }
+
     if (!fileExists) {
       toast({
-        title: "File Missing",
-        description: "dgVoodooCpl.exe does not exist in the game directory.",
+        title: "dgVoodoo Missing",
+        description: "dgVoodooCpl.exe not found in game folder.",
         type: "error",
       });
       return;
@@ -53,48 +67,21 @@ export function OpenDgVoodooButton({
 
     if (!isWin) {
       toast({
-        title: "Platform Unsupported",
-        description: "dgVoodoo control panel requires Windows.",
+        title: "OS Unsupported",
+        description: "Control panel requires Windows.",
         type: "error",
       });
       return;
     }
 
-    const dgVoodooPath = join(cleanDir, "dgVoodooCpl.exe");
-
-    const res = await launchExe(dgVoodooPath, {
-      cwd: cleanDir,
-    });
-
-    if (!res.success) {
-      if (res.error === "unsupported_os") {
-        toast({
-          title: "Platform Notice",
-          description:
-            "dgVoodoo control panel requires Windows or Wine environment.",
-          type: "error",
-        });
-      } else if (res.error === "file_not_found") {
-        toast({
-          title: "File Missing",
-          description: "dgVoodooCpl.exe does not exist in the game directory.",
-          type: "error",
-        });
-      } else {
-        toast({
-          title: "Launch Error",
-          description: "Failed to start dgVoodoo control panel.",
-          type: "error",
-        });
+    try {
+      const res = await launchExe(join(cleanDir, "dgVoodooCpl.exe"), { cwd: cleanDir });
+      if (!res.success) {
+        toast(formatErrorToast(res.error, "PROCESS_SPAWN_FAILED"));
       }
-      return;
+    } catch (err) {
+      toast(formatErrorToast(err, "PROCESS_SPAWN_FAILED"));
     }
-
-    toast({
-      title: "dgVoodoo Opened",
-      description: "Control panel is running.",
-      type: "info",
-    });
   };
 
   const getButtonLabel = () => {
@@ -105,18 +92,9 @@ export function OpenDgVoodooButton({
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={isDisabled}
-      onClick={handleOpen}
-      style={style}
-    >
+    <Button variant="outline" size="sm" disabled={isDisabled} onClick={handleOpen} style={style}>
       <Row gap={8} align="center" justify="center">
-        <SlidersHorizontal
-          size={14}
-          color={isDisabled ? theme.colors.mutedFg : theme.colors.fg}
-        />
+        <SlidersHorizontal size={14} color={isDisabled ? theme.colors.mutedFg : theme.colors.fg} />
         {getButtonLabel()}
       </Row>
     </Button>

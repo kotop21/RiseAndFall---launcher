@@ -1,31 +1,19 @@
 import { spawn } from "node:child_process";
 
 export async function openBrowser(url: string): Promise<boolean> {
-  let cmd: string;
-  let args: string[];
+  const cleanUrl = url.trim();
+  if (!cleanUrl) return false;
 
-  switch (process.platform) {
-    case "darwin":
-      cmd = "open";
-      args = [url];
-      break;
-    case "win32":
-      cmd = "cmd";
-      args = ["/c", "start", "", url];
-      break;
-    default:
-      cmd = "xdg-open";
-      args = [url];
-      break;
-  }
+  const [cmd, args] =
+    process.platform === "darwin"
+      ? ["open", [cleanUrl]]
+      : process.platform === "win32"
+        ? ["cmd", ["/c", "start", "", cleanUrl]]
+        : ["xdg-open", [cleanUrl]];
 
   return new Promise<boolean>((resolve) => {
     try {
-      const proc = spawn(cmd, args, {
-        stdio: "ignore",
-        detached: true,
-      });
-
+      const proc = spawn(cmd, args, { stdio: "ignore", detached: true });
       proc.on("error", () => resolve(false));
       proc.on("close", (code) => resolve(code === 0));
       proc.unref();

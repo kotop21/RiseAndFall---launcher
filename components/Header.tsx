@@ -18,6 +18,7 @@ import { hasRiseAndFallExe } from "@/lib/utils/game-files";
 import { useOnlineTracker } from "@/lib/api/online";
 import { DownloadGameButton } from "./DownloadGameButton";
 import type { LauncherConfig } from "@/lib/config/types";
+import { formatErrorToast } from "@/lib/errors";
 
 interface HeaderProps {
   config: LauncherConfig;
@@ -39,9 +40,7 @@ export function Header({
   const [isValidating, setIsValidating] = useState(true);
   const isWin = isWindows();
 
-  const isPathConfigured = Boolean(
-    config.gameDir && config.gameDir.trim().length > 0,
-  );
+  const isPathConfigured = Boolean(config.gameDir?.trim());
 
   useEffect(() => {
     let isMounted = true;
@@ -71,16 +70,14 @@ export function Header({
   const formatPlaytime = (totalMinutes: number): string => {
     if (!totalMinutes || totalMinutes <= 0) return "0 min";
     if (totalMinutes < 60) return `${totalMinutes} min`;
-    const hours = Math.floor(totalMinutes / 60);
-    return `${hours} hrs`;
+    return `${Math.floor(totalMinutes / 60)} hrs`;
   };
 
   const handleStartGame = async () => {
     if (!gameExists) {
       toast({
-        title: "Game Not Found",
-        description:
-          "RiseAndFall.exe is missing from the configured directory.",
+        title: "Game Missing",
+        description: "RiseAndFall.exe not found in game folder.",
         type: "error",
       });
       return;
@@ -88,9 +85,8 @@ export function Header({
 
     if (!isWin) {
       toast({
-        title: "Platform Unsupported",
-        description:
-          "Game launcher can only start executables natively on Windows.",
+        title: "OS Unsupported",
+        description: "Native launch requires Windows.",
         type: "error",
       });
       return;
@@ -99,13 +95,18 @@ export function Header({
     if (isRunning) return;
     setIsRunning(true);
 
+    toast({
+      title: "Starting Game",
+      description: "Launching Rise and Fall...",
+      type: "info",
+      duration: 2000,
+    });
+
     const root = config.gameDir.trim();
     const launchStartTime = new Date();
 
     try {
-      const exePath = join(root, "RiseAndFall.exe");
-
-      const res = await launchExe(exePath, {
+      const res = await launchExe(join(root, "RiseAndFall.exe"), {
         cwd: root,
         rawArgs: config.gameArg,
         trackSession: true,
@@ -118,56 +119,17 @@ export function Header({
               launchStartTime,
             );
             onConfigChange?.(nextConfig);
-          } catch (sessionErr) {
-            console.error("Failed to record game session:", sessionErr);
-          }
-
-          toast({
-            title: "Game Closed",
-            description: `Session playtime: ${daemonResult.elapsedMinutes} min`,
-            type: "info",
-          });
+          } catch {}
         },
       });
 
       if (!res.success) {
         setIsRunning(false);
-
-        if (res.error === "unsupported_os") {
-          toast({
-            title: "Platform Notice",
-            description:
-              "Direct .exe execution requires Windows or Wine environment.",
-            type: "error",
-          });
-        } else if (res.error === "file_not_found") {
-          toast({
-            title: "Game Missing",
-            description: "RiseAndFall.exe not found at target directory.",
-            type: "error",
-          });
-        } else {
-          toast({
-            title: "Execution Error",
-            description: "Failed to spawn game process.",
-            type: "error",
-          });
-        }
-        return;
+        toast(formatErrorToast(res.error, "PROCESS_SPAWN_FAILED"));
       }
-
-      toast({
-        title: "Game Started",
-        description: "Rise and Fall is running.",
-        type: "info",
-      });
-    } catch {
+    } catch (err) {
       setIsRunning(false);
-      toast({
-        title: "Launch Failed",
-        description: "Unexpected error during launch sequence.",
-        type: "error",
-      });
+      toast(formatErrorToast(err, "PROCESS_SPAWN_FAILED"));
     }
   };
 

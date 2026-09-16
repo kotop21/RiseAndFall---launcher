@@ -24,35 +24,29 @@ function getStoredKey(): string | null {
   try {
     if (typeof localStorage !== "undefined") {
       const stored = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (stored && typeof stored === "string" && stored.trim().length > 0) {
-        inMemoryKey = stored.trim();
-      }
+      if (stored?.trim()) inMemoryKey = stored.trim();
     }
   } catch {}
   return inMemoryKey;
 }
 
-function setStoredKey(key: string) {
-  if (typeof key !== "string" || !key.trim()) return;
-  inMemoryKey = key.trim();
+function setStoredKey(key: string): boolean {
+  if (typeof key !== "string" || !key.trim()) return false;
+  const cleanKey = key.trim();
+  const isNew = inMemoryKey !== cleanKey;
+  inMemoryKey = cleanKey;
   try {
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(SESSION_STORAGE_KEY, inMemoryKey);
     }
   } catch {}
+  return isNew;
 }
 
 export async function sendHeartbeat(): Promise<boolean> {
   const activeKey = getStoredKey();
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-  };
-
-  if (activeKey) {
-    headers["x-session-key"] = activeKey;
-  }
-
-  console.log("Online: sending heartbeat request");
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (activeKey) headers["x-session-key"] = activeKey;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -63,44 +57,25 @@ export async function sendHeartbeat(): Promise<boolean> {
       headers,
       signal: controller.signal,
     });
-
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      console.log(`Online: server returned status ${res.status}`);
       notify(null);
       return false;
     }
 
-    const rawData: unknown = await res.json();
-    if (!rawData || typeof rawData !== "object") {
-      console.log("Online: invalid payload structure received");
-      notify(null);
-      return false;
-    }
+    const data = (await res.json()) as Partial<OnlineResponse>;
+    if (data?.key?.trim()) setStoredKey(data.key);
 
-    const data = rawData as Partial<OnlineResponse>;
-
-    if (typeof data.key === "string" && data.key.trim().length > 0) {
-      setStoredKey(data.key);
-      console.log("Online: session key updated");
-    }
-
-    if (
-      typeof data.online === "number" &&
-      Number.isFinite(data.online) &&
-      data.online >= 0
-    ) {
+    if (typeof data?.online === "number" && Number.isFinite(data.online) && data.online >= 0) {
       notify(data.online);
-      console.log(`Online: updated to ${data.online}`);
       return true;
     }
 
     notify(null);
     return false;
-  } catch (err: unknown) {
+  } catch {
     clearTimeout(timeoutId);
-    console.log("Online: connection failed or timed out");
     notify(null);
     return false;
   }
@@ -108,20 +83,15 @@ export async function sendHeartbeat(): Promise<boolean> {
 
 function scheduleNext(delayMs: number) {
   if (!isStarted) return;
-  if (timerId) {
-    clearTimeout(timerId);
-  }
+  if (timerId) clearTimeout(timerId);
   timerId = setTimeout(async () => {
-    const success = await sendHeartbeat();
-    scheduleNext(success ? HEARTBEAT_INTERVAL_MS : RETRY_INTERVAL_MS);
+    scheduleNext((await sendHeartbeat()) ? HEARTBEAT_INTERVAL_MS : RETRY_INTERVAL_MS);
   }, delayMs);
 }
 
 export function startOnlineTracker() {
   if (isStarted) return;
   isStarted = true;
-  console.log("Online: tracker started");
-
   sendHeartbeat().then((success) => {
     scheduleNext(success ? HEARTBEAT_INTERVAL_MS : RETRY_INTERVAL_MS);
   });
@@ -133,7 +103,6 @@ export function stopOnlineTracker() {
     timerId = null;
   }
   isStarted = false;
-  console.log("Online: tracker stopped");
 }
 
 export function useOnlineTracker(): number | null {
@@ -142,7 +111,6 @@ export function useOnlineTracker(): number | null {
   useEffect(() => {
     listeners.add(setOnline);
     startOnlineTracker();
-
     return () => {
       listeners.delete(setOnline);
     };

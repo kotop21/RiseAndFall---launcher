@@ -7,46 +7,36 @@ export async function extractSingleZip(
   archivePath: string,
   destinationDir: string,
 ): Promise<boolean> {
-  if (!existsSync(archivePath)) {
-    console.error("Extract: archive file does not exist:", archivePath);
-    return false;
-  }
+  if (!existsSync(archivePath)) return false;
 
-  console.log(`Extract: unpacking ${archivePath} into ${destinationDir}`);
-
-  let cmd: string;
-  let args: string[];
-
-  if (process.platform === "win32") {
-    cmd = "tar.exe";
-    args = ["-xf", archivePath, "-C", destinationDir];
-  } else {
-    cmd = "unzip";
-    args = ["-o", "-q", archivePath, "-d", destinationDir];
-  }
+  const [cmd, args] =
+    process.platform === "win32"
+      ? ["tar.exe", ["-xf", archivePath, "-C", destinationDir]]
+      : ["unzip", ["-o", "-q", archivePath, "-d", destinationDir]];
 
   return new Promise<boolean>((resolve) => {
     const proc = spawn(cmd, args, { stdio: "ignore" });
 
     proc.on("error", () => {
       if (process.platform === "win32") {
-        const psArgs = [
-          "-NoProfile",
-          "-NonInteractive",
-          "-Command",
-          `Expand-Archive -LiteralPath '${archivePath}' -DestinationPath '${destinationDir}' -Force`,
-        ];
-        const psProc = spawn("powershell.exe", psArgs, { stdio: "ignore" });
-        psProc.on("close", (psCode) => resolve(psCode === 0));
+        const psProc = spawn(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            `Expand-Archive -LiteralPath '${archivePath}' -DestinationPath '${destinationDir}' -Force`,
+          ],
+          { stdio: "ignore" },
+        );
+        psProc.on("close", (code) => resolve(code === 0));
         psProc.on("error", () => resolve(false));
       } else {
         resolve(false);
       }
     });
 
-    proc.on("close", (code) => {
-      resolve(code === 0);
-    });
+    proc.on("close", (code) => resolve(code === 0));
   });
 }
 
@@ -54,26 +44,23 @@ export async function extractZip(
   archivePath: string,
   destinationDir: string,
 ): Promise<boolean> {
-  const rootSuccess = await extractSingleZip(archivePath, destinationDir);
-  if (!rootSuccess) return false;
+  if (!(await extractSingleZip(archivePath, destinationDir))) return false;
 
-  const entries = readdirSync(destinationDir);
-  const nestedZips = entries.filter(
-    (file) =>
-      file.toLowerCase().endsWith(".zip") &&
-      join(destinationDir, file) !== archivePath,
-  );
+  try {
+    const nestedZips = readdirSync(destinationDir).filter(
+      (file) => file.toLowerCase().endsWith(".zip") && join(destinationDir, file) !== archivePath,
+    );
 
-  for (const zipFile of nestedZips) {
-    const fullZipPath = join(destinationDir, zipFile);
-    console.log(`Extract: unpacking nested archive ${zipFile}`);
-    const nestedSuccess = await extractSingleZip(fullZipPath, destinationDir);
-    if (nestedSuccess) {
-      try {
-        await unlink(fullZipPath);
-      } catch {}
+    for (const zipFile of nestedZips) {
+      const fullZipPath = join(destinationDir, zipFile);
+      if (await extractSingleZip(fullZipPath, destinationDir)) {
+        try {
+          await unlink(fullZipPath);
+        } catch {}
+      }
     }
+    return true;
+  } catch {
+    return false;
   }
-
-  return true;
 }

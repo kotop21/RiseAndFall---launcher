@@ -39,7 +39,7 @@ export function App({ initialConfig }: AppProps) {
   };
 
   return (
-    <ToastProvider defaultPosition="bottom-right">
+    <ToastProvider defaultPosition="top-right">
       <Flex
         direction="column"
         style={{

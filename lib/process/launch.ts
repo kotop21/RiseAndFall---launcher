@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { access } from "node:fs/promises";
 import { watchProcessDaemon, type ProcessDaemonResult } from "./daemon";
 import { isWindows } from "@/lib/utils/os";
+import { createLauncherError, LauncherAppError } from "@/lib/errors";
 
 export interface LaunchExeOptions {
   cwd?: string;
@@ -13,11 +14,7 @@ export interface LaunchExeOptions {
 
 export type LaunchResult =
   | { success: true; pid: number; trackingSession: boolean }
-  | {
-      success: false;
-      error: "unsupported_os" | "file_not_found" | "spawn_failed";
-      details?: string;
-    };
+  | { success: false; error: LauncherAppError };
 
 async function checkFileExists(path: string): Promise<boolean> {
   try {
@@ -29,8 +26,13 @@ async function checkFileExists(path: string): Promise<boolean> {
 }
 
 export function sanitizeGameArgs(raw: string): string {
-  if (!raw || !raw.trim()) return "";
-  return raw.replace(/(?<!\\)\\"/g, '\\\\"');
+  return raw && raw.trim() ? raw.replace(/(?<!\\)\"/g, '\\\\"') : "";
+}
+
+export function parseArgs(rawArgs: string): string[] {
+  if (!rawArgs || !rawArgs.trim()) return [];
+  const matches = rawArgs.match(/(?:[^\s"]+|"[^"]*")+/g);
+  return matches ? matches.map((arg) => arg.replace(/^"|"$/g, "")) : [];
 }
 
 export async function launchExe(
@@ -40,15 +42,17 @@ export async function launchExe(
   const cleanExePath = exePath?.trim();
 
   if (!cleanExePath) {
-    console.error("Process: Executable path is empty or undefined.");
-    return { success: false, error: "file_not_found" };
+    return {
+      success: false,
+      error: createLauncherError("GAME_EXE_NOT_FOUND", "Executable path is empty or undefined."),
+    };
   }
 
-  const exists = await checkFileExists(cleanExePath);
-
-  if (!exists) {
-    console.error(`Process: Target executable not found at: ${cleanExePath}`);
-    return { success: false, error: "file_not_found" };
+  if (!(await checkFileExists(cleanExePath))) {
+    return {
+      success: false,
+      error: createLauncherError("GAME_EXE_NOT_FOUND", `File not found at: ${cleanExePath}`),
+    };
   }
 
   const workingDir =
@@ -62,13 +66,9 @@ export async function launchExe(
 
   if (isWindows()) {
     try {
-      const sourceArgs =
-        options.rawArgs ?? (options.args ? options.args.join(" ") : "");
+      const sourceArgs = options.rawArgs ?? (options.args ? options.args.join(" ") : "");
       const formattedArgs = sanitizeGameArgs(sourceArgs);
-
-      const commandLine = formattedArgs
-        ? `"${cleanExePath}" ${formattedArgs}`
-        : `"${cleanExePath}"`;
+      const commandLine = formattedArgs ? `"${cleanExePath}" ${formattedArgs}` : `"${cleanExePath}"`;
 
       const proc = spawn(commandLine, {
         cwd: workingDir,
@@ -78,22 +78,29 @@ export async function launchExe(
         windowsVerbatimArguments: true,
       });
 
+      if (!proc.pid) {
+        return {
+          success: false,
+          error: createLauncherError("PROCESS_SPAWN_FAILED", "Windows process spawned with an invalid PID."),
+        };
+      }
+
       if (trackSession) {
-        watchProcessDaemon(proc, options.onSessionEnd).catch((err) => {
-          console.error("Process: Daemon tracking error:", err);
-        });
+        watchProcessDaemon(proc, options.onSessionEnd).catch(() => {});
       } else {
         proc.unref();
       }
 
       return {
         success: true,
-        pid: proc.pid ?? 0,
+        pid: proc.pid,
         trackingSession: trackSession,
       };
     } catch (err) {
-      console.error("Process: Failed to spawn Windows executable:", err);
-      return { success: false, error: "spawn_failed", details: String(err) };
+      return {
+        success: false,
+        error: createLauncherError("PROCESS_SPAWN_FAILED", String(err), err),
+      };
     }
   }
 
@@ -105,29 +112,28 @@ export async function launchExe(
       detached: true,
     });
 
-    let hasSpawnError = false;
+    let spawnErr: unknown = null;
     await new Promise<void>((resolve) => {
       proc.once("error", (err: any) => {
-        if (err?.code === "ENOENT") {
-          hasSpawnError = true;
-        }
+        spawnErr = err;
         resolve();
       });
-      setTimeout(resolve, 50);
+      setTimeout(resolve, 60);
     });
 
-    if (hasSpawnError) {
+    if (spawnErr) {
       return {
         success: false,
-        error: "unsupported_os",
-        details: "Direct .exe execution requires Windows or Wine.",
+        error: createLauncherError(
+          "UNSUPPORTED_OS",
+          "Wine executable was not found. Direct execution requires Windows or Wine installed in PATH.",
+          spawnErr,
+        ),
       };
     }
 
     if (trackSession) {
-      watchProcessDaemon(proc, options.onSessionEnd).catch((err) => {
-        console.error("Process: Daemon tracking error:", err);
-      });
+      watchProcessDaemon(proc, options.onSessionEnd).catch(() => {});
     } else {
       proc.unref();
     }
@@ -138,13 +144,9 @@ export async function launchExe(
       trackingSession: trackSession,
     };
   } catch (err) {
-    return { success: false, error: "spawn_failed", details: String(err) };
+    return {
+      success: false,
+      error: createLauncherError("PROCESS_SPAWN_FAILED", String(err), err),
+    };
   }
-}
-
-export function parseArgs(rawArgs: string): string[] {
-  if (!rawArgs || !rawArgs.trim()) return [];
-  const matches = rawArgs.match(/(?:[^\s"]+|"[^"]*")+/g);
-  if (!matches) return [];
-  return matches.map((arg) => arg.replace(/^"|"$/g, ""));
 }

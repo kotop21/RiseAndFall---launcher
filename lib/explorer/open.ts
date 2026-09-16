@@ -3,48 +3,28 @@ import { existsSync } from "node:fs";
 
 export async function openExplorer(targetPath: string): Promise<boolean> {
   const cleanPath = targetPath.trim();
-  if (!cleanPath || !existsSync(cleanPath)) {
-    return false;
-  }
+  if (!cleanPath || !existsSync(cleanPath)) return false;
 
-  let cmd: string;
-  let args: string[];
-
-  switch (process.platform) {
-    case "darwin":
-      cmd = "open";
-      args = [cleanPath];
-      break;
-    case "win32":
-      cmd = "explorer";
-      args = [cleanPath];
-      break;
-    default:
-      cmd = "xdg-open";
-      args = [cleanPath];
-      break;
-  }
+  const [cmd, args] =
+    process.platform === "darwin"
+      ? ["open", [cleanPath]]
+      : process.platform === "win32"
+        ? ["explorer", [cleanPath]]
+        : ["xdg-open", [cleanPath]];
 
   return new Promise<boolean>((resolve) => {
     try {
-      const proc = spawn(cmd, args, {
-        stdio: "ignore",
-        detached: true,
-      });
-
-      let hasError = false;
+      const proc = spawn(cmd, args, { stdio: "ignore", detached: true });
+      let failed = false;
 
       proc.on("error", () => {
-        hasError = true;
+        failed = true;
         resolve(false);
       });
 
       proc.unref();
-
       setTimeout(() => {
-        if (!hasError) {
-          resolve(true);
-        }
+        if (!failed) resolve(true);
       }, 100);
     } catch {
       resolve(false);

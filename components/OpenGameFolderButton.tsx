@@ -2,6 +2,7 @@ import { dirname } from "node:path";
 import { Button, Row, useToast, theme } from "@/ui";
 import { FolderOpen } from "@/icon";
 import { openExplorer } from "@/lib/explorer/open";
+import { formatErrorToast } from "@/lib/errors";
 
 interface OpenGameFolderButtonProps {
   gameDir?: string;
@@ -32,13 +33,16 @@ export function OpenGameFolderButton({
       targetDir = dirname(targetDir);
     }
 
-    const ok = await openExplorer(targetDir);
-    if (!ok) {
-      toast({
-        title: "Explorer Error",
-        description: "Failed to open directory in file explorer.",
-        type: "error",
-      });
+    try {
+      if (!(await openExplorer(targetDir))) {
+        toast({
+          title: "Explorer Error",
+          description: "Target directory does not exist or system explorer cannot access it.",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      toast(formatErrorToast(err, "EXPLORER_FAILED"));
     }
   };
 

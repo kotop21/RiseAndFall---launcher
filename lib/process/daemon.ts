@@ -34,19 +34,13 @@ export async function watchProcessDaemon(
       }
 
       const currentCpuSignature = await getProcessCpuUsage(pid);
-
-      if (!currentCpuSignature) {
-        return;
-      }
+      if (!currentCpuSignature) return;
 
       if (currentCpuSignature === lastCpuSignature) {
         if (!freezeStartTime) {
           freezeStartTime = Date.now();
         } else if (Date.now() - freezeStartTime >= 5000) {
           terminatedDueToHang = true;
-          console.warn(
-            `Daemon: Process [PID: ${pid}] frozen (CPU unresponsive) for 5s. Terminating...`,
-          );
           cleanup();
           await killProcessTree(pid);
         }
@@ -63,18 +57,12 @@ export async function watchProcessDaemon(
       proc.once("exit", () => resolve());
       proc.once("error", () => resolve());
     });
-  } catch {
   } finally {
     cleanup();
-
-    const endTime = Date.now();
-    const elapsedMs = Math.max(0, endTime - startTime);
-    const elapsedSeconds = Math.max(1, Math.floor(elapsedMs / 1000));
-    const elapsedMinutes = Math.max(1, Math.floor(elapsedSeconds / 60));
-
+    const elapsedSeconds = Math.max(1, Math.floor(Math.max(0, Date.now() - startTime) / 1000));
     const result: ProcessDaemonResult = {
       elapsedSeconds,
-      elapsedMinutes,
+      elapsedMinutes: Math.max(1, Math.floor(elapsedSeconds / 60)),
       terminatedDueToHang,
     };
 
