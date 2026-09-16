@@ -4,17 +4,19 @@ import { Header } from "@/components/Header";
 import { MainView } from "./views/MainView";
 import { SettingsView } from "./views/SettingsView";
 import { InstallView } from "./views/InstallView";
+import { WelcomeView } from "./views/WelcomeView";
 import { saveConfig } from "@/lib/config/save";
 import type { LauncherConfig } from "@/lib/config/types";
 
 interface AppProps {
   initialConfig: LauncherConfig;
+  isFirstLaunch?: boolean;
 }
 
-export function App({ initialConfig }: AppProps) {
+export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
   const [config, setConfig] = useState<LauncherConfig>(initialConfig);
-  const [activeView, setActiveView] = useState<"main" | "settings" | "install">(
-    "main",
+  const [activeView, setActiveView] = useState<"welcome" | "main" | "settings" | "install">(
+    isFirstLaunch ? "welcome" : "main",
   );
   const [installSource, setInstallSource] = useState<"main" | "settings">(
     "main",
@@ -26,6 +28,12 @@ export function App({ initialConfig }: AppProps) {
   const handleUpdateConfig = async (nextConfig: LauncherConfig) => {
     setConfig(nextConfig);
     await saveConfig(nextConfig);
+  };
+
+  const handleSelectExistingFromWelcome = async (gameDir: string) => {
+    const nextCfg: LauncherConfig = { ...config, gameDir };
+    await handleUpdateConfig(nextCfg);
+    setActiveView("main");
   };
 
   const handleInstallSuccess = (installedPath: string) => {
@@ -52,9 +60,23 @@ export function App({ initialConfig }: AppProps) {
         <Views
           value={activeView}
           onValueChange={(id) =>
-            setActiveView(id as "main" | "settings" | "install")
+            setActiveView(id as "welcome" | "main" | "settings" | "install")
           }
         >
+          <View
+            id="welcome"
+            transition="fade"
+            style={{ width: "100%", height: "100%" }}
+          >
+            <WelcomeView
+              onSelectExistingGame={handleSelectExistingFromWelcome}
+              onNavigateInstall={() => {
+                setInstallSource("main");
+                setActiveView("install");
+              }}
+            />
+          </View>
+
           <View
             id="main"
             transition="fade"

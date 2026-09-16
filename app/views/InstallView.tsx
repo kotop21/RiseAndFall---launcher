@@ -14,8 +14,19 @@ import {
   useToast,
   theme,
 } from "@/ui";
-import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
-import { ArrowLeft, Folder, Globe, Download, RefreshCw, CheckCircle, AlertTriangle } from "@/icon";
+import {
+  NavigationRoot,
+  SegmentedNav,
+} from "@/components/ui/elements/navigation";
+import {
+  ArrowLeft,
+  Folder,
+  Globe,
+  Download,
+  RefreshCw,
+  CheckCircle,
+  AlertTriangle,
+} from "@/icon";
 import { installGamePackage, type InstallStatus } from "@/lib/manager/install";
 import { formatErrorToast } from "@/lib/errors";
 
@@ -74,7 +85,10 @@ export function InstallView({
 
       if (!selected) return;
 
-      const pickedPath = typeof selected === "object" ? (selected as { path: string }).path : selected;
+      const pickedPath =
+        typeof selected === "object"
+          ? (selected as { path: string }).path
+          : selected;
       if (pickedPath) setInstallPath(pickedPath);
     } catch (err) {
       toast(formatErrorToast(err, "FS_ACCESS_DENIED"));
@@ -97,7 +111,9 @@ export function InstallView({
     abortControllerRef.current = new AbortController();
     setConfirmAbort(false);
     setStatus("downloading");
-    setStatusMessage(isReinstall ? "Preparing reinstall..." : "Starting installation...");
+    setStatusMessage(
+      isReinstall ? "Preparing reinstall..." : "Starting installation...",
+    );
 
     const res = await installGamePackage({
       targetDir: target,
@@ -132,7 +148,10 @@ export function InstallView({
       if (!confirmReinstall) {
         setConfirmReinstall(true);
         if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
-        resetConfirmTimer.current = setTimeout(() => setConfirmReinstall(false), 4000);
+        resetConfirmTimer.current = setTimeout(
+          () => setConfirmReinstall(false),
+          4000,
+        );
         return;
       }
       if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
@@ -167,7 +186,10 @@ export function InstallView({
   ];
 
   return (
-    <ScrollArea direction="vertical" style={{ flexGrow: 1, width: "100%", height: "100%" }}>
+    <ScrollArea
+      direction="vertical"
+      style={{ flexGrow: 1, width: "100%", height: "100%" }}
+    >
       <Column gap={20} style={{ width: "100%", padding: 24 }}>
         <Row gap={12} align="center">
           <Button
@@ -186,7 +208,7 @@ export function InstallView({
             <Muted>
               {isReinstall
                 ? "Cleans existing game files except Data/Saved Games and downloads fresh copy"
-                : "Download and extract game assets, localized audio, and map packs"}
+                : "Download the game pack with mods and your language"}
             </Muted>
           </Column>
         </Row>
@@ -206,10 +228,15 @@ export function InstallView({
             }}
           >
             <Label>Target Installation Directory</Label>
-            <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>{installPath}</P>
+            <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>
+              {installPath}
+            </P>
             <Row gap={6} align="center">
               <AlertTriangle size={14} color={theme.colors.mutedFg} />
-              <Muted>All game files will be refreshed. Saves in Data/Saved Games are preserved.</Muted>
+              <Muted>
+                All game files will be refreshed. Saves in Data/Saved Games are
+                preserved.
+              </Muted>
             </Row>
           </Column>
         ) : (
@@ -249,7 +276,11 @@ export function InstallView({
               if (!isInstalling) setSelectedLang(val);
             }}
           >
-            <SegmentedNav items={langNavItems} itemWidth={100} itemHeight={32} />
+            <SegmentedNav
+              items={langNavItems}
+              itemWidth={100}
+              itemHeight={32}
+            />
           </NavigationRoot>
         </Column>
 
@@ -264,8 +295,12 @@ export function InstallView({
             }}
           >
             <Row gap={8} align="center">
-              {status === "completed" && <CheckCircle size={16} color={theme.colors.success} />}
-              <P style={{ fontWeight: "bold" }}>{status === "completed" ? "Ready" : "Processing"}</P>
+              {status === "completed" && (
+                <CheckCircle size={16} color={theme.colors.success} />
+              )}
+              <P style={{ fontWeight: "bold" }}>
+                {status === "completed" ? "Ready" : "Processing"}
+              </P>
             </Row>
             <Muted>{statusMessage}</Muted>
           </Column>
@@ -273,8 +308,18 @@ export function InstallView({
 
         <Separator orientation="horizontal" />
 
-        <Row gap={10} justify="between" align="center" style={{ width: "100%" }}>
-          <Button variant="secondary" size="sm" disabled={isInstalling} onClick={onCancel}>
+        <Row
+          gap={10}
+          justify="between"
+          align="center"
+          style={{ width: "100%" }}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={isInstalling}
+            onClick={onCancel}
+          >
             Cancel
           </Button>
 
@@ -293,14 +338,20 @@ export function InstallView({
                 {isReinstall ? (
                   <RefreshCw
                     size={14}
-                    color={confirmReinstall ? theme.colors.destructiveFg : theme.colors.primaryFg}
+                    color={
+                      confirmReinstall
+                        ? theme.colors.destructiveFg
+                        : theme.colors.primaryFg
+                    }
                   />
                 ) : (
                   <Download size={14} color={theme.colors.primaryFg} />
                 )}
                 <P
                   style={{
-                    color: confirmReinstall ? theme.colors.destructiveFg : theme.colors.primaryFg,
+                    color: confirmReinstall
+                      ? theme.colors.destructiveFg
+                      : theme.colors.primaryFg,
                     fontWeight: "bold",
                   }}
                 >

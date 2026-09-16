@@ -3,10 +3,10 @@ import { initConfig } from "@/lib/config";
 import { App } from "./app/App";
 
 async function main() {
-  const config = await initConfig();
+  const { config, isFirstLaunch } = await initConfig();
 
-  render(<App initialConfig={config} />, {
-    title: "Launcher",
+  render(<App initialConfig={config} isFirstLaunch={isFirstLaunch} />, {
+    title: "Rise and Fall Launcher",
     width: 700,
     height: 520,
     minWidth: 700,
