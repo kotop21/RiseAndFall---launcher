@@ -19,6 +19,10 @@ export type LauncherErrorCode =
   | "EXPLORER_FAILED"
   | "BROWSER_FAILED"
   | "GITHUB_API_FAILED"
+  | "SETTINGS_CLI_NOT_FOUND"
+  | "SETTINGS_CLI_EXPORT_FAILED"
+  | "SETTINGS_CLI_IMPORT_FAILED"
+  | "SETTINGS_CLI_INVALID_FILE"
   | "UNKNOWN_ERROR";
 
 export interface LauncherErrorDetails {

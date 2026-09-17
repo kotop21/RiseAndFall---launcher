@@ -72,7 +72,8 @@ export function MainView({ config, onChangeConfig }: MainViewProps) {
     try {
       const d = new Date(rawDate);
       if (Number.isNaN(d.getTime())) return t("main.neverPlayed");
-      const locale = lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
+      const locale =
+        lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
       const formatted = d.toLocaleDateString(locale, {
         day: "numeric",
         month: "short",

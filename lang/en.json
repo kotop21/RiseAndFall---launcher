@@ -88,7 +88,9 @@
     "download": "Download Game",
     "reinstall": "Reinstall Game",
     "openFolder": "Open Game Folder",
-    "openDgVoodoo": "Open dgVoodoo Config"
+    "openDgVoodoo": "Open dgVoodoo Config",
+    "exportSettings": "Export Game Settings",
+    "importSettings": "Import Game Settings"
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -174,6 +176,22 @@
     "UNKNOWN_ERROR": {
       "title": "Unknown Error",
       "description": "An unexpected error occurred."
+    },
+    "SETTINGS_CLI_NOT_FOUND": {
+      "title": "CLI Missing",
+      "description": "Requires Windows and raf-settings.exe."
+    },
+    "SETTINGS_CLI_EXPORT_FAILED": {
+      "title": "Export Failed",
+      "description": "Failed to read Windows Registry."
+    },
+    "SETTINGS_CLI_IMPORT_FAILED": {
+      "title": "Import Failed",
+      "description": "Failed to update Windows Registry."
+    },
+    "SETTINGS_CLI_INVALID_FILE": {
+      "title": "Invalid File",
+      "description": "Unsupported settings format."
     }
   },
   "toasts": {
@@ -202,6 +220,14 @@
     "filesLockedTitle": "Files Locked",
     "filesLockedDesc": "Close the game before cleaning directory.",
     "sessionSaveErrorTitle": "Session Error",
-    "sessionSaveErrorDesc": "Failed to update playtime statistics."
+    "sessionSaveErrorDesc": "Failed to update playtime statistics.",
+    "settingsExportSuccessTitle": "Export Complete",
+    "settingsExportSuccessDesc": "Saved to {path}",
+    "settingsImportSuccessTitle": "Import Complete",
+    "settingsImportSuccessDesc": "Game settings applied successfully.",
+    "cliOsUnsupportedTitle": "Windows Only",
+    "cliOsUnsupportedDesc": "Game settings need Windows",
+    "cliMissingTitle": "CLI Missing",
+    "cliMissingDesc": "Utility file not found."
   }
 }

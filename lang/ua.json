@@ -88,7 +88,9 @@
     "download": "Завантажити гру",
     "reinstall": "Перевстановляти гру",
     "openFolder": "Відкрити теку з грою",
-    "openDgVoodoo": "Налаштування dgVoodoo"
+    "openDgVoodoo": "Налаштування dgVoodoo",
+    "exportSettings": "Експорт налаштувань гри",
+    "importSettings": "Імпорт налаштувань гри"
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -174,6 +176,22 @@
     "UNKNOWN_ERROR": {
       "title": "Невідома помилка",
       "description": "Сталася непередбачена помилка."
+    },
+    "SETTINGS_CLI_NOT_FOUND": {
+      "title": "CLI недоступний",
+      "description": "Потрібен Windows та raf-settings.exe."
+    },
+    "SETTINGS_CLI_EXPORT_FAILED": {
+      "title": "Збій експорту",
+      "description": "Помилка читання реєстру Windows."
+    },
+    "SETTINGS_CLI_IMPORT_FAILED": {
+      "title": "Збій імпорту",
+      "description": "Помилка запису реєстру Windows."
+    },
+    "SETTINGS_CLI_INVALID_FILE": {
+      "title": "Невірний файл",
+      "description": "Невідповідний формат налаштувань."
     }
   },
   "toasts": {
@@ -202,6 +220,14 @@
     "filesLockedTitle": "Файли зайняті",
     "filesLockedDesc": "Закрийте гру перед очищенням теки.",
     "sessionSaveErrorTitle": "Помилка збереження",
-    "sessionSaveErrorDesc": "Не вдалося записати час сесії."
+    "sessionSaveErrorDesc": "Не вдалося записати час сесії.",
+    "settingsExportSuccessTitle": "Налаштування збережено",
+    "settingsExportSuccessDesc": "Файл збережено у {path}",
+    "settingsImportSuccessTitle": "Налаштування застосовано",
+    "settingsImportSuccessDesc": "Параметри гри успішно оновлено.",
+    "cliOsUnsupportedTitle": "Тільки Windows",
+    "cliOsUnsupportedDesc": "Налаштування гри доступні на Windows",
+    "cliMissingTitle": "Файл не знайдено",
+    "cliMissingDesc": "Утиліту не знайдено."
   }
 }

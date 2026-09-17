@@ -88,7 +88,9 @@
     "download": "Скачать игру",
     "reinstall": "Переустановить игру",
     "openFolder": "Открыть папку с игрой",
-    "openDgVoodoo": "Настройки dgVoodoo"
+    "openDgVoodoo": "Настройки dgVoodoo",
+    "exportSettings": "Экспорт настроек игры",
+    "importSettings": "Импорт настроек игры"
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -174,6 +176,22 @@
     "UNKNOWN_ERROR": {
       "title": "Неизвестная ошибка",
       "description": "Произошла непредвиденная ошибка."
+    },
+    "SETTINGS_CLI_NOT_FOUND": {
+      "title": "CLI недоступен",
+      "description": "Нужен Windows и raf-settings.exe."
+    },
+    "SETTINGS_CLI_EXPORT_FAILED": {
+      "title": "Сбой экспорта",
+      "description": "Ошибка чтения реестра Windows."
+    },
+    "SETTINGS_CLI_IMPORT_FAILED": {
+      "title": "Сбой импорта",
+      "description": "Ошибка записи реестра Windows."
+    },
+    "SETTINGS_CLI_INVALID_FILE": {
+      "title": "Неверный файл",
+      "description": "Неподходящий формат настроек."
     }
   },
   "toasts": {
@@ -202,6 +220,14 @@
     "filesLockedTitle": "Файлы заняты",
     "filesLockedDesc": "Закройте игру перед очисткой папки.",
     "sessionSaveErrorTitle": "Ошибка сохранения",
-    "sessionSaveErrorDesc": "Не удалось записать время сессии."
+    "sessionSaveErrorDesc": "Не удалось записать время сессии.",
+    "settingsExportSuccessTitle": "Настройки сохранены",
+    "settingsExportSuccessDesc": "Файл записан в {path}",
+    "settingsImportSuccessTitle": "Настройки применены",
+    "settingsImportSuccessDesc": "Параметры игры успешно обновлены.",
+    "cliOsUnsupportedTitle": "Только Windows",
+    "cliOsUnsupportedDesc": "Настройки игры доступны на Windows",
+    "cliMissingTitle": "Файл не найден",
+    "cliMissingDesc": "Утилита не найдена."
   }
 }

@@ -6,9 +6,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-cli:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: packages/raf-settings/go.sum
+
+      - name: Build Go Settings CLI
+        shell: bash
+        run: |
+          cd packages/raf-settings
+          go build -ldflags="-s -w" -o raf-settings.exe .
+
+      - name: Upload CLI Bin
+        uses: actions/upload-artifact@v4
+        with:
+          name: internal-cli-bin-dev
+          path: packages/raf-settings/raf-settings.exe
+          retention-days: 1
+
   build-dev:
     runs-on: windows-latest
-
+    needs: [build-cli]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,12 +49,17 @@ jobs:
         run: |
           bun install
 
+      - name: Download CLI Bin
+        uses: actions/download-artifact@v4
+        with:
+          name: internal-cli-bin-dev
+          path: dist/bin
+
       - name: Build Windows Dev Executable (With Console)
         shell: bash
         env:
           API_URL: ${{ secrets.API_URL }}
         run: |
-          mkdir -p dist
           bun run scripts/generate-version.ts
           bun build --compile --define process.env.API_URL="\"${API_URL}\"" index.tsx --outfile dist/raf-launcher.exe
 
@@ -37,4 +67,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: raf-launcher-windows-dev-x64
-          path: dist/raf-launcher.exe
+          path: |
+            dist/raf-launcher.exe
+            dist/bin/raf-settings.exe

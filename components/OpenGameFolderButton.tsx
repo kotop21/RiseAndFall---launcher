@@ -49,10 +49,21 @@ export function OpenGameFolderButton({
     }
   };
 
+  const isPathEmpty = !gameDir.trim();
+
   return (
-    <Button variant="outline" size="sm" onClick={handleOpen} style={style}>
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={isPathEmpty}
+      onClick={handleOpen}
+      style={style}
+    >
       <Row gap={8} align="center" justify="center">
-        <FolderOpen size={14} color={theme.colors.fg} />
+        <FolderOpen
+          size={14}
+          color={isPathEmpty ? theme.colors.mutedFg : theme.colors.fg}
+        />
         {buttonLabel}
       </Row>
     </Button>

@@ -26,13 +26,21 @@ import {
   Globe,
   Layers,
   Trash2,
+  Download,
+  Upload,
 } from "@/icon";
 import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
 import { DownloadGameButton } from "@/components/DownloadGameButton";
 import { ProfileSwitcher } from "@/components/ProfileSwitcher";
 import type { LauncherConfig } from "@/lib/config/types";
-import { formatErrorToast } from "@/lib/errors";
+import { formatErrorToast, createLauncherError } from "@/lib/errors";
+import {
+  exportGameSettings,
+  importGameSettings,
+  hasSettingsCli,
+} from "@/lib/settings-cli";
+import { isWindows } from "@/lib/utils/os";
 import { useTranslation } from "@/lib/lang";
 
 interface SettingsViewProps {
@@ -49,7 +57,7 @@ export function SettingsView({
   onOpenInstall,
 }: SettingsViewProps) {
   const { t } = useTranslation();
-  const { pickFolder } = useFileDialog();
+  const { pickFolder, pickFile } = useFileDialog();
   const { toast } = useToast();
 
   const [formState, setFormState] = useState<LauncherConfig>({
@@ -66,14 +74,16 @@ export function SettingsView({
     });
   }, [config]);
 
-  const hasContentChanges =
+  // Изменения отслеживаются исключительно для профилей, путей и аргументов
+  const hasProfileChanges =
     JSON.stringify(formState.gameProfiles) !==
       JSON.stringify(config.gameProfiles) ||
     formState.activeProfileId !== config.activeProfileId ||
-    formState.launcherLang !== config.launcherLang;
+    formState.gameDir !== config.gameDir ||
+    formState.gameArg !== config.gameArg;
 
   const handleBack = () => {
-    if (hasContentChanges) {
+    if (hasProfileChanges) {
       setShowTopSave(true);
       toast({
         title: t("settings.unsavedTitle"),
@@ -181,23 +191,23 @@ export function SettingsView({
     }));
   };
 
-  const handleRevert = () => {
+  const handleRevertProfiles = () => {
     const defaultActiveId = config.activeProfileId || "slot-1";
     const baseTarget = config.gameProfiles?.find(
       (p) => p.id === defaultActiveId,
     );
 
     setShowTopSave(false);
-    setFormState({
-      ...config,
+    setFormState((prev) => ({
+      ...prev,
       activeProfileId: defaultActiveId,
       gameDir: baseTarget?.path || "",
       gameArg: baseTarget?.gameArg || config.gameArg,
       gameProfiles: config.gameProfiles ? [...config.gameProfiles] : [],
-    });
+    }));
   };
 
-  const handleSave = async () => {
+  const handleSaveProfiles = async () => {
     try {
       const activeProf = formState.gameProfiles.find(
         (p) => p.id === formState.activeProfileId,
@@ -218,6 +228,95 @@ export function SettingsView({
       onBack?.();
     } catch (err) {
       toast(formatErrorToast(err, "CONFIG_WRITE_FAILED"));
+    }
+  };
+
+  // Мгновенная смена языка интерфейса без нажатия кнопки сохранения
+  const handleLanguageChange = async (newLang: string) => {
+    setFormState((prev) => ({ ...prev, launcherLang: newLang }));
+    try {
+      await onChangeConfig({
+        ...config,
+        launcherLang: newLang,
+      });
+    } catch (err) {
+      toast(formatErrorToast(err, "CONFIG_WRITE_FAILED"));
+    }
+  };
+
+  const isCliAvailable = hasSettingsCli();
+
+  useEffect(() => {
+    if (!isWindows()) {
+      toast({
+        title: t("toasts.cliOsUnsupportedTitle"),
+        description: t("toasts.cliOsUnsupportedDesc"),
+        type: "warn",
+      });
+      return;
+    }
+
+    if (!isCliAvailable) {
+      toast({
+        title: t("toasts.cliMissingTitle"),
+        description: t("toasts.cliMissingDesc"),
+        type: "warn",
+      });
+    }
+  }, [isCliAvailable]);
+
+  const handleExportRegistrySettings = async () => {
+    try {
+      const selectedFolder = await pickFolder({
+        title: t("buttons.exportSettings"),
+      });
+      if (!selectedFolder) return;
+
+      const targetDir =
+        typeof selectedFolder === "object"
+          ? selectedFolder.path
+          : selectedFolder;
+      if (!targetDir) return;
+
+      const res = await exportGameSettings(targetDir);
+      if (!res.success) {
+        throw createLauncherError("SETTINGS_CLI_EXPORT_FAILED", res.error);
+      }
+      toast({
+        title: t("toasts.settingsExportSuccessTitle"),
+        description: t("toasts.settingsExportSuccessDesc").replace(
+          "{path}",
+          (res.outputFilePath || targetDir).split(/[\\/]/).pop() ||
+            "raf-settings.json",
+        ),
+        type: "info",
+        duration: 4000,
+      });
+    } catch (err) {
+      toast(formatErrorToast(err, "SETTINGS_CLI_EXPORT_FAILED"));
+    }
+  };
+
+  const handleImportRegistrySettings = async () => {
+    try {
+      const selectedFilePath = await pickFile({
+        title: t("buttons.importSettings"),
+        extensions: ["json"],
+      });
+      if (!selectedFilePath) return;
+
+      const res = await importGameSettings(selectedFilePath);
+      if (!res.success) {
+        throw createLauncherError("SETTINGS_CLI_IMPORT_FAILED", res.error);
+      }
+      toast({
+        title: t("toasts.settingsImportSuccessTitle"),
+        description: t("toasts.settingsImportSuccessDesc"),
+        type: "info",
+        duration: 3500,
+      });
+    } catch (err) {
+      toast(formatErrorToast(err, "SETTINGS_CLI_IMPORT_FAILED"));
     }
   };
 
@@ -258,8 +357,8 @@ export function SettingsView({
             <ArrowLeft size={18} color={theme.colors.fg} />
           </Button>
 
-          {showTopSave && hasContentChanges && (
-            <Button variant="default" size="sm" onClick={handleSave}>
+          {showTopSave && hasProfileChanges && (
+            <Button variant="default" size="sm" onClick={handleSaveProfiles}>
               <Row gap={8} align="center">
                 <Check size={14} color={theme.colors.primaryFg} />
                 {t("settings.save")}
@@ -275,6 +374,7 @@ export function SettingsView({
 
         <Separator orientation="horizontal" />
 
+        {/* Блок управления профилями */}
         <Column gap={10} style={{ width: "100%" }}>
           <Row justify="between" align="center" style={{ width: "100%" }}>
             <Row gap={8} align="center">
@@ -373,41 +473,18 @@ export function SettingsView({
           </Muted>
         </Column>
 
-        <Separator
-          orientation="horizontal"
-          style={{ marginTop: 6, marginBottom: 2 }}
-        />
-
-        <Column gap={8} style={{ width: "100%" }}>
-          <Row gap={8} align="center">
-            <Globe size={14} color={theme.colors.mutedFg} />
-            <Label>{t("settings.language")}</Label>
-          </Row>
-          <NavigationRoot
-            value={formState.launcherLang || "en"}
-            onValueChange={(val) =>
-              setFormState((prev) => ({ ...prev, launcherLang: val }))
-            }
-          >
-            <SegmentedNav
-              items={langNavItems}
-              itemWidth={100}
-              itemHeight={32}
-            />
-          </NavigationRoot>
-        </Column>
-
+        {/* Кнопки сохранения/сброса только для профиля */}
         <Row
           gap={10}
           justify="end"
           align="center"
-          style={{ width: "100%", marginTop: 4 }}
+          style={{ width: "100%", marginTop: 2 }}
         >
           <Button
             variant="secondary"
             size="sm"
-            disabled={!hasContentChanges}
-            onClick={handleRevert}
+            disabled={!hasProfileChanges}
+            onClick={handleRevertProfiles}
           >
             <Row gap={8} align="center">
               <RotateCcw size={14} color={theme.colors.fg} />
@@ -418,8 +495,8 @@ export function SettingsView({
           <Button
             variant="default"
             size="sm"
-            disabled={!hasContentChanges}
-            onClick={handleSave}
+            disabled={!hasProfileChanges}
+            onClick={handleSaveProfiles}
           >
             <Row gap={8} align="center">
               <Check size={14} color={theme.colors.primaryFg} />
@@ -430,6 +507,27 @@ export function SettingsView({
 
         <Separator orientation="horizontal" />
 
+        {/* Блок языка интерфейса (мгновенное применение) */}
+        <Column gap={8} style={{ width: "100%" }}>
+          <Row gap={8} align="center">
+            <Globe size={14} color={theme.colors.mutedFg} />
+            <Label>{t("settings.language")}</Label>
+          </Row>
+          <NavigationRoot
+            value={formState.launcherLang || "en"}
+            onValueChange={handleLanguageChange}
+          >
+            <SegmentedNav
+              items={langNavItems}
+              itemWidth={100}
+              itemHeight={32}
+            />
+          </NavigationRoot>
+        </Column>
+
+        <Separator orientation="horizontal" />
+
+        {/* Действия и утилиты */}
         <Column gap={10} style={{ width: "100%" }}>
           <Label>{t("settings.actions")}</Label>
 
@@ -455,6 +553,38 @@ export function SettingsView({
                 onClick={onOpenInstall}
                 style={{ width: "100%" }}
               />
+            </div>
+          </Row>
+
+          <Row gap={10} align="center" style={{ width: "100%" }}>
+            <div style={{ flexGrow: 1, minWidth: 0 }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!isCliAvailable}
+                onClick={handleExportRegistrySettings}
+                style={{ width: "100%" }}
+              >
+                <Row gap={8} align="center">
+                  <Download size={14} color={theme.colors.fg} />
+                  {t("buttons.exportSettings")}
+                </Row>
+              </Button>
+            </div>
+
+            <div style={{ flexGrow: 1, minWidth: 0 }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!isCliAvailable}
+                onClick={handleImportRegistrySettings}
+                style={{ width: "100%" }}
+              >
+                <Row gap={8} align="center">
+                  <Upload size={14} color={theme.colors.fg} />
+                  {t("buttons.importSettings")}
+                </Row>
+              </Button>
             </div>
           </Row>
         </Column>
