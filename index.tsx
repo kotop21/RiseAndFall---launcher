@@ -1,6 +1,10 @@
 import { render } from "@gpuix/react";
 import { initConfig } from "@/lib/config";
+import { initLogger, logger } from "@/lib/logger";
+import { getLauncherVersion } from "@/lib/utils/version";
 import { App } from "./app/App";
+
+initLogger(getLauncherVersion());
 
 async function main() {
   const { config, isFirstLaunch } = await initConfig();
@@ -15,5 +19,5 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Fatal startup error:", err);
+  logger.error("fatal", "startup error", err);
 });

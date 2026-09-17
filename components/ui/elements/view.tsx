@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import type { StyleDesc, MotionTransition } from "@gpuix/react";
 import { motion } from "@gpuix/react";
+import { logger } from "@/lib/logger";
 
 export type ViewTransition =
   | "slide-down"
@@ -50,7 +51,7 @@ export function Views({
 
   useEffect(() => {
     if (activeView && prevViewRef.current !== activeView) {
-      console.log(`view: switched to: ${activeView}`);
+      logger.info("view", `switched to: ${activeView}`);
       prevViewRef.current = activeView;
     }
   }, [activeView]);

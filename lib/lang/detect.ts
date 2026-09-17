@@ -1,89 +1,107 @@
+import { platform } from "node:os";
 import { execSync } from "node:child_process";
-import type { SupportedLang } from "./index";
+import { logger } from "@/lib/logger";
 
-function parseLocaleString(raw: string): SupportedLang {
-  const norm = raw.toLowerCase().trim();
-  if (norm.startsWith("uk") || norm.startsWith("ua") || norm.includes("ukrainian") || norm.includes("1058")) {
+export type SupportedLang = "en" | "ru" | "ua";
+
+function normalizeLang(rawLocale: string): SupportedLang {
+  const lower = rawLocale.toLowerCase().trim();
+
+  if (
+    lower.startsWith("uk") ||
+    lower.startsWith("ua") ||
+    lower.includes("ukrainian") ||
+    lower.includes("uk_") ||
+    lower.includes("uk-")
+  ) {
     return "ua";
   }
-  if (norm.startsWith("ru") || norm.includes("russian") || norm.includes("1049")) {
+
+  if (
+    lower.startsWith("ru") ||
+    lower.includes("russian") ||
+    lower.includes("ru_") ||
+    lower.includes("ru-")
+  ) {
     return "ru";
   }
+
   return "en";
 }
 
 export function detectSystemLanguage(): SupportedLang {
-  let detected: SupportedLang = "en";
-  let source = "fallback";
+  const os = platform();
+  let detected: SupportedLang | null = null;
+  let source = "";
 
-  if (process.platform === "darwin") {
+  if (os === "darwin") {
     try {
-      const out = execSync("defaults read -g AppleLanguages", {
+      const appleLocale = execSync("defaults read -g AppleLocale", {
+        encoding: "utf-8",
         stdio: ["ignore", "pipe", "ignore"],
-        timeout: 1500,
-      })
-        .toString()
-        .trim();
-
-      const match = out.match(/"([^"]+)"/);
-      if (match && match[1]) {
-        detected = parseLocaleString(match[1]);
-        source = `apple-languages (${match[1]})`;
+      }).trim();
+      if (appleLocale) {
+        detected = normalizeLang(appleLocale);
+        source = `macOS AppleLocale (${appleLocale})`;
       }
     } catch {}
 
-    if (source === "fallback") {
+    if (!detected) {
       try {
-        const out = execSync("defaults read -g AppleLocale", {
+        const appleLangs = execSync("defaults read -g AppleLanguages", {
+          encoding: "utf-8",
           stdio: ["ignore", "pipe", "ignore"],
-          timeout: 1500,
-        })
-          .toString()
-          .trim();
-
-        if (out) {
-          detected = parseLocaleString(out);
-          source = `apple-locale (${out})`;
+        }).trim();
+        const match = appleLangs.match(/"([^"]+)"/);
+        if (match && match[1]) {
+          detected = normalizeLang(match[1]);
+          source = `macOS AppleLanguages (${match[1]})`;
         }
       } catch {}
     }
-  } else if (process.platform === "win32") {
+  }
+
+  if (!detected && os === "win32") {
     try {
       const out = execSync(
-        "powershell.exe -NoProfile -NonInteractive -Command (Get-Culture).Name",
-        { stdio: ["ignore", "pipe", "ignore"], timeout: 1500 },
-      )
-        .toString()
-        .trim();
-
+        'powershell -NoProfile -Command "[System.Globalization.CultureInfo]::InstalledUICulture.Name"',
+        { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] },
+      ).trim();
       if (out) {
-        detected = parseLocaleString(out);
-        source = `powershell (${out})`;
+        detected = normalizeLang(out);
+        source = `Windows InstalledUICulture (${out})`;
       }
     } catch {}
   }
 
-  if (source === "fallback") {
+  if (!detected) {
     const envLocale =
       process.env.LC_ALL ||
       process.env.LC_MESSAGES ||
       process.env.LANG ||
-      process.env.LANGUAGE;
-
+      process.env.LANGUAGE ||
+      "";
     if (envLocale) {
-      detected = parseLocaleString(envLocale);
-      source = `env (${envLocale})`;
-    } else {
-      try {
-        const intlLocale = Intl.DateTimeFormat().resolvedOptions().locale;
-        if (intlLocale) {
-          detected = parseLocaleString(intlLocale);
-          source = `intl (${intlLocale})`;
-        }
-      } catch {}
+      detected = normalizeLang(envLocale);
+      source = `Environment variable (${envLocale})`;
     }
   }
 
-  console.log(`Lang: detected system language "${detected}" via ${source}`);
+  if (!detected) {
+    try {
+      const intlLocale = Intl.DateTimeFormat().resolvedOptions().locale;
+      if (intlLocale) {
+        detected = normalizeLang(intlLocale);
+        source = `Intl.DateTimeFormat (${intlLocale})`;
+      }
+    } catch {}
+  }
+
+  if (!detected) {
+    detected = "en";
+    source = "Fallback default";
+  }
+
+  logger.info("lang", `detected system language "${detected}" via ${source}`);
   return detected;
 }

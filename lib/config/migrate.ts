@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import type { LauncherConfig, GameBuildProfile } from "./types";
 
 export const CURRENT_CONFIG_VERSION = 3;
@@ -88,9 +89,7 @@ export function migrateConfig(raw: Record<string, any>): {
   };
 
   if (wasMigrated) {
-    console.log(
-      `Config: migrated schema from v${version} to v${CURRENT_CONFIG_VERSION}`,
-    );
+    logger.info("config", `migrated schema from v${version} to v${CURRENT_CONFIG_VERSION}`);
   }
 
   return { config, wasMigrated };

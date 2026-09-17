@@ -2,6 +2,7 @@ import { useCallback, type ReactNode } from "react";
 import { spawn } from "node:child_process";
 import { access } from "node:fs/promises";
 import { join } from "node:path";
+import { logger } from "@/lib/logger";
 
 export interface FileDialogOptions {
   title?: string;
@@ -44,7 +45,7 @@ async function runProcess(cmd: string[]): Promise<string[] | null> {
       });
 
       proc.on("error", (err) => {
-        console.error("FileDialog process error:", err);
+        logger.error("file-picker", "dialog process error", err);
         resolve(null);
       });
 
@@ -63,7 +64,7 @@ async function runProcess(cmd: string[]): Promise<string[] | null> {
         resolve(lines);
       });
     } catch (err) {
-      console.error("FileDialog execution error:", err);
+      logger.error("file-picker", "dialog execution error", err);
       resolve(null);
     }
   });
@@ -99,7 +100,7 @@ export async function openFileDialog(
     if (multiple) {
       script += ` with multiple selections allowed`;
     }
-    script += `\nset posixPaths to {}\nrepeat with aFile in (theFiles as list)\nset end of posixPaths to POSIX path of aFile\nend repeat\nset AppleScript\'s text item delimiters to "\\n"\nreturn posixPaths as text`;
+    script += `\nset posixPaths to {}\nrepeat with aFile in (theFiles as list)\nset end of posixPaths to POSIX path of aFile\nend repeat\nset AppleScript's text item delimiters to "\\n"\nreturn posixPaths as text`;
 
     return runProcess(["osascript", "-e", script]);
   }
@@ -173,7 +174,7 @@ export async function openFolderDialog(
     if (multiple) {
       script += ` with multiple selections allowed`;
     }
-    script += `\nset posixPaths to {}\nrepeat with aFolder in (theFolders as list)\nset end of posixPaths to POSIX path of aFolder\nend repeat\nset AppleScript\'s text item delimiters to "\\n"\nreturn posixPaths as text`;
+    script += `\nset posixPaths to {}\nrepeat with aFolder in (theFolders as list)\nset end of posixPaths to POSIX path of aFolder\nend repeat\nset AppleScript's text item delimiters to "\\n"\nreturn posixPaths as text`;
 
     rawPaths = await runProcess(["osascript", "-e", script]);
   } else if (platform === "win32") {
