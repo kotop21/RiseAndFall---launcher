@@ -2,14 +2,18 @@ import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import { dirname } from "node:path";
 import { pack, unpack } from "msgpackr";
 import { getConfigPath } from "./dir";
+import { CURRENT_CONFIG_VERSION, DEFAULT_GAME_ARG, createDefaultProfiles, migrateConfig } from "./migrate";
 import type { LauncherConfig } from "./types";
 
 export const DEFAULT_CONFIG: LauncherConfig = {
+  version: CURRENT_CONFIG_VERSION,
   gameDir: "",
-  gameArg: '-datapath "Data\\" -redistpath "Redist\\"',
+  gameArg: DEFAULT_GAME_ARG,
   launcherLang: "en",
   totalPlaytimeMinutes: 0,
   lastLaunchDate: null,
+  gameProfiles: createDefaultProfiles(),
+  activeProfileId: "slot-1",
 };
 
 async function fileExists(path: string): Promise<boolean> {
@@ -54,18 +58,14 @@ export async function initConfig(): Promise<{ config: LauncherConfig; isFirstLau
 
   try {
     const rawBytes = await readFile(filePath);
-    const data = unpack(rawBytes) as Partial<LauncherConfig>;
+    const data = (unpack(rawBytes) || {}) as Record<string, any>;
+    const { config, wasMigrated } = migrateConfig(data);
 
-    const config: LauncherConfig = {
-      gameDir: data.gameDir ?? DEFAULT_CONFIG.gameDir,
-      gameArg: data.gameArg ?? DEFAULT_CONFIG.gameArg,
-      launcherLang: data.launcherLang ?? DEFAULT_CONFIG.launcherLang,
-      totalPlaytimeMinutes:
-        typeof data.totalPlaytimeMinutes === "number"
-          ? data.totalPlaytimeMinutes
-          : DEFAULT_CONFIG.totalPlaytimeMinutes,
-      lastLaunchDate: data.lastLaunchDate ?? DEFAULT_CONFIG.lastLaunchDate,
-    };
+    if (wasMigrated) {
+      try {
+        await writeFile(filePath, pack(config));
+      } catch {}
+    }
 
     return { config, isFirstLaunch: forceWelcome };
   } catch {

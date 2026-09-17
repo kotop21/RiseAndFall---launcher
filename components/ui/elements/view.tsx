@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import type { StyleDesc, MotionTransition } from "@gpuix/react";
 import { motion } from "@gpuix/react";
 
@@ -46,6 +46,14 @@ export function Views({
 }: ViewsProps) {
   const [internalView, setInternalView] = useState(defaultValue);
   const activeView = value !== undefined ? value : internalView;
+  const prevViewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (activeView && prevViewRef.current !== activeView) {
+      console.log(`view: switched to: ${activeView}`);
+      prevViewRef.current = activeView;
+    }
+  }, [activeView]);
 
   const setView = (id: string) => {
     if (value === undefined) {
@@ -122,12 +130,10 @@ export function View({
       animate = { opacity: 1, top: 0 };
       break;
     case "slide-left":
-      // въезжает справа налево
       initial = { opacity: 0, left: offset };
       animate = { opacity: 1, left: 0 };
       break;
     case "slide-right":
-      // въезжает слева направо
       initial = { opacity: 0, left: -offset };
       animate = { opacity: 1, left: 0 };
       break;

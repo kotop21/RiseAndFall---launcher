@@ -9,12 +9,15 @@ import {
   ScrollArea,
   theme,
 } from "@/ui";
-import { Tag, Layers } from "@/icon";
+import { Tag, Layers, Calendar } from "@/icon";
 import { UpdateList } from "@/components/UpdateList";
 import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
+import { ProfileSwitcher } from "@/components/ProfileSwitcher";
 import { hasDgVoodooCplExe } from "@/lib/utils/game-files";
 import { getLauncherVersion } from "@/lib/utils/version";
+import { useTranslation } from "@/lib/lang";
+import type { LauncherConfig } from "@/lib/config/types";
 
 const QUOTES = [
   "«Command from above. Conquer on foot.»",
@@ -28,10 +31,12 @@ const rawVersion = getLauncherVersion().trim().replace(/^v/i, "");
 const launcherLabel = `Launcher v${rawVersion}`;
 
 interface MainViewProps {
-  gameDir?: string;
+  config: LauncherConfig;
+  onChangeConfig: (nextConfig: LauncherConfig) => Promise<void> | void;
 }
 
-export function MainView({ gameDir = "" }: MainViewProps) {
+export function MainView({ config, onChangeConfig }: MainViewProps) {
+  const { t, lang } = useTranslation();
   const [isDgVoodooReady, setIsDgVoodooReady] = useState(false);
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
@@ -39,7 +44,7 @@ export function MainView({ gameDir = "" }: MainViewProps) {
     let isMounted = true;
 
     (async () => {
-      const exists = await hasDgVoodooCplExe(gameDir);
+      const exists = await hasDgVoodooCplExe(config.gameDir);
       if (isMounted) {
         setIsDgVoodooReady(exists);
       }
@@ -48,7 +53,36 @@ export function MainView({ gameDir = "" }: MainViewProps) {
     return () => {
       isMounted = false;
     };
-  }, [gameDir]);
+  }, [config.gameDir]);
+
+  const handleSelectSlot = async (slotId: string) => {
+    if (slotId === config.activeProfileId) return;
+    const target = config.gameProfiles?.find((p) => p.id === slotId);
+    const nextConfig: LauncherConfig = {
+      ...config,
+      activeProfileId: slotId,
+      gameDir: target?.path || "",
+      gameArg: target?.gameArg || config.gameArg,
+    };
+    await onChangeConfig(nextConfig);
+  };
+
+  const formatLastLaunch = (rawDate: string | null) => {
+    if (!rawDate) return t("main.neverPlayed");
+    try {
+      const d = new Date(rawDate);
+      if (Number.isNaN(d.getTime())) return t("main.neverPlayed");
+      const locale = lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
+      const formatted = d.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+      return t("main.lastLaunch").replace("{date}", formatted);
+    } catch {
+      return t("main.neverPlayed");
+    }
+  };
 
   return (
     <ScrollArea
@@ -67,9 +101,15 @@ export function MainView({ gameDir = "" }: MainViewProps) {
         }}
       >
         <Column gap={10} style={{ width: "100%" }}>
-          <H1 style={{ color: theme.colors.fg }}>
-            Rise And Fall: Civilization at War
-          </H1>
+          <Row justify="between" align="center" style={{ width: "100%" }}>
+            <H1 style={{ color: theme.colors.fg }}>{t("main.title")}</H1>
+            <ProfileSwitcher
+              profiles={config.gameProfiles || []}
+              activeProfileId={config.activeProfileId || "slot-1"}
+              onSelectProfile={handleSelectSlot}
+              onlyConfigured
+            />
+          </Row>
 
           <Row gap={8} align="center">
             <Badge variant="secondary">
@@ -82,7 +122,16 @@ export function MainView({ gameDir = "" }: MainViewProps) {
             <Badge variant={isDgVoodooReady ? "success" : "destructive"}>
               <Row gap={6} align="center">
                 <Layers size={12} color={theme.colors.fg} />
-                {isDgVoodooReady ? "dgVoodoo Ready" : "dgVoodoo Missing"}
+                {isDgVoodooReady
+                  ? t("main.dgVoodooReady")
+                  : t("main.dgVoodooMissing")}
+              </Row>
+            </Badge>
+
+            <Badge variant="outline">
+              <Row gap={6} align="center">
+                <Calendar size={12} color={theme.colors.mutedFg} />
+                {formatLastLaunch(config.lastLaunchDate)}
               </Row>
             </Badge>
           </Row>
@@ -93,8 +142,11 @@ export function MainView({ gameDir = "" }: MainViewProps) {
         <Separator orientation="horizontal" />
 
         <Row justify="start" gap={10} align="center" style={{ width: "100%" }}>
-          <OpenGameFolderButton gameDir={gameDir} label="Open Game Directory" />
-          <OpenDgVoodooButton gameDir={gameDir} />
+          <OpenGameFolderButton
+            gameDir={config.gameDir}
+            label={t("main.openGameFolder")}
+          />
+          <OpenDgVoodooButton gameDir={config.gameDir} />
         </Row>
 
         <Separator orientation="horizontal" />
