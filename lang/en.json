@@ -194,6 +194,14 @@
     "dgvMissingTitle": "dgVoodoo Missing",
     "dgvMissingDesc": "dgVoodooCpl.exe not found in game folder.",
     "dgvOsUnsupportedTitle": "OS Unsupported",
-    "dgvOsUnsupportedDesc": "Control panel requires Windows."
+    "dgvOsUnsupportedDesc": "Control panel requires Windows.",
+    "settingsSavedTitle": "Settings Saved",
+    "settingsSavedDesc": "Configuration updated successfully.",
+    "profileClearedTitle": "Profile Cleared",
+    "profileClearedDesc": "Path removed from current slot.",
+    "filesLockedTitle": "Files Locked",
+    "filesLockedDesc": "Close the game before cleaning directory.",
+    "sessionSaveErrorTitle": "Session Error",
+    "sessionSaveErrorDesc": "Failed to update playtime statistics."
   }
 }

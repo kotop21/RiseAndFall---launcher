@@ -121,7 +121,14 @@ export function Header({
               launchStartTime,
             );
             onConfigChange?.(nextConfig);
-          } catch {}
+          } catch (err) {
+            toast({
+              title: t("toasts.sessionSaveErrorTitle"),
+              description: t("toasts.sessionSaveErrorDesc"),
+              type: "warn",
+              duration: 3500,
+            });
+          }
         },
       });
 

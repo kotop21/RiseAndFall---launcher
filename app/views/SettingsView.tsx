@@ -183,7 +183,9 @@ export function SettingsView({
 
   const handleRevert = () => {
     const defaultActiveId = config.activeProfileId || "slot-1";
-    const baseTarget = config.gameProfiles?.find((p) => p.id === defaultActiveId);
+    const baseTarget = config.gameProfiles?.find(
+      (p) => p.id === defaultActiveId,
+    );
 
     setShowTopSave(false);
     setFormState({
@@ -207,6 +209,12 @@ export function SettingsView({
       };
       await onChangeConfig(toSave);
       setShowTopSave(false);
+      toast({
+        title: t("toasts.settingsSavedTitle"),
+        description: t("toasts.settingsSavedDesc"),
+        type: "info",
+        duration: 2500,
+      });
       onBack?.();
     } catch (err) {
       toast(formatErrorToast(err, "CONFIG_WRITE_FAILED"));
@@ -342,9 +350,6 @@ export function SettingsView({
         <Column gap={8} style={{ width: "100%" }}>
           <Row justify="between" align="center" style={{ width: "100%" }}>
             <Label>{t("settings.launchArgs")}</Label>
-            <Badge variant="outline" style={{ fontSize: 11 }}>
-              {activeSlotLabel}
-            </Badge>
           </Row>
           <Input
             value={formState.gameArg}

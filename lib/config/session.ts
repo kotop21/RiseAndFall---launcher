@@ -1,6 +1,7 @@
 import { initConfig } from "./init";
 import { saveConfig } from "./save";
 import type { LauncherConfig } from "./types";
+import { logger } from "@/lib/logger";
 
 export async function recordGameSession(
   playtimeMinutes: number,
@@ -14,6 +15,12 @@ export async function recordGameSession(
     lastLaunchDate: launchDate.toISOString(),
   };
 
-  await saveConfig(nextConfig);
-  return nextConfig;
+  try {
+    await saveConfig(nextConfig);
+    logger.info("session", `Recorded game session: +${playtimeMinutes} min`);
+    return nextConfig;
+  } catch (err) {
+    logger.error("session", "Failed saving session time:", err);
+    throw err;
+  }
 }

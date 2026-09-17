@@ -1,10 +1,14 @@
 import { readdir, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
+import { logger } from "@/lib/logger";
 
 export async function cleanGameDirectory(targetDir: string): Promise<boolean> {
   const cleanRoot = targetDir.trim();
-  if (!cleanRoot || !existsSync(cleanRoot)) return false;
+  if (!cleanRoot || !existsSync(cleanRoot)) {
+    logger.error("clean", `Target directory does not exist or empty: ${cleanRoot}`);
+    return false;
+  }
 
   const savedGamesPath = resolve(join(cleanRoot, "Data", "Saved Games"));
 
@@ -25,8 +29,10 @@ export async function cleanGameDirectory(targetDir: string): Promise<boolean> {
         await rm(resolve(fullPath), { recursive: true, force: true });
       }
     }
+    logger.info("clean", `Cleaned game directory successfully: ${cleanRoot}`);
     return true;
-  } catch {
+  } catch (err) {
+    logger.error("clean", `Failed cleaning directory at ${cleanRoot}:`, err);
     return false;
   }
 }

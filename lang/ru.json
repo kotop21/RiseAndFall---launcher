@@ -194,7 +194,14 @@
     "dgvMissingTitle": "dgVoodoo отсутствует",
     "dgvMissingDesc": "dgVoodooCpl.exe не найден в папке с игрой.",
     "dgvOsUnsupportedTitle": "ОС не поддерживается",
-    "dgvOsUnsupportedDesc": "Панель управления требует Windows."
+    "dgvOsUnsupportedDesc": "Панель управления требует Windows.",
+    "settingsSavedTitle": "Настройки сохранены",
+    "settingsSavedDesc": "Параметры успешно обновлены.",
+    "profileClearedTitle": "Профиль очищен",
+    "profileClearedDesc": "Путь удален из текущего слота.",
+    "filesLockedTitle": "Файлы заняты",
+    "filesLockedDesc": "Закройте игру перед очисткой папки.",
+    "sessionSaveErrorTitle": "Ошибка сохранения",
+    "sessionSaveErrorDesc": "Не удалось записать время сессии."
   }
 }
-

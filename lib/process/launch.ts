@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
 import { access } from "node:fs/promises";
+import { dirname } from "node:path";
 import { watchProcessDaemon, type ProcessDaemonResult } from "./daemon";
 import { isWindows } from "@/lib/utils/os";
 import { createLauncherError, LauncherAppError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 export interface LaunchExeOptions {
   cwd?: string;
@@ -26,7 +28,7 @@ async function checkFileExists(path: string): Promise<boolean> {
 }
 
 export function sanitizeGameArgs(raw: string): string {
-  return raw && raw.trim() ? raw.replace(/(?<!\\)\"/g, '\\\\"') : "";
+  return raw && raw.trim() ? raw.replace(/(?<!\\)"/g, '\\"') : "";
 }
 
 export function parseArgs(rawArgs: string): string[] {
@@ -42,6 +44,7 @@ export async function launchExe(
   const cleanExePath = exePath?.trim();
 
   if (!cleanExePath) {
+    logger.error("launch", "Executable path is empty");
     return {
       success: false,
       error: createLauncherError("GAME_EXE_NOT_FOUND", "Executable path is empty or undefined."),
@@ -49,19 +52,14 @@ export async function launchExe(
   }
 
   if (!(await checkFileExists(cleanExePath))) {
+    logger.error("launch", `File not found at: ${cleanExePath}`);
     return {
       success: false,
       error: createLauncherError("GAME_EXE_NOT_FOUND", `File not found at: ${cleanExePath}`),
     };
   }
 
-  const workingDir =
-    options.cwd ??
-    cleanExePath.substring(
-      0,
-      Math.max(cleanExePath.lastIndexOf("/"), cleanExePath.lastIndexOf("\\")),
-    );
-
+  const workingDir = options.cwd ?? dirname(cleanExePath);
   const trackSession = Boolean(options.trackSession);
 
   if (isWindows()) {
@@ -78,7 +76,12 @@ export async function launchExe(
         windowsVerbatimArguments: true,
       });
 
+      proc.on("error", (err) => {
+        logger.error("launch", "Windows process error event:", err);
+      });
+
       if (!proc.pid) {
+        logger.error("launch", "Windows process spawned with invalid PID");
         return {
           success: false,
           error: createLauncherError("PROCESS_SPAWN_FAILED", "Windows process spawned with an invalid PID."),
@@ -86,17 +89,21 @@ export async function launchExe(
       }
 
       if (trackSession) {
-        watchProcessDaemon(proc, options.onSessionEnd).catch(() => {});
+        watchProcessDaemon(proc, options.onSessionEnd).catch((err) => {
+          logger.error("launch", "Daemon tracking error:", err);
+        });
       } else {
         proc.unref();
       }
 
+      logger.info("launch", `Started game process PID: ${proc.pid}`);
       return {
         success: true,
         pid: proc.pid,
         trackingSession: trackSession,
       };
     } catch (err) {
+      logger.error("launch", "Failed executing game via Windows shell:", err);
       return {
         success: false,
         error: createLauncherError("PROCESS_SPAWN_FAILED", String(err), err),
@@ -118,10 +125,11 @@ export async function launchExe(
         spawnErr = err;
         resolve();
       });
-      setTimeout(resolve, 60);
+      setTimeout(resolve, 80);
     });
 
     if (spawnErr) {
+      logger.error("launch", "Wine execution failed:", spawnErr);
       return {
         success: false,
         error: createLauncherError(
@@ -133,17 +141,21 @@ export async function launchExe(
     }
 
     if (trackSession) {
-      watchProcessDaemon(proc, options.onSessionEnd).catch(() => {});
+      watchProcessDaemon(proc, options.onSessionEnd).catch((err) => {
+        logger.error("launch", "Daemon tracking error:", err);
+      });
     } else {
       proc.unref();
     }
 
+    logger.info("launch", `Started Wine process PID: ${proc.pid ?? 0}`);
     return {
       success: true,
       pid: proc.pid ?? 0,
       trackingSession: trackSession,
     };
   } catch (err) {
+    logger.error("launch", "Unexpected error launching executable:", err);
     return {
       success: false,
       error: createLauncherError("PROCESS_SPAWN_FAILED", String(err), err),

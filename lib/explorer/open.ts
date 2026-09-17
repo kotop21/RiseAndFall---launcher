@@ -1,33 +1,31 @@
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { logger } from "@/lib/logger";
 
-export async function openExplorer(targetPath: string): Promise<boolean> {
-  const cleanPath = targetPath.trim();
-  if (!cleanPath || !existsSync(cleanPath)) return false;
+export function openExplorer(dirPath: string): boolean {
+  const cleanPath = dirPath?.trim();
+  if (!cleanPath) return false;
 
-  const [cmd, args] =
-    process.platform === "darwin"
-      ? ["open", [cleanPath]]
-      : process.platform === "win32"
-        ? ["explorer", [cleanPath]]
-        : ["xdg-open", [cleanPath]];
+  const platform = process.platform;
+  let cmd = "xdg-open";
+  let args = [cleanPath];
 
-  return new Promise<boolean>((resolve) => {
-    try {
-      const proc = spawn(cmd, args, { stdio: "ignore", detached: true });
-      let failed = false;
+  if (platform === "win32") {
+    cmd = "explorer.exe";
+    args = [cleanPath];
+  } else if (platform === "darwin") {
+    cmd = "open";
+    args = [cleanPath];
+  }
 
-      proc.on("error", () => {
-        failed = true;
-        resolve(false);
-      });
-
-      proc.unref();
-      setTimeout(() => {
-        if (!failed) resolve(true);
-      }, 100);
-    } catch {
-      resolve(false);
-    }
-  });
+  try {
+    const proc = spawn(cmd, args, { stdio: "ignore", detached: true });
+    proc.on("error", (err) => {
+      logger.error("explorer", `Failed opening folder ${cleanPath}:`, err);
+    });
+    proc.unref();
+    return true;
+  } catch (err) {
+    logger.error("explorer", `Exception opening folder ${cleanPath}:`, err);
+    return false;
+  }
 }

@@ -4,6 +4,7 @@ import { pack, unpack } from "msgpackr";
 import { getConfigPath } from "./dir";
 import { CURRENT_CONFIG_VERSION, DEFAULT_GAME_ARG, createDefaultProfiles, migrateConfig } from "./migrate";
 import type { LauncherConfig } from "./types";
+import { logger } from "@/lib/logger";
 
 export const DEFAULT_CONFIG: LauncherConfig = {
   version: CURRENT_CONFIG_VERSION,
@@ -45,14 +46,19 @@ export async function initConfig(): Promise<{ config: LauncherConfig; isFirstLau
 
   try {
     await mkdir(dirname(filePath), { recursive: true });
-  } catch {}
+  } catch (err) {
+    logger.error("config", `Failed creating config directory at ${dirname(filePath)}:`, err);
+  }
 
   const exists = await fileExists(filePath);
 
   if (!exists) {
     try {
       await writeFile(filePath, pack(DEFAULT_CONFIG));
-    } catch {}
+      logger.info("config", `Initialized default configuration at ${filePath}`);
+    } catch (err) {
+      logger.error("config", `Failed writing default config to ${filePath}:`, err);
+    }
     return { config: DEFAULT_CONFIG, isFirstLaunch: true };
   }
 
@@ -64,14 +70,20 @@ export async function initConfig(): Promise<{ config: LauncherConfig; isFirstLau
     if (wasMigrated) {
       try {
         await writeFile(filePath, pack(config));
-      } catch {}
+        logger.info("config", `Persisted migrated configuration to ${filePath}`);
+      } catch (err) {
+        logger.error("config", `Failed writing migrated config to ${filePath}:`, err);
+      }
     }
 
     return { config, isFirstLaunch: forceWelcome };
-  } catch {
+  } catch (err) {
+    logger.error("config", `Failed parsing or reading configuration at ${filePath}, falling back to defaults:`, err);
     try {
       await writeFile(filePath, pack(DEFAULT_CONFIG));
-    } catch {}
+    } catch (writeErr) {
+      logger.error("config", `Failed recreating fallback config at ${filePath}:`, writeErr);
+    }
     return { config: DEFAULT_CONFIG, isFirstLaunch: true };
   }
 }

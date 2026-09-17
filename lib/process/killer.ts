@@ -1,5 +1,6 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
+import { logger } from "@/lib/logger";
 
 const execAsync = promisify(exec);
 
@@ -20,8 +21,10 @@ export async function killProcessTree(pid: number): Promise<boolean> {
     } else {
       process.kill(pid, "SIGKILL");
     }
+    logger.info("killer", `Terminated process tree PID: ${pid}`);
     return true;
-  } catch {
+  } catch (err) {
+    logger.error("killer", `Failed terminating process tree PID: ${pid}`, err);
     return false;
   }
 }

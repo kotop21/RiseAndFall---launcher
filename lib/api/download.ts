@@ -1,5 +1,6 @@
 import { API_ROUTES, type AvailableFilesResponse } from "./client";
 import { createLauncherError, type LauncherAppError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 export interface DownloadStreamResult {
   ok: boolean;
@@ -14,10 +15,14 @@ export async function fetchAvailableFiles(): Promise<Record<string, string> | nu
       method: "GET",
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      logger.error("api", `Failed to fetch available files: HTTP ${res.status}`);
+      return null;
+    }
     const data = (await res.json()) as AvailableFilesResponse;
     return data.available || null;
-  } catch {
+  } catch (err) {
+    logger.error("api", "Network error in fetchAvailableFiles:", err);
     return null;
   }
 }
@@ -38,10 +43,12 @@ export async function downloadSingleFileStream(
           desc = errJson.missing?.length ? `${errJson.error}: ${errJson.missing.join(", ")}` : errJson.error;
         }
       } catch {}
+      logger.error("download", `Download single file error: ${desc}`);
       return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", desc) };
     }
 
     if (!res.body) {
+      logger.error("download", "Response payload stream is empty");
       return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", "Empty response payload stream") };
     }
 
@@ -55,6 +62,11 @@ export async function downloadSingleFileStream(
     const isAbort =
       (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError")) ||
       signal?.aborted;
+
+    if (!isAbort) {
+      logger.error("download", "Network error in downloadSingleFileStream:", err);
+    }
+
     return {
       ok: false,
       error: createLauncherError(
@@ -82,10 +94,12 @@ export async function downloadFilesStream(
           desc = errJson.missing?.length ? `${errJson.error}: ${errJson.missing.join(", ")}` : errJson.error;
         }
       } catch {}
+      logger.error("download", `Download files error: ${desc}`);
       return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", desc) };
     }
 
     if (!res.body) {
+      logger.error("download", "Response payload stream is empty");
       return { ok: false, error: createLauncherError("DOWNLOAD_FAILED", "Empty response payload stream") };
     }
 
@@ -99,6 +113,11 @@ export async function downloadFilesStream(
     const isAbort =
       (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError")) ||
       signal?.aborted;
+
+    if (!isAbort) {
+      logger.error("download", "Network error in downloadFilesStream:", err);
+    }
+
     return {
       ok: false,
       error: createLauncherError(

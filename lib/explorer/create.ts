@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { existsSync } from "node:fs";
+import { logger } from "@/lib/logger";
 
 export async function ensureDirectory(dirPath: string): Promise<boolean> {
   const target = dirPath.trim();
@@ -10,7 +11,8 @@ export async function ensureDirectory(dirPath: string): Promise<boolean> {
       await mkdir(target, { recursive: true });
     }
     return true;
-  } catch {
+  } catch (err) {
+    logger.error("fs", `Failed ensuring directory at ${target}:`, err);
     return false;
   }
 }
@@ -25,7 +27,8 @@ export async function createFile(
     if (!(await ensureDirectory(dirname(target)))) return false;
     await writeFile(target, content);
     return true;
-  } catch {
+  } catch (err) {
+    logger.error("fs", `Failed creating file at ${target}:`, err);
     return false;
   }
 }

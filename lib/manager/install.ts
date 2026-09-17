@@ -9,9 +9,11 @@ import { cleanGameDirectory } from "@/lib/explorer/clean";
 import { getConfigPath } from "@/lib/config/dir";
 import { saveConfig } from "@/lib/config/save";
 import { DEFAULT_CONFIG } from "@/lib/config/init";
+import { migrateConfig } from "@/lib/config/migrate";
 import type { LauncherConfig } from "@/lib/config/types";
 import { createLauncherError, normalizeError, type LauncherAppError } from "@/lib/errors";
 import { getCurrentLanguage, getTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
 
 export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" | "error";
 
@@ -44,6 +46,7 @@ export async function installGamePackage({
   const currentLang = getCurrentLanguage();
   const cleanDir = targetDir.trim();
   if (!cleanDir) {
+    logger.error("install", "Target directory is empty");
     return {
       success: false,
       error: createLauncherError("TARGET_DIR_REQUIRED"),
@@ -51,6 +54,7 @@ export async function installGamePackage({
   }
 
   if (!(await ensureDirectory(cleanDir))) {
+    logger.error("install", `Target directory is invalid or inaccessible: ${cleanDir}`);
     return {
       success: false,
       error: createLauncherError("TARGET_DIR_INVALID"),
@@ -63,9 +67,14 @@ export async function installGamePackage({
       message: getTranslation(currentLang, "install.cleaningOld"),
     });
     if (!(await cleanGameDirectory(cleanDir))) {
+      logger.error("install", `Failed cleaning directory: ${cleanDir}`);
+      const isRuOrUa = currentLang === "ru" || currentLang === "ua";
+      const desc = isRuOrUa
+        ? "Не удалось очистить папку. Закройте игру и другие программы."
+        : "Failed cleaning folder. Ensure the game is closed and try again.";
       return {
         success: false,
-        error: createLauncherError("FS_ACCESS_DENIED"),
+        error: createLauncherError("FS_ACCESS_DENIED", desc),
       };
     }
   }
@@ -101,6 +110,7 @@ export async function installGamePackage({
     const streamRes = await downloadSingleFileStream(pkg.key, signal);
     if (!streamRes.ok || !streamRes.stream) {
       const err = streamRes.error ?? createLauncherError("DOWNLOAD_FAILED");
+      logger.error("install", `Package download stream failed for ${pkg.key}:`, err);
       onProgress?.({ status: "error", message: err.description });
       return { success: false, error: err };
     }
@@ -180,6 +190,8 @@ export async function installGamePackage({
       } catch {}
 
       const normalized = normalizeError(err, "EXTRACTION_FAILED");
+      logger.error("install", `Error while processing package ${pkg.key}:`, normalized);
+
       if (normalized.code === "INSTALL_CANCELLED" || signal?.aborted) {
         try {
           await cleanGameDirectory(cleanDir);
@@ -207,8 +219,11 @@ export async function installGamePackage({
   if (existsSync(cfgPath)) {
     try {
       const raw = await readFile(cfgPath);
-      currentCfg = { ...DEFAULT_CONFIG, ...(unpack(raw) as Partial<LauncherConfig>) };
-    } catch {}
+      const data = (unpack(raw) || {}) as Record<string, any>;
+      currentCfg = migrateConfig(data).config;
+    } catch (err) {
+      logger.error("install", "Failed reading current config for update:", err);
+    }
   }
 
   const activeId = currentCfg.activeProfileId || "slot-1";
@@ -223,7 +238,11 @@ export async function installGamePackage({
     launcherLang: currentLang,
   };
 
-  await saveConfig(updatedConfig);
+  try {
+    await saveConfig(updatedConfig);
+  } catch (err) {
+    logger.error("install", "Failed saving updated config after install:", err);
+  }
 
   onProgress?.({
     status: "completed",
@@ -231,5 +250,6 @@ export async function installGamePackage({
     bytesDownloaded: cumulativeBytes,
   });
 
+  logger.info("install", `Game package installed successfully to: ${cleanDir}`);
   return { success: true, config: updatedConfig };
 }

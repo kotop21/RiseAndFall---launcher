@@ -1,5 +1,6 @@
 import type { ReleaseItem } from "./types";
 import { MOCK_RELEASES } from "./mock";
+import { logger } from "@/lib/logger";
 
 const RELEASES_API_URL = "https://api.github.com/repos/kotop21/RiseAndFall---launcher/releases";
 
@@ -50,12 +51,14 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
       });
 
       if (!res.ok) {
+        logger.error("github", `Releases fetch returned HTTP ${res.status}`);
         cachedReleases = MOCK_RELEASES.slice(0, 5);
         return cachedReleases;
       }
 
       const data = (await res.json()) as GitHubReleaseRaw[];
       if (!Array.isArray(data)) {
+        logger.error("github", "Releases response is not an array");
         cachedReleases = MOCK_RELEASES.slice(0, 5);
         return cachedReleases;
       }
@@ -71,7 +74,8 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
       }));
 
       return cachedReleases;
-    } catch {
+    } catch (err) {
+      logger.error("github", "Network or parsing error fetching releases:", err);
       cachedReleases = MOCK_RELEASES.slice(0, 5);
       return cachedReleases;
     } finally {
