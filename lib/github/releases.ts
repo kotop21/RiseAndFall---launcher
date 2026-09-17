@@ -14,6 +14,28 @@ interface GitHubReleaseRaw {
 let cachedReleases: ReleaseItem[] | null = null;
 let inFlightRequest: Promise<ReleaseItem[]> | null = null;
 
+function formatReleaseTitle(rawTitle: string | null | undefined, body: string | null | undefined, version: string): string | null {
+  const cleanTitle = rawTitle?.trim();
+  if (cleanTitle && cleanTitle !== version) {
+    return cleanTitle;
+  }
+
+  if (!body) return null;
+
+  const inlineText = body
+    .split(/\r?\n+/)
+    .map((line) => line.replace(/^[\s*\-•#\d.]+/g, "").trim())
+    .filter(Boolean)
+    .join(" • ");
+
+  if (!inlineText) return null;
+
+  const limit = 48;
+  return inlineText.length > limit
+    ? `${inlineText.slice(0, limit).trimEnd()}... [more]`
+    : inlineText;
+}
+
 export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]> {
   if (!forceRefresh && cachedReleases) return cachedReleases;
   if (!forceRefresh && inFlightRequest) return inFlightRequest;
@@ -42,26 +64,11 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
         (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime(),
       );
 
-      cachedReleases = sorted.slice(0, 5).map((item) => {
-        const version = item.tag_name;
-        const rawTitle = item.name?.trim();
-
-        let title: string | null = null;
-        if (rawTitle && rawTitle !== version) {
-          title = rawTitle;
-        } else if (item.body) {
-          const cleanText = item.body
-            .replace(/^[*\-•#\s]+/gm, "")
-            .replace(/\r?\n+/g, " ")
-            .trim();
-
-          if (cleanText.length > 0) {
-            title = cleanText.length > 20 ? `${cleanText.slice(0, 20)}...` : cleanText;
-          }
-        }
-
-        return { version, title, url: item.html_url };
-      });
+      cachedReleases = sorted.slice(0, 5).map((item) => ({
+        version: item.tag_name,
+        title: formatReleaseTitle(item.name, item.body, item.tag_name),
+        url: item.html_url,
+      }));
 
       return cachedReleases;
     } catch {

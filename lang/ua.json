@@ -1,0 +1,200 @@
+{
+  "welcome": {
+    "hello": "Привіт!",
+    "author": "Лаунчер від kotop21",
+    "settingUp": "Зараз усе налаштуємо!",
+    "preparing": "Підготовка робочого оточення...",
+    "gettingStarted": "Початок роботи",
+    "chooseMethod": "Оберіть спосіб ініціалізації файлів гри",
+    "existingGame": "Вже встановлена",
+    "existingDesc": "Вказати наявну теку з RiseAndFall.exe на диску",
+    "freshInstall": "Чисте встановлення",
+    "freshDesc": "Завантажити збірку гри з модами",
+    "browse": "Обрати",
+    "install": "Встановити"
+  },
+  "main": {
+    "title": "Rise And Fall: Civilization at War",
+    "dgVoodooReady": "dgVoodoo Готовий",
+    "dgVoodooMissing": "dgVoodoo Відсутній",
+    "openGameFolder": "Відкрити теку гри",
+    "latestUpdate": "Останнє",
+    "lastLaunch": "Останній запуск: {date}",
+    "neverPlayed": "Ще не запускалась"
+  },
+  "header": {
+    "currentOnline": "Онлайн:",
+    "totalPlaytime": "Час у грі:",
+    "gameRunning": "Гра запущена...",
+    "checking": "Перевірка...",
+    "gameMissing": "Гру не знайдено",
+    "windowsOnly": "Тільки Windows",
+    "startGame": "Грати",
+    "startingGame": "Запуск гри",
+    "startingDesc": "Запуск Rise and Fall...",
+    "gameMissingDesc": "RiseAndFall.exe не знайдено в теці гри.",
+    "osUnsupportedDesc": "Прямий запуск підтримується лише на Windows."
+  },
+  "settings": {
+    "title": "Налаштування та діагностика",
+    "subtitle": "Керування файлами гри, параметрами та запуском",
+    "gamePath": "Шлях до гри",
+    "browse": "Огляд",
+    "launchArgs": "Параметри запуску",
+    "argsHint": "Параметри запуску для гри",
+    "language": "Мова інтерфейсу",
+    "revert": "Скинути",
+    "save": "Зберегти",
+    "actions": "Дії та інструменти",
+    "unsavedTitle": "Незбережені зміни",
+    "unsavedDesc": "Збережіть або скасуйте зміни перед виходом.",
+    "buildsTitle": "Профілі та збірки гри",
+    "buildsDesc": "Зберігайте до 5 тек гри (моди, оригінал, тести) та перемикайтеся в 1 клік",
+    "slotLabel": "Збірка {n}",
+    "slotEmpty": "Порожній слот",
+    "activeSlotBadge": "Активна",
+    "removeSlotConfirm": "Видалити профіль",
+    "setPathFirst": "Вкажіть шлях для цього профілю",
+    "launchArgsProfileHint": "Параметри запуску зберігаються окремо для {profile}."
+  },
+  "install": {
+    "titleInstall": "Встановлення гри",
+    "titleReinstall": "Перевстановлення Rise and Fall",
+    "subInstall": "Завантаження збірки гри з модами",
+    "subReinstall": "Очищає файли гри (крім Data/Saved Games) та завантажує заново",
+    "targetDir": "Цільова тека встановлення",
+    "targetWarning": "Усі файли буде оновлено. Збереження в Data/Saved Games залишаються.",
+    "installDir": "Тека встановлення",
+    "langPack": "Мовний пакет гри",
+    "ready": "Готово",
+    "processing": "Обробка",
+    "cancel": "Скасувати",
+    "abort": "Перервати",
+    "abortConfirm": "Підтвердити скасування (натисніть ще раз)",
+    "btnInstall": "Завантажити та встановити",
+    "btnReinstall": "Перевстановити гру",
+    "btnReinstallConfirm": "Підтвердити перевстановлення",
+    "statusStarting": "Початок встановлення...",
+    "statusPreparingReinstall": "Підготовка до перевстановлення...",
+    "pkgBaseGame": "Основна гра",
+    "pkgLangPack": "Мовний пакет ({lang})",
+    "pkgModBfm": "Мод BFM",
+    "cleaningOld": "Очищення попередньої версії...",
+    "connecting": "З'єднання: {step}...",
+    "extracting": "Розпакування: {step}...",
+    "completed": "Встановлення успішно завершено!"
+  },
+  "buttons": {
+    "download": "Завантажити гру",
+    "reinstall": "Перевстановляти гру",
+    "openFolder": "Відкрити теку з грою",
+    "openDgVoodoo": "Налаштування dgVoodoo"
+  },
+  "errors": {
+    "GAME_EXE_NOT_FOUND": {
+      "title": "Гру не знайдено",
+      "description": "RiseAndFall.exe відсутній у вказаній теці."
+    },
+    "DGV_EXE_NOT_FOUND": {
+      "title": "dgVoodoo відсутній",
+      "description": "dgVoodooCpl.exe не знайдено в теці гри."
+    },
+    "TARGET_DIR_REQUIRED": {
+      "title": "Вкажіть шлях",
+      "description": "Шлях для встановлення не вказано."
+    },
+    "TARGET_DIR_INVALID": {
+      "title": "Невірна тека",
+      "description": "Тека не існує або недоступна."
+    },
+    "FS_ACCESS_DENIED": {
+      "title": "Доступ заборонено",
+      "description": "Недостатньо прав для доступу до теки."
+    },
+    "CONFIG_READ_FAILED": {
+      "title": "Помилка конфігурації",
+      "description": "Не вдалося прочитати налаштування."
+    },
+    "CONFIG_WRITE_FAILED": {
+      "title": "Помилка збереження",
+      "description": "Не вдалося записати файл налаштувань."
+    },
+    "NETWORK_OFFLINE": {
+      "title": "Помилка мережі",
+      "description": "Немає з'єднання із сервером лаунчера."
+    },
+    "NETWORK_TIMEOUT": {
+      "title": "Таймаут з'єднання",
+      "description": "Сервер занадто довго не відповідає."
+    },
+    "DOWNLOAD_FAILED": {
+      "title": "Помилка завантаження",
+      "description": "Не вдалося завантажити пакет файлів."
+    },
+    "CORRUPTED_ARCHIVE": {
+      "title": "Помилка архіву",
+      "description": "Файл архіву пошкоджений або недоступний."
+    },
+    "EXTRACTION_FAILED": {
+      "title": "Помилка розпакування",
+      "description": "Не вдалося видобути файли з архіву."
+    },
+    "INSTALL_CANCELLED": {
+      "title": "Скасовано",
+      "description": "Встановлення зупинено. Тимчасові файли видалено."
+    },
+    "PROCESS_SPAWN_FAILED": {
+      "title": "Помилка запуску",
+      "description": "Не вдалося створити процес гри."
+    },
+    "PROCESS_CRASHED": {
+      "title": "Аварійне завершення",
+      "description": "Процес гри неочікувано завершив роботу."
+    },
+    "PROCESS_FROZEN": {
+      "title": "Гра зависла",
+      "description": "Процес зупинено через відсутність відповіді."
+    },
+    "UNSUPPORTED_OS": {
+      "title": "ОС не підтримується",
+      "description": "Для запуску потрібен Windows або Wine."
+    },
+    "EXPLORER_FAILED": {
+      "title": "Помилка провідника",
+      "description": "Не вдалося відкрити теку у файловому менеджері."
+    },
+    "BROWSER_FAILED": {
+      "title": "Помилка браузера",
+      "description": "Не вдалося відкрити системний браузер."
+    },
+    "GITHUB_API_FAILED": {
+      "title": "Помилка синхронізації",
+      "description": "Не вдалося отримати список релізів."
+    },
+    "UNKNOWN_ERROR": {
+      "title": "Невідома помилка",
+      "description": "Сталася непередбачена помилка."
+    }
+  },
+  "toasts": {
+    "welcomeMissingTitle": "Гру не знайдено",
+    "welcomeMissingDesc": "RiseAndFall.exe не знайдено в обраній теці.",
+    "welcomeAccessDeniedTitle": "Доступ заборонено",
+    "welcomeAccessDeniedDesc": "Не вдалося відкрити діалог вибору теки.",
+    "installPathRequiredTitle": "Вкажіть шлях",
+    "installPathRequiredDesc": "Теку для встановлення не вказано.",
+    "explorerNotSetTitle": "Шлях не вказано",
+    "explorerNotSetDesc": "Спочатку вкажіть шлях до гри.",
+    "explorerErrorTitle": "Помилка провідника",
+    "explorerErrorDesc": "Тека не існує або недоступна провіднику.",
+    "browserErrorTitle": "Помилка браузера",
+    "browserErrorDesc": "Не вдалося відкрити системний браузер за посиланням.",
+    "dgvPathRequiredTitle": "Вкажіть шлях",
+    "dgvPathRequiredDesc": "Спочатку оберіть теку з грою.",
+    "dgvMissingTitle": "dgVoodoo відсутній",
+    "dgvMissingDesc": "dgVoodooCpl.exe не знайдено в теці гри.",
+    "dgvOsUnsupportedTitle": "ОС не підтримується",
+    "dgvOsUnsupportedDesc": "Панель керування вимагає Windows."
+  }
+}
+

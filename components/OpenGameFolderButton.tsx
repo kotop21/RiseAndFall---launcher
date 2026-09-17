@@ -3,6 +3,7 @@ import { Button, Row, useToast, theme } from "@/ui";
 import { FolderOpen } from "@/icon";
 import { openExplorer } from "@/lib/explorer/open";
 import { formatErrorToast } from "@/lib/errors";
+import { useTranslation } from "@/lib/lang";
 
 interface OpenGameFolderButtonProps {
   gameDir?: string;
@@ -12,18 +13,20 @@ interface OpenGameFolderButtonProps {
 
 export function OpenGameFolderButton({
   gameDir = "",
-  label = "Open Game Folder",
+  label,
   style,
 }: OpenGameFolderButtonProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
+  const buttonLabel = label || t("buttons.openFolder");
 
   const handleOpen = async () => {
     let targetDir = gameDir.trim();
 
     if (!targetDir) {
       toast({
-        title: "Directory Not Set",
-        description: "Please specify the game installation path first.",
+        title: t("toasts.explorerNotSetTitle"),
+        description: t("toasts.explorerNotSetDesc"),
         type: "warn",
       });
       return;
@@ -36,8 +39,8 @@ export function OpenGameFolderButton({
     try {
       if (!(await openExplorer(targetDir))) {
         toast({
-          title: "Explorer Error",
-          description: "Target directory does not exist or system explorer cannot access it.",
+          title: t("toasts.explorerErrorTitle"),
+          description: t("toasts.explorerErrorDesc"),
           type: "error",
         });
       }
@@ -50,7 +53,7 @@ export function OpenGameFolderButton({
     <Button variant="outline" size="sm" onClick={handleOpen} style={style}>
       <Row gap={8} align="center" justify="center">
         <FolderOpen size={14} color={theme.colors.fg} />
-        {label}
+        {buttonLabel}
       </Row>
     </Button>
   );

@@ -1,0 +1,199 @@
+{
+  "welcome": {
+    "hello": "Hello!",
+    "author": "Launcher by kotop21",
+    "settingUp": "Setting Things Up",
+    "preparing": "Preparing runtime environment...",
+    "gettingStarted": "Getting Started",
+    "chooseMethod": "Choose how you want to set up the game files",
+    "existingGame": "Existing Game",
+    "existingDesc": "Locate an existing RiseAndFall.exe installation",
+    "freshInstall": "Fresh Install",
+    "freshDesc": "Download the game pack with mods and your language",
+    "browse": "Browse",
+    "install": "Install"
+  },
+  "main": {
+    "title": "Rise And Fall: Civilization at War",
+    "dgVoodooReady": "dgVoodoo Ready",
+    "dgVoodooMissing": "dgVoodoo Missing",
+    "openGameFolder": "Open Game Directory",
+    "latestUpdate": "Latest",
+    "lastLaunch": "Last played: {date}",
+    "neverPlayed": "Never played"
+  },
+  "header": {
+    "currentOnline": "Current Online:",
+    "totalPlaytime": "Total Playtime:",
+    "gameRunning": "Game Running...",
+    "checking": "Checking...",
+    "gameMissing": "Game Missing",
+    "windowsOnly": "Windows Only",
+    "startGame": "Start Game",
+    "startingGame": "Starting Game",
+    "startingDesc": "Launching Rise and Fall...",
+    "gameMissingDesc": "RiseAndFall.exe not found in game folder.",
+    "osUnsupportedDesc": "Native launch requires Windows."
+  },
+  "settings": {
+    "title": "Settings & Diagnostics",
+    "subtitle": "Manage game installation, executables, and startup hooks",
+    "gamePath": "Game Path",
+    "browse": "Browse",
+    "launchArgs": "Launch Arguments",
+    "argsHint": "Default engine arguments for proper resource mounting",
+    "language": "Interface Language",
+    "revert": "Revert Changes",
+    "save": "Save",
+    "actions": "Actions & Tools",
+    "unsavedTitle": "Unsaved Changes",
+    "unsavedDesc": "Save or revert modifications before leaving.",
+    "buildsTitle": "Game Profiles & Builds",
+    "buildsDesc": "Store up to 5 game paths (mods, vanilla, test builds) and switch instantly",
+    "slotLabel": "Build {n}",
+    "slotEmpty": "Empty Slot",
+    "activeSlotBadge": "Active",
+    "removeSlotConfirm": "Remove Profile",
+    "setPathFirst": "Select path to assign to this profile",
+    "launchArgsProfileHint": "Arguments applied specifically for {profile}."
+  },
+  "install": {
+    "titleInstall": "Install Game",
+    "titleReinstall": "Reinstall Rise and Fall",
+    "subInstall": "Download the game pack with mods and your language",
+    "subReinstall": "Cleans existing game files except Data/Saved Games and downloads fresh copy",
+    "targetDir": "Target Installation Directory",
+    "targetWarning": "All game files will be refreshed. Saves in Data/Saved Games are preserved.",
+    "installDir": "Installation Directory",
+    "langPack": "Game Language Pack",
+    "ready": "Ready",
+    "processing": "Processing",
+    "cancel": "Cancel",
+    "abort": "Abort",
+    "abortConfirm": "Confirm Abort (Click Again)",
+    "btnInstall": "Download & Install",
+    "btnReinstall": "Reinstall Game",
+    "btnReinstallConfirm": "Confirm Reinstall (Click Again)",
+    "statusStarting": "Starting installation...",
+    "statusPreparingReinstall": "Preparing reinstall...",
+    "pkgBaseGame": "Base Game",
+    "pkgLangPack": "Language Pack ({lang})",
+    "pkgModBfm": "BFM Mod",
+    "cleaningOld": "Cleaning previous installation...",
+    "connecting": "Connecting for {step}...",
+    "extracting": "Extracting {step}...",
+    "completed": "Installation completed successfully!"
+  },
+  "buttons": {
+    "download": "Download Game",
+    "reinstall": "Reinstall Game",
+    "openFolder": "Open Game Folder",
+    "openDgVoodoo": "Open dgVoodoo Config"
+  },
+  "errors": {
+    "GAME_EXE_NOT_FOUND": {
+      "title": "Game Missing",
+      "description": "RiseAndFall.exe not found in selected directory."
+    },
+    "DGV_EXE_NOT_FOUND": {
+      "title": "dgVoodoo Missing",
+      "description": "dgVoodooCpl.exe not found in game folder."
+    },
+    "TARGET_DIR_REQUIRED": {
+      "title": "Path Required",
+      "description": "Installation folder path is empty."
+    },
+    "TARGET_DIR_INVALID": {
+      "title": "Invalid Folder",
+      "description": "Folder does not exist or cannot be accessed."
+    },
+    "FS_ACCESS_DENIED": {
+      "title": "Access Denied",
+      "description": "Insufficient disk permissions for this path."
+    },
+    "CONFIG_READ_FAILED": {
+      "title": "Config Error",
+      "description": "Failed reading settings. Restored defaults."
+    },
+    "CONFIG_WRITE_FAILED": {
+      "title": "Save Failed",
+      "description": "Unable to write launcher settings to disk."
+    },
+    "NETWORK_OFFLINE": {
+      "title": "Network Error",
+      "description": "Unable to connect to launcher server."
+    },
+    "NETWORK_TIMEOUT": {
+      "title": "Connection Timeout",
+      "description": "Server took too long to reply. Try again."
+    },
+    "DOWNLOAD_FAILED": {
+      "title": "Download Error",
+      "description": "Failed fetching game assets package."
+    },
+    "CORRUPTED_ARCHIVE": {
+      "title": "Archive Error",
+      "description": "Package file is corrupted or unreadable."
+    },
+    "EXTRACTION_FAILED": {
+      "title": "Unpack Failed",
+      "description": "Failed unpacking archive files to disk."
+    },
+    "INSTALL_CANCELLED": {
+      "title": "Cancelled",
+      "description": "Installation stopped. Temp files removed."
+    },
+    "PROCESS_SPAWN_FAILED": {
+      "title": "Launch Failed",
+      "description": "Could not start game process."
+    },
+    "PROCESS_CRASHED": {
+      "title": "Game Crashed",
+      "description": "Game process terminated unexpectedly."
+    },
+    "PROCESS_FROZEN": {
+      "title": "Game Unresponsive",
+      "description": "Process was closed due to freezing."
+    },
+    "UNSUPPORTED_OS": {
+      "title": "OS Unsupported",
+      "description": "Direct launch requires Windows or Wine."
+    },
+    "EXPLORER_FAILED": {
+      "title": "Explorer Error",
+      "description": "Could not open folder in file manager."
+    },
+    "BROWSER_FAILED": {
+      "title": "Browser Error",
+      "description": "Could not open default web browser."
+    },
+    "GITHUB_API_FAILED": {
+      "title": "Sync Failed",
+      "description": "Could not load release changelogs."
+    },
+    "UNKNOWN_ERROR": {
+      "title": "Unknown Error",
+      "description": "An unexpected error occurred."
+    }
+  },
+  "toasts": {
+    "welcomeMissingTitle": "Game Missing",
+    "welcomeMissingDesc": "RiseAndFall.exe not found in selected folder.",
+    "welcomeAccessDeniedTitle": "Access Denied",
+    "welcomeAccessDeniedDesc": "Failed to open directory picker.",
+    "installPathRequiredTitle": "Path Required",
+    "installPathRequiredDesc": "Target game folder is missing.",
+    "explorerNotSetTitle": "Directory Not Set",
+    "explorerNotSetDesc": "Please specify the game installation path first.",
+    "explorerErrorTitle": "Explorer Error",
+    "explorerErrorDesc": "Target directory does not exist or system explorer cannot access it.",
+    "browserErrorTitle": "Browser Error",
+    "browserErrorDesc": "Failed to launch default web browser for changelog link.",
+    "dgvPathRequiredTitle": "Path Required",
+    "dgvPathRequiredDesc": "Choose game folder first.",
+    "dgvMissingTitle": "dgVoodoo Missing",
+    "dgvMissingDesc": "dgVoodooCpl.exe not found in game folder.",
+    "dgvOsUnsupportedTitle": "OS Unsupported",
+    "dgvOsUnsupportedDesc": "Control panel requires Windows."
+  }
+}

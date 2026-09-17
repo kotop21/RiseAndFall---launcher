@@ -1,0 +1,200 @@
+{
+  "welcome": {
+    "hello": "Привет!",
+    "author": "Лаунчер от kotop21",
+    "settingUp": "Сейчас мы все настроим!",
+    "preparing": "Подготавливаем рабочее окружение...",
+    "gettingStarted": "Начало работы",
+    "chooseMethod": "Выберите способ инициализации файлов игры",
+    "existingGame": "Уже установлена",
+    "existingDesc": "Указать существующую папку с RiseAndFall.exe на вашем диске",
+    "freshInstall": "Чистая установка",
+    "freshDesc": "Скачать сборку игры с модами и вашим языком",
+    "browse": "Выбрать",
+    "install": "Установить"
+  },
+  "main": {
+    "title": "Rise And Fall: Civilization at War",
+    "dgVoodooReady": "dgVoodoo Готов",
+    "dgVoodooMissing": "dgVoodoo Отсутствует",
+    "openGameFolder": "Открыть папку игры",
+    "latestUpdate": "Последнее",
+    "lastLaunch": "Последний запуск: {date}",
+    "neverPlayed": "Еще не запускалась"
+  },
+  "header": {
+    "currentOnline": "Онлайн:",
+    "totalPlaytime": "Время в игре:",
+    "gameRunning": "Игра запущена...",
+    "checking": "Проверка...",
+    "gameMissing": "Игра не найдена",
+    "windowsOnly": "Только Windows",
+    "startGame": "Запустить игру",
+    "startingGame": "Запуск игры",
+    "startingDesc": "Запуск Rise and Fall...",
+    "gameMissingDesc": "RiseAndFall.exe не найден в папке игры.",
+    "osUnsupportedDesc": "Прямой запуск поддерживается только на Windows."
+  },
+  "settings": {
+    "title": "Настройки и диагностика",
+    "subtitle": "Управление файлами игры, аргументами и запуском",
+    "gamePath": "Путь к игре",
+    "browse": "Обзор",
+    "launchArgs": "Аргументы запуска",
+    "argsHint": "Параметры запуска для игры",
+    "language": "Язык интерфейса",
+    "revert": "Сбросить",
+    "save": "Сохранить",
+    "actions": "Действия и утилиты",
+    "unsavedTitle": "Несохраненные изменения",
+    "unsavedDesc": "Сохраните или отмените изменения перед выходом.",
+    "buildsTitle": "Профили и сборки игры",
+    "buildsDesc": "Храните до 5 папок игры (моды, оригинал, тестовые) и переключайтесь в 1 клик",
+    "slotLabel": "Сборка {n}",
+    "slotEmpty": "Пустой слот",
+    "activeSlotBadge": "Активна",
+    "removeSlotConfirm": "Удалить профиль",
+    "setPathFirst": "Укажите путь для этого профиля",
+    "launchArgsProfileHint": "Аргументы запуска сохраняются индивидуально для {profile}. "
+  },
+  "install": {
+    "titleInstall": "Установка игры",
+    "titleReinstall": "Переустановка Rise and Fall",
+    "subInstall": "Загрузка сборки игры с модами та вашим языком",
+    "subReinstall": "Очищает файлы игры (кроме Data/Saved Games) и загружает заново",
+    "targetDir": "Целевая папка установки",
+    "targetWarning": "Все файлы будут обновлены. Сохранения в Data/Saved Games сохраняются.",
+    "installDir": "Папка установки",
+    "langPack": "Языковой пакет игры",
+    "ready": "Готово",
+    "processing": "В процессе",
+    "cancel": "Отмена",
+    "abort": "Прервать",
+    "abortConfirm": "Подтвердить отмену (нажмите еще раз)",
+    "btnInstall": "Скачать и установить",
+    "btnReinstall": "Переустановить игру",
+    "btnReinstallConfirm": "Подтвердить переустановку",
+    "statusStarting": "Начало установки...",
+    "statusPreparingReinstall": "Подготовка к переустановке...",
+    "pkgBaseGame": "Основная игра",
+    "pkgLangPack": "Языковой пакет ({lang})",
+    "pkgModBfm": "Мод BFM",
+    "cleaningOld": "Очистка предыдущей установки...",
+    "connecting": "Подключение: {step}...",
+    "extracting": "Распаковка: {step}...",
+    "completed": "Установка успешно завершена!"
+  },
+  "buttons": {
+    "download": "Скачать игру",
+    "reinstall": "Переустановить игру",
+    "openFolder": "Открыть папку с игрой",
+    "openDgVoodoo": "Настройки dgVoodoo"
+  },
+  "errors": {
+    "GAME_EXE_NOT_FOUND": {
+      "title": "Игра не найдена",
+      "description": "RiseAndFall.exe не найден в указанной папке."
+    },
+    "DGV_EXE_NOT_FOUND": {
+      "title": "dgVoodoo отсутствует",
+      "description": "dgVoodooCpl.exe не найден в папке игры."
+    },
+    "TARGET_DIR_REQUIRED": {
+      "title": "Укажите путь",
+      "description": "Путь к папке установки не указан."
+    },
+    "TARGET_DIR_INVALID": {
+      "title": "Неверная папка",
+      "description": "Папка не существует или недоступна."
+    },
+    "FS_ACCESS_DENIED": {
+      "title": "Доступ запрещен",
+      "description": "Недостаточно прав для работы с этой папкой."
+    },
+    "CONFIG_READ_FAILED": {
+      "title": "Ошибка настроек",
+      "description": "Не удалось прочитать файл настроек."
+    },
+    "CONFIG_WRITE_FAILED": {
+      "title": "Ошибка сохранения",
+      "description": "Не удалось сохранить настройки лаунчера."
+    },
+    "NETWORK_OFFLINE": {
+      "title": "Ошибка сети",
+      "description": "Нет соединения с сервером лаунчера."
+    },
+    "NETWORK_TIMEOUT": {
+      "title": "Таймаут соединения",
+      "description": "Сервер отвечает слишком долго."
+    },
+    "DOWNLOAD_FAILED": {
+      "title": "Ошибка загрузки",
+      "description": "Не удалось загрузить файлы игры."
+    },
+    "CORRUPTED_ARCHIVE": {
+      "title": "Ошибка архива",
+      "description": "Архив поврежден или не читается."
+    },
+    "EXTRACTION_FAILED": {
+      "title": "Ошибка распаковки",
+      "description": "Не удалось извлечь файлы из архива."
+    },
+    "INSTALL_CANCELLED": {
+      "title": "Отменено",
+      "description": "Установка прервана. Временные файлы удалены."
+    },
+    "PROCESS_SPAWN_FAILED": {
+      "title": "Ошибка запуска",
+      "description": "Не удалось запустить процесс игры."
+    },
+    "PROCESS_CRASHED": {
+      "title": "Сбой игры",
+      "description": "Процесс игры неожиданно завершился."
+    },
+    "PROCESS_FROZEN": {
+      "title": "Игра зависла",
+      "description": "Процесс был закрыт из-за отсутствия ответа."
+    },
+    "UNSUPPORTED_OS": {
+      "title": "ОС не поддерживается",
+      "description": "Требуется Windows или Wine."
+    },
+    "EXPLORER_FAILED": {
+      "title": "Ошибка проводника",
+      "description": "Не удалось открыть папку в проводнике."
+    },
+    "BROWSER_FAILED": {
+      "title": "Ошибка браузера",
+      "description": "Не удалось открыть браузер по умолчанию."
+    },
+    "GITHUB_API_FAILED": {
+      "title": "Ошибка синхронизации",
+      "description": "Не удалось загрузить список обновлений."
+    },
+    "UNKNOWN_ERROR": {
+      "title": "Неизвестная ошибка",
+      "description": "Произошла непредвиденная ошибка."
+    }
+  },
+  "toasts": {
+    "welcomeMissingTitle": "Игра не найдена",
+    "welcomeMissingDesc": "RiseAndFall.exe не найден в выбранной папке.",
+    "welcomeAccessDeniedTitle": "Доступ запрещен",
+    "welcomeAccessDeniedDesc": "Не удалось открыть выбор папки.",
+    "installPathRequiredTitle": "Укажите путь",
+    "installPathRequiredDesc": "Папка для установки не указана.",
+    "explorerNotSetTitle": "Путь не указан",
+    "explorerNotSetDesc": "Сначала укажите путь к игре.",
+    "explorerErrorTitle": "Ошибка проводника",
+    "explorerErrorDesc": "Папка не существует или недоступна проводнику.",
+    "browserErrorTitle": "Ошибка браузера",
+    "browserErrorDesc": "Не удалось открыть браузер для перехода по ссылке.",
+    "dgvPathRequiredTitle": "Укажите путь",
+    "dgvPathRequiredDesc": "Сначала выберите папку с игрой.",
+    "dgvMissingTitle": "dgVoodoo отсутствует",
+    "dgvMissingDesc": "dgVoodooCpl.exe не найден в папке с игрой.",
+    "dgvOsUnsupportedTitle": "ОС не поддерживается",
+    "dgvOsUnsupportedDesc": "Панель управления требует Windows."
+  }
+}
+

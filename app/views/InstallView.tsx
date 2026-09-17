@@ -29,6 +29,7 @@ import {
 } from "@/icon";
 import { installGamePackage, type InstallStatus } from "@/lib/manager/install";
 import { formatErrorToast } from "@/lib/errors";
+import { useTranslation } from "@/lib/lang";
 
 interface InstallViewProps {
   defaultInstallPath?: string;
@@ -43,6 +44,7 @@ export function InstallView({
   onInstalled,
   onCancel,
 }: InstallViewProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { pickFolder } = useFileDialog();
 
@@ -79,7 +81,7 @@ export function InstallView({
           : undefined;
 
       const selected = await pickFolder({
-        title: "Select Game Installation Directory",
+        title: t("install.installDir"),
         defaultPath: parentDir,
       });
 
@@ -101,8 +103,8 @@ export function InstallView({
     const target = installPath.trim();
     if (!target) {
       toast({
-        title: "Path Required",
-        description: "Target game folder is missing.",
+        title: t("toasts.installPathRequiredTitle"),
+        description: t("toasts.installPathRequiredDesc"),
         type: "warn",
       });
       return;
@@ -112,7 +114,7 @@ export function InstallView({
     setConfirmAbort(false);
     setStatus("downloading");
     setStatusMessage(
-      isReinstall ? "Preparing reinstall..." : "Starting installation...",
+      isReinstall ? t("install.statusPreparingReinstall") : t("install.statusStarting"),
     );
 
     const res = await installGamePackage({
@@ -203,12 +205,12 @@ export function InstallView({
           </Button>
           <Column gap={2}>
             <H2 style={{ color: theme.colors.fg }}>
-              {isReinstall ? "Reinstall Rise and Fall" : "Install Game"}
+              {isReinstall ? t("install.titleReinstall") : t("install.titleInstall")}
             </H2>
             <Muted>
               {isReinstall
-                ? "Cleans existing game files except Data/Saved Games and downloads fresh copy"
-                : "Download the game pack with mods and your language"}
+                ? t("install.subReinstall")
+                : t("install.subInstall")}
             </Muted>
           </Column>
         </Row>
@@ -227,21 +229,18 @@ export function InstallView({
               padding: 14,
             }}
           >
-            <Label>Target Installation Directory</Label>
+            <Label>{t("install.targetDir")}</Label>
             <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>
               {installPath}
             </P>
             <Row gap={6} align="center">
               <AlertTriangle size={14} color={theme.colors.mutedFg} />
-              <Muted>
-                All game files will be refreshed. Saves in Data/Saved Games are
-                preserved.
-              </Muted>
+              <Muted>{t("install.targetWarning")}</Muted>
             </Row>
           </Column>
         ) : (
           <Column gap={8} style={{ width: "100%" }}>
-            <Label>Installation Directory</Label>
+            <Label>{t("install.installDir")}</Label>
             <Row gap={8} align="center" style={{ width: "100%" }}>
               <div style={{ flexGrow: 1 }}>
                 <Input
@@ -258,7 +257,7 @@ export function InstallView({
               >
                 <Row gap={8} align="center">
                   <Folder size={14} color={theme.colors.fg} />
-                  Browse
+                  {t("settings.browse")}
                 </Row>
               </Button>
             </Row>
@@ -268,7 +267,7 @@ export function InstallView({
         <Column gap={8} style={{ width: "100%" }}>
           <Row gap={8} align="center">
             <Globe size={14} color={theme.colors.mutedFg} />
-            <Label>Language Pack</Label>
+            <Label>{t("install.langPack")}</Label>
           </Row>
           <NavigationRoot
             value={selectedLang}
@@ -299,7 +298,9 @@ export function InstallView({
                 <CheckCircle size={16} color={theme.colors.success} />
               )}
               <P style={{ fontWeight: "bold" }}>
-                {status === "completed" ? "Ready" : "Processing"}
+                {status === "completed"
+                  ? t("install.ready")
+                  : t("install.processing")}
               </P>
             </Row>
             <Muted>{statusMessage}</Muted>
@@ -320,12 +321,12 @@ export function InstallView({
             disabled={isInstalling}
             onClick={onCancel}
           >
-            Cancel
+            {t("install.cancel")}
           </Button>
 
           {isInstalling ? (
             <Button variant="destructive" size="sm" onClick={handleAbort}>
-              {confirmAbort ? "Confirm Abort (Click Again)" : "Abort"}
+              {confirmAbort ? t("install.abortConfirm") : t("install.abort")}
             </Button>
           ) : (
             <Button
@@ -357,11 +358,11 @@ export function InstallView({
                 >
                   {isReinstall
                     ? confirmReinstall
-                      ? "Confirm Reinstall (Click Again)"
-                      : "Reinstall Game"
+                      ? t("install.btnReinstallConfirm")
+                      : t("install.btnReinstall")
                     : status === "completed"
-                      ? "Reinstall"
-                      : "Download & Install"}
+                      ? t("install.btnReinstall")
+                      : t("install.btnInstall")}
                 </P>
               </Row>
             </Button>

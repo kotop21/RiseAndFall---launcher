@@ -15,16 +15,21 @@ import {
 } from "@/ui";
 import { FolderCheck, Download, Sparkles, Wrench } from "@/icon";
 import { hasRiseAndFallExe } from "@/lib/utils/game-files";
+import { detectSystemLanguage } from "@/lib/lang/detect";
+import { useTranslation } from "@/lib/lang";
 
 interface WelcomeViewProps {
+  onAutoDetectLanguage?: (lang: "en" | "ru" | "ua") => void;
   onSelectExistingGame: (gameDir: string) => Promise<void> | void;
   onNavigateInstall: () => void;
 }
 
 export function WelcomeView({
+  onAutoDetectLanguage,
   onSelectExistingGame,
   onNavigateInstall,
 }: WelcomeViewProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { pickFolder } = useFileDialog();
   const [slide, setSlide] = useState<"greeting" | "preparing" | "choice">(
@@ -34,6 +39,9 @@ export function WelcomeView({
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
+    const detected = detectSystemLanguage();
+    onAutoDetectLanguage?.(detected);
+
     timers.current.push(
       setTimeout(() => {
         setSlide("preparing");
@@ -58,7 +66,7 @@ export function WelcomeView({
 
     try {
       const selected = await pickFolder({
-        title: "Select Game Directory",
+        title: t("welcome.chooseMethod"),
         requiredFile: "RiseAndFall.exe",
       });
 
@@ -72,8 +80,8 @@ export function WelcomeView({
 
       if (!isValid) {
         toast({
-          title: "Game Missing",
-          description: "RiseAndFall.exe not found in selected folder.",
+          title: t("toasts.welcomeMissingTitle"),
+          description: t("toasts.welcomeMissingDesc"),
           type: "error",
         });
         return;
@@ -82,8 +90,8 @@ export function WelcomeView({
       await onSelectExistingGame(path);
     } catch {
       toast({
-        title: "Access Denied",
-        description: "Failed to open directory picker.",
+        title: t("toasts.welcomeAccessDeniedTitle"),
+        description: t("toasts.welcomeAccessDeniedDesc"),
         type: "error",
       });
     } finally {
@@ -116,8 +124,10 @@ export function WelcomeView({
         >
           <Column align="center" justify="center" gap={12}>
             <Sparkles size={32} color={theme.colors.fg} />
-            <H1 style={{ fontSize: 36, textAlign: "center" }}>Hello!</H1>
-            <Muted style={{ fontSize: 14 }}>Launcher by kotop21</Muted>
+            <H1 style={{ fontSize: 36, textAlign: "center" }}>
+              {t("welcome.hello")}
+            </H1>
+            <Muted style={{ fontSize: 14 }}>{t("welcome.author")}</Muted>
           </Column>
         </View>
 
@@ -135,11 +145,9 @@ export function WelcomeView({
           <Column align="center" justify="center" gap={12}>
             <Wrench size={32} color={theme.colors.fg} />
             <H2 style={{ fontSize: 28, textAlign: "center" }}>
-              Setting Things Up
+              {t("welcome.settingUp")}
             </H2>
-            <Muted style={{ fontSize: 14 }}>
-              Preparing runtime environment...
-            </Muted>
+            <Muted style={{ fontSize: 14 }}>{t("welcome.preparing")}</Muted>
           </Column>
         </View>
 
@@ -163,10 +171,10 @@ export function WelcomeView({
           >
             <Column align="center" gap={4}>
               <H2 style={{ fontSize: 24, textAlign: "center" }}>
-                Getting Started
+                {t("welcome.gettingStarted")}
               </H2>
               <Muted style={{ textAlign: "center" }}>
-                Choose how you want to set up the game files
+                {t("welcome.chooseMethod")}
               </Muted>
             </Column>
 
@@ -190,10 +198,12 @@ export function WelcomeView({
                   <Column gap={4}>
                     <Row gap={8} align="center">
                       <FolderCheck size={16} color={theme.colors.fg} />
-                      <P style={{ fontWeight: "bold" }}>Existing Game</P>
+                      <P style={{ fontWeight: "bold" }}>
+                        {t("welcome.existingGame")}
+                      </P>
                     </Row>
                     <Muted style={{ fontSize: 12 }}>
-                      Locate an existing RiseAndFall.exe installation
+                      {t("welcome.existingDesc")}
                     </Muted>
                   </Column>
                 </div>
@@ -207,7 +217,7 @@ export function WelcomeView({
                 >
                   <Row gap={6} align="center" justify="center">
                     <FolderCheck size={14} color={theme.colors.fg} />
-                    Browse
+                    {t("welcome.browse")}
                   </Row>
                 </Button>
               </div>
@@ -231,10 +241,12 @@ export function WelcomeView({
                   <Column gap={4}>
                     <Row gap={8} align="center">
                       <Download size={16} color={theme.colors.fg} />
-                      <P style={{ fontWeight: "bold" }}>Fresh Install</P>
+                      <P style={{ fontWeight: "bold" }}>
+                        {t("welcome.freshInstall")}
+                      </P>
                     </Row>
                     <Muted style={{ fontSize: 12 }}>
-                      Download the game pack with mods and your language
+                      {t("welcome.freshDesc")}
                     </Muted>
                   </Column>
                 </div>
@@ -247,7 +259,7 @@ export function WelcomeView({
                 >
                   <Row gap={6} align="center" justify="center">
                     <Download size={14} color={theme.colors.primaryFg} />
-                    Install
+                    {t("welcome.install")}
                   </Row>
                 </Button>
               </div>

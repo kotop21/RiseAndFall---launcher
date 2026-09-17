@@ -1,6 +1,7 @@
 import type { StyleDesc } from "@gpuix/react";
 import { Row, P, theme } from "@/ui";
 import { Download, RefreshCw } from "@/icon";
+import { useTranslation } from "@/lib/lang";
 
 interface DownloadGameButtonProps {
   variant?: "download" | "reinstall";
@@ -17,6 +18,7 @@ export function DownloadGameButton({
   disabled = false,
   style,
 }: DownloadGameButtonProps) {
+  const { t } = useTranslation();
   const isReinstall = variant === "reinstall";
   const iconColor = disabled ? theme.colors.mutedFg : theme.colors.primaryFg;
   const textColor = disabled ? theme.colors.mutedFg : theme.colors.primaryFg;
@@ -61,7 +63,7 @@ export function DownloadGameButton({
             fontSize: size === "sm" ? 12 : 14,
           }}
         >
-          {isReinstall ? "Reinstall Game" : "Download Game"}
+          {isReinstall ? t("buttons.reinstall") : t("buttons.download")}
         </P>
       </Row>
     </div>

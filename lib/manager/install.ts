@@ -11,6 +11,7 @@ import { saveConfig } from "@/lib/config/save";
 import { DEFAULT_CONFIG } from "@/lib/config/init";
 import type { LauncherConfig } from "@/lib/config/types";
 import { createLauncherError, normalizeError, type LauncherAppError } from "@/lib/errors";
+import { getCurrentLanguage, getTranslation } from "@/lib/lang";
 
 export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" | "error";
 
@@ -40,6 +41,7 @@ export async function installGamePackage({
   config?: LauncherConfig;
   error?: LauncherAppError;
 }> {
+  const currentLang = getCurrentLanguage();
   const cleanDir = targetDir.trim();
   if (!cleanDir) {
     return {
@@ -51,27 +53,30 @@ export async function installGamePackage({
   if (!(await ensureDirectory(cleanDir))) {
     return {
       success: false,
-      error: createLauncherError("TARGET_DIR_INVALID", `Cannot access or create directory: ${cleanDir}`),
+      error: createLauncherError("TARGET_DIR_INVALID"),
     };
   }
 
   if (cleanBeforeInstall) {
     onProgress?.({
       status: "extracting",
-      message: "Cleaning previous installation...",
+      message: getTranslation(currentLang, "install.cleaningOld"),
     });
     if (!(await cleanGameDirectory(cleanDir))) {
       return {
         success: false,
-        error: createLauncherError("FS_ACCESS_DENIED", `Cannot clean directory: ${cleanDir}`),
+        error: createLauncherError("FS_ACCESS_DENIED"),
       };
     }
   }
 
   const packages = [
-    { key: "game", label: "Base Game" },
-    { key: `lang:${lang}`, label: `Language Pack (${lang.toUpperCase()})` },
-    { key: "mod:bfm", label: "BFM Mod" },
+    { key: "game", label: getTranslation(currentLang, "install.pkgBaseGame") },
+    {
+      key: `lang:${lang}`,
+      label: getTranslation(currentLang, "install.pkgLangPack").replace("{lang}", lang.toUpperCase()),
+    },
+    { key: "mod:bfm", label: getTranslation(currentLang, "install.pkgModBfm") },
   ];
 
   let cumulativeBytes = 0;
@@ -89,13 +94,13 @@ export async function installGamePackage({
 
     onProgress?.({
       status: "downloading",
-      message: `Connecting for ${stepLabel}...`,
+      message: getTranslation(currentLang, "install.connecting").replace("{step}", stepLabel),
       bytesDownloaded: cumulativeBytes,
     });
 
     const streamRes = await downloadSingleFileStream(pkg.key, signal);
     if (!streamRes.ok || !streamRes.stream) {
-      const err = streamRes.error ?? createLauncherError("DOWNLOAD_FAILED", `Failed downloading ${pkg.label}`);
+      const err = streamRes.error ?? createLauncherError("DOWNLOAD_FAILED");
       onProgress?.({ status: "error", message: err.description });
       return { success: false, error: err };
     }
@@ -150,12 +155,12 @@ export async function installGamePackage({
 
       onProgress?.({
         status: "extracting",
-        message: `Extracting ${stepLabel}...`,
+        message: getTranslation(currentLang, "install.extracting").replace("{step}", stepLabel),
         bytesDownloaded: cumulativeBytes,
       });
 
       if (!(await extractZip(tempArchivePath, cleanDir))) {
-        throw createLauncherError("EXTRACTION_FAILED", `Failed extracting ${pkg.label}`);
+        throw createLauncherError("EXTRACTION_FAILED");
       }
     } catch (err: unknown) {
       if (reader) {
@@ -182,7 +187,7 @@ export async function installGamePackage({
         return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
       }
 
-      const launchErr = createLauncherError(normalized.code, normalized.description, err);
+      const launchErr = createLauncherError(normalized.code, undefined, err);
       onProgress?.({ status: "error", message: launchErr.description });
       return { success: false, error: launchErr };
     } finally {
@@ -206,17 +211,23 @@ export async function installGamePackage({
     } catch {}
   }
 
+  const activeId = currentCfg.activeProfileId || "slot-1";
+  const updatedProfiles = (currentCfg.gameProfiles || DEFAULT_CONFIG.gameProfiles).map((p) =>
+    p.id === activeId ? { ...p, path: cleanDir } : p
+  );
+
   const updatedConfig: LauncherConfig = {
     ...currentCfg,
     gameDir: cleanDir,
-    launcherLang: lang,
+    gameProfiles: updatedProfiles,
+    launcherLang: currentLang,
   };
 
   await saveConfig(updatedConfig);
 
   onProgress?.({
     status: "completed",
-    message: "Installation completed successfully!",
+    message: getTranslation(currentLang, "install.completed"),
     bytesDownloaded: cumulativeBytes,
   });
 

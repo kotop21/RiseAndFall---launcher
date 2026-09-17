@@ -6,6 +6,7 @@ import { launchExe } from "@/lib/process/launch";
 import { isWindows } from "@/lib/utils/os";
 import { hasDgVoodooCplExe } from "@/lib/utils/game-files";
 import { formatErrorToast } from "@/lib/errors";
+import { useTranslation } from "@/lib/lang";
 
 interface OpenDgVoodooButtonProps {
   gameDir?: string;
@@ -13,6 +14,7 @@ interface OpenDgVoodooButtonProps {
 }
 
 export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [fileExists, setFileExists] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
@@ -49,8 +51,8 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!cleanDir) {
       toast({
-        title: "Path Required",
-        description: "Choose game folder first.",
+        title: t("toasts.dgvPathRequiredTitle"),
+        description: t("toasts.dgvPathRequiredDesc"),
         type: "warn",
       });
       return;
@@ -58,8 +60,8 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!fileExists) {
       toast({
-        title: "dgVoodoo Missing",
-        description: "dgVoodooCpl.exe not found in game folder.",
+        title: t("toasts.dgvMissingTitle"),
+        description: t("toasts.dgvMissingDesc"),
         type: "error",
       });
       return;
@@ -67,8 +69,8 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!isWin) {
       toast({
-        title: "OS Unsupported",
-        description: "Control panel requires Windows.",
+        title: t("toasts.dgvOsUnsupportedTitle"),
+        description: t("toasts.dgvOsUnsupportedDesc"),
         type: "error",
       });
       return;
@@ -85,10 +87,10 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
   };
 
   const getButtonLabel = () => {
-    if (isValidating) return "Checking...";
-    if (!fileExists) return "dgVoodoo Missing";
-    if (!isWin) return "Windows Only";
-    return "Open dgVoodoo Config";
+    if (isValidating) return t("header.checking");
+    if (!fileExists) return t("main.dgVoodooMissing");
+    if (!isWin) return t("header.windowsOnly");
+    return t("buttons.openDgVoodoo");
   };
 
   return (

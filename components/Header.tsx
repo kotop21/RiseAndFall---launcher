@@ -19,6 +19,7 @@ import { useOnlineTracker } from "@/lib/api/online";
 import { DownloadGameButton } from "./DownloadGameButton";
 import type { LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
+import { useTranslation } from "@/lib/lang";
 
 interface HeaderProps {
   config: LauncherConfig;
@@ -33,6 +34,7 @@ export function Header({
   onOpenSettings,
   onOpenInstall,
 }: HeaderProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const onlineCount = useOnlineTracker();
   const [isRunning, setIsRunning] = useState(false);
@@ -76,8 +78,8 @@ export function Header({
   const handleStartGame = async () => {
     if (!gameExists) {
       toast({
-        title: "Game Missing",
-        description: "RiseAndFall.exe not found in game folder.",
+        title: t("header.gameMissing"),
+        description: t("header.gameMissingDesc"),
         type: "error",
       });
       return;
@@ -85,8 +87,8 @@ export function Header({
 
     if (!isWin) {
       toast({
-        title: "OS Unsupported",
-        description: "Native launch requires Windows.",
+        title: t("header.windowsOnly"),
+        description: t("header.osUnsupportedDesc"),
         type: "error",
       });
       return;
@@ -96,8 +98,8 @@ export function Header({
     setIsRunning(true);
 
     toast({
-      title: "Starting Game",
-      description: "Launching Rise and Fall...",
+      title: t("header.startingGame"),
+      description: t("header.startingDesc"),
       type: "info",
       duration: 2000,
     });
@@ -136,11 +138,11 @@ export function Header({
   const isButtonDisabled = isRunning || isValidating || !gameExists || !isWin;
 
   const getButtonText = () => {
-    if (isRunning) return "Game Running...";
-    if (isValidating) return "Checking...";
-    if (!gameExists) return "Game Missing";
-    if (!isWin) return "Windows Only";
-    return "Start Game";
+    if (isRunning) return t("header.gameRunning");
+    if (isValidating) return t("header.checking");
+    if (!gameExists) return t("header.gameMissing");
+    if (!isWin) return t("header.windowsOnly");
+    return t("header.startGame");
   };
 
   const isActionReady = !isValidating && gameExists && isWin && !isRunning;
@@ -184,7 +186,7 @@ export function Header({
           <Column gap={4} align="start">
             <Row gap={8} align="center">
               <Users size={14} color={theme.colors.mutedFg} />
-              <Muted>Current Online:</Muted>
+              <Muted>{t("header.currentOnline")}</Muted>
               <P
                 style={{
                   fontWeight: "bold",
@@ -199,7 +201,7 @@ export function Header({
             </Row>
             <Row gap={8} align="center">
               <Clock size={14} color={theme.colors.mutedFg} />
-              <Muted>Total Playtime:</Muted>
+              <Muted>{t("header.totalPlaytime")}</Muted>
               <P style={{ color: theme.colors.mutedFg }}>
                 {formatPlaytime(config.totalPlaytimeMinutes)}
               </P>
