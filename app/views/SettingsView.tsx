@@ -1,15 +1,18 @@
+import { discordRpc } from "@/lib/discord-rpc";
 import { useState, useEffect } from "react";
 import {
   Column,
   Row,
   H2,
   Label,
+  P,
   Muted,
   Input,
   Button,
   Separator,
   ScrollArea,
   Badge,
+  Switch,
   useFileDialog,
   useToast,
   theme,
@@ -74,7 +77,6 @@ export function SettingsView({
     });
   }, [config]);
 
-  // Изменения отслеживаются исключительно для профилей, путей и аргументов
   const hasProfileChanges =
     JSON.stringify(formState.gameProfiles) !==
       JSON.stringify(config.gameProfiles) ||
@@ -231,7 +233,6 @@ export function SettingsView({
     }
   };
 
-  // Мгновенная смена языка интерфейса без нажатия кнопки сохранения
   const handleLanguageChange = async (newLang: string) => {
     setFormState((prev) => ({ ...prev, launcherLang: newLang }));
     try {
@@ -337,8 +338,8 @@ export function SettingsView({
 
   const langNavItems = [
     { id: "en", label: "English" },
-    { id: "ru", label: "Русский" },
     { id: "ua", label: "Українська" },
+    { id: "ru", label: "Русский" },
   ];
 
   return (
@@ -374,7 +375,6 @@ export function SettingsView({
 
         <Separator orientation="horizontal" />
 
-        {/* Блок управления профилями */}
         <Column gap={10} style={{ width: "100%" }}>
           <Row justify="between" align="center" style={{ width: "100%" }}>
             <Row gap={8} align="center">
@@ -473,7 +473,6 @@ export function SettingsView({
           </Muted>
         </Column>
 
-        {/* Кнопки сохранения/сброса только для профиля */}
         <Row
           gap={10}
           justify="end"
@@ -507,7 +506,6 @@ export function SettingsView({
 
         <Separator orientation="horizontal" />
 
-        {/* Блок языка интерфейса (мгновенное применение) */}
         <Column gap={8} style={{ width: "100%" }}>
           <Row gap={8} align="center">
             <Globe size={14} color={theme.colors.mutedFg} />
@@ -525,9 +523,38 @@ export function SettingsView({
           </NavigationRoot>
         </Column>
 
+        <Column gap={8} style={{ width: "100%" }}>
+          <Label>{t("settings.integrations")}</Label>
+          <Row justify="between" align="center" style={{ width: "100%" }}>
+            <P style={{ color: theme.colors.fg, fontSize: 14 }}>
+              {t("settings.enableDiscordRpc")}
+            </P>
+            <Switch
+              checked={formState.discordRpc}
+              onCheckedChange={(checked) => {
+                setFormState((prev) => ({ ...prev, discordRpc: checked }));
+                discordRpc.setEnabled(checked);
+                onChangeConfig({
+                  ...config,
+                  discordRpc: checked,
+                });
+                toast({
+                  title: checked
+                    ? t("toasts.discordRpcEnabledTitle")
+                    : t("toasts.discordRpcDisabledTitle"),
+                  description: checked
+                    ? t("toasts.discordRpcEnabledDesc")
+                    : t("toasts.discordRpcDisabledDesc"),
+                  type: "info",
+                  duration: 2500,
+                });
+              }}
+            />
+          </Row>
+        </Column>
+
         <Separator orientation="horizontal" />
 
-        {/* Действия и утилиты */}
         <Column gap={10} style={{ width: "100%" }}>
           <Label>{t("settings.actions")}</Label>
 

@@ -1,3 +1,5 @@
+import { launcherTracker } from "@/lib/process/launcher-tracker";
+import { discordRpc } from "@/lib/discord-rpc";
 import { render } from "@gpuix/react";
 import { initConfig } from "@/lib/config";
 import { initLogger, logger } from "@/lib/logger";
@@ -8,6 +10,8 @@ initLogger(getLauncherVersion());
 
 async function main() {
   const { config, isFirstLaunch } = await initConfig();
+  discordRpc.init(config.discordRpc);
+  launcherTracker.init(config.launcherPlaytimeMinutes || 0);
 
   render(<App initialConfig={config} isFirstLaunch={isFirstLaunch} />, {
     title: "Rise and Fall Launcher",

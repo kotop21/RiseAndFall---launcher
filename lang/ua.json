@@ -33,7 +33,8 @@
     "startingGame": "Запуск гри",
     "startingDesc": "Запуск Rise and Fall...",
     "gameMissingDesc": "RiseAndFall.exe не знайдено в теці гри.",
-    "osUnsupportedDesc": "Прямий запуск підтримується лише на Windows."
+    "osUnsupportedDesc": "Прямий запуск підтримується лише на Windows.",
+    "launcherTime": "Час у лаунчері: {time}"
   },
   "settings": {
     "title": "Налаштування та діагностика",
@@ -55,7 +56,9 @@
     "activeSlotBadge": "Активна",
     "removeSlotConfirm": "Видалити профіль",
     "setPathFirst": "Вкажіть шлях для цього профілю",
-    "launchArgsProfileHint": "Параметри запуску зберігаються окремо для {profile}."
+    "launchArgsProfileHint": "Параметри запуску зберігаються окремо для {profile}.",
+    "integrations": "Інтеграції",
+    "enableDiscordRpc": "Відображати активність у Discord"
   },
   "install": {
     "titleInstall": "Встановлення гри",
@@ -228,6 +231,10 @@
     "cliOsUnsupportedTitle": "Тільки Windows",
     "cliOsUnsupportedDesc": "Налаштування гри доступні на Windows",
     "cliMissingTitle": "Файл не знайдено",
-    "cliMissingDesc": "Утиліту не знайдено."
+    "cliMissingDesc": "Утиліту не знайдено.",
+    "discordRpcEnabledTitle": "Discord RPC увімкнено",
+    "discordRpcEnabledDesc": "Статус активності увімкнено",
+    "discordRpcDisabledTitle": "Discord RPC вимкнено",
+    "discordRpcDisabledDesc": "Статус активності вимкнено"
   }
 }

@@ -30,6 +30,7 @@ import {
 import { installGamePackage, type InstallStatus } from "@/lib/manager/install";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { isWindows } from "@/lib/utils/os";
 
 interface InstallViewProps {
   defaultInstallPath?: string;
@@ -48,7 +49,15 @@ export function InstallView({
   const { toast } = useToast();
   const { pickFolder } = useFileDialog();
 
-  const [installPath, setInstallPath] = useState(defaultInstallPath);
+  const getInitialPath = () => {
+    if (defaultInstallPath) return defaultInstallPath;
+    if (!isReinstall) {
+      return isWindows() ? "C:\\Games\\Rise and Fall" : "Rise and Fall";
+    }
+    return "";
+  };
+
+  const [installPath, setInstallPath] = useState(getInitialPath);
   const [selectedLang, setSelectedLang] = useState<string>("en");
   const [status, setStatus] = useState<InstallStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("");
@@ -114,7 +123,9 @@ export function InstallView({
     setConfirmAbort(false);
     setStatus("downloading");
     setStatusMessage(
-      isReinstall ? t("install.statusPreparingReinstall") : t("install.statusStarting"),
+      isReinstall
+        ? t("install.statusPreparingReinstall")
+        : t("install.statusStarting"),
     );
 
     const res = await installGamePackage({
@@ -205,7 +216,9 @@ export function InstallView({
           </Button>
           <Column gap={2}>
             <H2 style={{ color: theme.colors.fg }}>
-              {isReinstall ? t("install.titleReinstall") : t("install.titleInstall")}
+              {isReinstall
+                ? t("install.titleReinstall")
+                : t("install.titleInstall")}
             </H2>
             <Muted>
               {isReinstall

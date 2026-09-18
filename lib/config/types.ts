@@ -11,9 +11,11 @@ export interface LauncherConfig {
   gameArg: string;
   launcherLang: string;
   totalPlaytimeMinutes: number;
+  launcherPlaytimeMinutes: number;
   lastLaunchDate: string | null;
   gameProfiles: GameBuildProfile[];
   activeProfileId: string;
+  discordRpc: boolean;
 }
 
 export interface LauncherState {

@@ -16,3 +16,5 @@ export { H1, H2, H3, P, Muted, Label } from "./elements/typography";
 export { Badge, type BadgeProps } from "./elements/badge";
 export { Views, View, ViewTrigger, useViews, type ViewsProps, type ViewProps, type ViewTriggerProps, type ViewTransition } from "./elements/view";
 export { NavigationRoot, useNavigation, SegmentedNav, NavPanel, type NavItem, type SegmentedNavProps, type NavPanelProps } from "./elements/navigation";
+
+export { Tooltip, type TooltipProps, type TooltipSide } from "./elements/tooltip";

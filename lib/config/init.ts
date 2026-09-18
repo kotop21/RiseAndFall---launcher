@@ -12,9 +12,11 @@ export const DEFAULT_CONFIG: LauncherConfig = {
   gameArg: DEFAULT_GAME_ARG,
   launcherLang: "en",
   totalPlaytimeMinutes: 0,
+  launcherPlaytimeMinutes: 0,
   lastLaunchDate: null,
   gameProfiles: createDefaultProfiles(),
   activeProfileId: "slot-1",
+  discordRpc: true,
 };
 
 async function fileExists(path: string): Promise<boolean> {

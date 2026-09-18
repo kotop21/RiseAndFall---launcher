@@ -33,7 +33,8 @@
     "startingGame": "Запуск игры",
     "startingDesc": "Запуск Rise and Fall...",
     "gameMissingDesc": "RiseAndFall.exe не найден в папке игры.",
-    "osUnsupportedDesc": "Прямой запуск поддерживается только на Windows."
+    "osUnsupportedDesc": "Прямой запуск поддерживается только на Windows.",
+    "launcherTime": "Время в лаунчере: {time}"
   },
   "settings": {
     "title": "Настройки и диагностика",
@@ -55,7 +56,9 @@
     "activeSlotBadge": "Активна",
     "removeSlotConfirm": "Удалить профиль",
     "setPathFirst": "Укажите путь для этого профиля",
-    "launchArgsProfileHint": "Аргументы запуска сохраняются индивидуально для {profile}. "
+    "launchArgsProfileHint": "Аргументы запуска сохраняются индивидуально для {profile}. ",
+    "integrations": "Интеграции",
+    "enableDiscordRpc": "Отображать активность в Discord"
   },
   "install": {
     "titleInstall": "Установка игры",
@@ -228,6 +231,10 @@
     "cliOsUnsupportedTitle": "Только Windows",
     "cliOsUnsupportedDesc": "Настройки игры доступны на Windows",
     "cliMissingTitle": "Файл не найден",
-    "cliMissingDesc": "Утилита не найдена."
+    "cliMissingDesc": "Утилита не найдена.",
+    "discordRpcEnabledTitle": "Discord RPC включен",
+    "discordRpcEnabledDesc": "Статус активности включен",
+    "discordRpcDisabledTitle": "Discord RPC отключен",
+    "discordRpcDisabledDesc": "Статус активности выключен"
   }
 }

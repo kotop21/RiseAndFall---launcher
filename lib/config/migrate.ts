@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger";
 import type { LauncherConfig, GameBuildProfile } from "./types";
 
-export const CURRENT_CONFIG_VERSION = 3;
+export const CURRENT_CONFIG_VERSION = 5;
 export const DEFAULT_GAME_ARG = '-datapath "Data\\" -redistpath "Redist\\"';
 
 export function createDefaultProfiles(initialPath = "", initialArg = DEFAULT_GAME_ARG): GameBuildProfile[] {
@@ -78,6 +78,8 @@ export function migrateConfig(raw: Record<string, any>): {
     gameDir: effectiveGameDir,
     gameArg: effectiveGameArg,
     launcherLang: typeof raw.launcherLang === "string" ? raw.launcherLang : "en",
+    launcherPlaytimeMinutes:
+      typeof raw.launcherPlaytimeMinutes === "number" ? raw.launcherPlaytimeMinutes : 0,
     totalPlaytimeMinutes:
       typeof raw.totalPlaytimeMinutes === "number" ? raw.totalPlaytimeMinutes : 0,
     lastLaunchDate:
@@ -86,6 +88,7 @@ export function migrateConfig(raw: Record<string, any>): {
         : null,
     gameProfiles: profiles,
     activeProfileId,
+    discordRpc: typeof raw.discordRpc === "boolean" ? raw.discordRpc : true,
   };
 
   if (wasMigrated) {

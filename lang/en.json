@@ -33,7 +33,8 @@
     "startingGame": "Starting Game",
     "startingDesc": "Launching Rise and Fall...",
     "gameMissingDesc": "RiseAndFall.exe not found in game folder.",
-    "osUnsupportedDesc": "Native launch requires Windows."
+    "osUnsupportedDesc": "Native launch requires Windows.",
+    "launcherTime": "Time in launcher: {time}"
   },
   "settings": {
     "title": "Settings & Diagnostics",
@@ -55,7 +56,9 @@
     "activeSlotBadge": "Active",
     "removeSlotConfirm": "Remove Profile",
     "setPathFirst": "Select path to assign to this profile",
-    "launchArgsProfileHint": "Arguments applied specifically for {profile}."
+    "launchArgsProfileHint": "Arguments applied specifically for {profile}.",
+    "integrations": "Integrations",
+    "enableDiscordRpc": "Enable Discord Rich Presence"
   },
   "install": {
     "titleInstall": "Install Game",
@@ -228,6 +231,10 @@
     "cliOsUnsupportedTitle": "Windows Only",
     "cliOsUnsupportedDesc": "Game settings need Windows",
     "cliMissingTitle": "CLI Missing",
-    "cliMissingDesc": "Utility file not found."
+    "cliMissingDesc": "Utility file not found.",
+    "discordRpcEnabledTitle": "Discord RPC Enabled",
+    "discordRpcEnabledDesc": "Presence status active",
+    "discordRpcDisabledTitle": "Discord RPC Disabled",
+    "discordRpcDisabledDesc": "Presence status turned off"
   }
 }

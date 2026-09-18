@@ -140,8 +140,6 @@ export function MainView({ config, onChangeConfig }: MainViewProps) {
           <Muted>{quote}</Muted>
         </Column>
 
-        <Separator orientation="horizontal" />
-
         <Row justify="start" gap={10} align="center" style={{ width: "100%" }}>
           <OpenGameFolderButton
             gameDir={config.gameDir}

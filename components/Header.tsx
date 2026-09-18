@@ -1,3 +1,4 @@
+import { discordRpc } from "@/lib/discord-rpc";
 import { useState, useEffect } from "react";
 import { join } from "node:path";
 import {
@@ -7,10 +8,11 @@ import {
   Button,
   P,
   Muted,
+  Tooltip,
   useToast,
   theme,
 } from "@/ui";
-import { Play, Users, Clock, Settings } from "@/icon";
+import { Play, Users, Clock, Settings, Calendar, Timer } from "@/icon";
 import { launchExe } from "@/lib/process/launch";
 import { recordGameSession } from "@/lib/config/session";
 import { isWindows } from "@/lib/utils/os";
@@ -34,13 +36,38 @@ export function Header({
   onOpenSettings,
   onOpenInstall,
 }: HeaderProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+
+  const formatLastLaunch = (rawDate: string | null) => {
+    if (!rawDate) return t("main.neverPlayed");
+    try {
+      const d = new Date(rawDate);
+      if (Number.isNaN(d.getTime())) return t("main.neverPlayed");
+      const locale =
+        lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
+      const formatted = d.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+      return t("main.lastLaunch").replace("{date}", formatted);
+    } catch {
+      return t("main.neverPlayed");
+    }
+  };
+
   const { toast } = useToast();
   const onlineCount = useOnlineTracker();
   const [isRunning, setIsRunning] = useState(false);
   const [gameExists, setGameExists] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const isWin = isWindows();
+
+  const formatLauncherPlaytime = (mins: number) => {
+    if (!mins || mins <= 0) return "0 min";
+    if (mins < 60) return `${mins} min`;
+    return `${Math.floor(mins / 60)} hrs ${mins % 60} min`;
+  };
 
   const isPathConfigured = Boolean(config.gameDir?.trim());
 
@@ -96,6 +123,7 @@ export function Header({
 
     if (isRunning) return;
     setIsRunning(true);
+    discordRpc.setGameRunning(true);
 
     toast({
       title: t("header.startingGame"),
@@ -114,6 +142,7 @@ export function Header({
         trackSession: true,
         onSessionEnd: async (daemonResult) => {
           setIsRunning(false);
+          discordRpc.setGameRunning(false);
 
           try {
             const nextConfig = await recordGameSession(
@@ -134,10 +163,12 @@ export function Header({
 
       if (!res.success) {
         setIsRunning(false);
+        discordRpc.setGameRunning(false);
         toast(formatErrorToast(res.error, "PROCESS_SPAWN_FAILED"));
       }
     } catch (err) {
       setIsRunning(false);
+      discordRpc.setGameRunning(false);
       toast(formatErrorToast(err, "PROCESS_SPAWN_FAILED"));
     }
   };
@@ -206,13 +237,52 @@ export function Header({
                 {onlineCount !== null ? onlineCount : "Unavailable"}
               </P>
             </Row>
-            <Row gap={8} align="center">
-              <Clock size={14} color={theme.colors.mutedFg} />
-              <Muted>{t("header.totalPlaytime")}</Muted>
-              <P style={{ color: theme.colors.mutedFg }}>
-                {formatPlaytime(config.totalPlaytimeMinutes)}
-              </P>
-            </Row>
+
+            <Tooltip
+              content={
+                <Column gap={4} style={{ padding: 2 }}>
+                  <Row gap={6} align="center">
+                    <Calendar size={13} color={theme.colors.mutedFg} />
+                    <text
+                      style={{
+                        fontFamily: theme.fontFamily,
+                        color: theme.colors.popoverFg,
+                        fontSize: 12,
+                      }}
+                    >
+                      {formatLastLaunch(config.lastLaunchDate)}
+                    </text>
+                  </Row>
+                  <Row gap={6} align="center">
+                    <Timer size={13} color={theme.colors.mutedFg} />
+                    <text
+                      style={{
+                        fontFamily: theme.fontFamily,
+                        color: theme.colors.mutedFg,
+                        fontSize: 11,
+                      }}
+                    >
+                      {t("header.launcherTime").replace(
+                        "{time}",
+                        formatLauncherPlaytime(
+                          config.launcherPlaytimeMinutes || 0,
+                        ),
+                      )}
+                    </text>
+                  </Row>
+                </Column>
+              }
+              side="top-start"
+              offset={8}
+            >
+              <Row gap={8} align="center">
+                <Clock size={14} color={theme.colors.mutedFg} />
+                <Muted>{t("header.totalPlaytime")}</Muted>
+                <P style={{ color: theme.colors.mutedFg }}>
+                  {formatPlaytime(config.totalPlaytimeMinutes)}
+                </P>
+              </Row>
+            </Tooltip>
           </Column>
         </Row>
 
