@@ -61,7 +61,7 @@ jobs:
           API_URL: ${{ secrets.API_URL }}
         run: |
           bun run scripts/generate-version.ts
-          bun build --compile --define process.env.API_URL="\"${API_URL}\"" index.tsx --outfile dist/raf-launcher.exe
+          bun build --compile --windows-icon=assets/icon.ico --define process.env.API_URL="\"${API_URL}\"" index.tsx --outfile dist/raf-launcher.exe
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4

@@ -14,7 +14,7 @@ async function main() {
   launcherTracker.init(config.launcherPlaytimeMinutes || 0);
 
   render(<App initialConfig={config} isFirstLaunch={isFirstLaunch} />, {
-    title: "Rise and Fall Launcher",
+    title: `Raf-Launcher v${getLauncherVersion()}`,
     width: 700,
     height: 520,
     minWidth: 700,
