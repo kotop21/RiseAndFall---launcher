@@ -5,7 +5,7 @@ const BASE_URL = (
 ).replace(/\/+$/, "");
 
 export const API_ROUTES = {
-  health: `${BASE_URL}/health`,
+  health: `${BASE_URL}/api/health`,
   online: `${BASE_URL}/api/online`,
   onlineCount: `${BASE_URL}/api/online/count`,
   download: (keys: string[] | string = "") => {

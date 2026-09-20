@@ -1,5 +1,59 @@
 import type { StyleDesc } from "@gpuix/react";
-import * as icons from "lucide-static";
+import {
+  ExternalLink,
+  FolderCheck,
+  FolderOpen,
+  Folder,
+  Download,
+  Upload,
+  Sparkles,
+  Wrench,
+  RefreshCw,
+  SlidersHorizontal,
+  Tag,
+  Layers,
+  Calendar,
+  Play,
+  Users,
+  Clock,
+  Timer,
+  Settings,
+  Check,
+  CheckCircle,
+  Trash2,
+  Globe,
+  AlertTriangle,
+  ArrowLeft,
+  RotateCcw,
+} from "lucide-static";
+
+const icons = {
+  ExternalLink,
+  FolderCheck,
+  FolderOpen,
+  Folder,
+  Download,
+  Upload,
+  Sparkles,
+  Wrench,
+  RefreshCw,
+  SlidersHorizontal,
+  Tag,
+  Layers,
+  Calendar,
+  Play,
+  Users,
+  Clock,
+  Timer,
+  Settings,
+  Check,
+  CheckCircle,
+  Trash2,
+  Globe,
+  AlertTriangle,
+  ArrowLeft,
+  RotateCcw,
+} as const;
 
 export type IconName = keyof typeof icons;
 
@@ -18,7 +72,7 @@ export function Icon({
   color = "#fafafa",
   style = {},
 }: IconProps) {
-  const source = icons[name] as string | undefined;
+  const source = icons[name];
 
   if (!source) {
     return null;

@@ -1,22 +1,19 @@
 {
-  "name": "bungpuix-raf-launcher",
+  "name": "raf-launcher",
   "module": "index.tsx",
   "type": "module",
   "private": true,
   "version": "2.0.0",
   "scripts": {
     "dev": "bun index.tsx",
-    "dev:check": "bun index.tsx",
     "typecheck": "tsc --noEmit",
     "prebuild": "bun run typecheck",
-    "build": "bun build index.tsx --outdir ./dist --target bun --minify",
-    "start": "./dist/app",
+    "build": "python3 build.py"
   },
   "devDependencies": {
     "@gpuix/native-win32-x64-msvc": "^0.7.0",
     "@types/bun": "latest",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
     "esbuild": "^0.28.2",
     "lucide-static": "^1.45.0"
   },
@@ -27,12 +24,9 @@
     "@gpuix/native": "^0.7.0",
     "@gpuix/react": "^0.7.0",
     "msgpackr": "^2.1.0",
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react": "19.0.0"
   },
-  "sideEffects": false,
   "overrides": {
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react": "19.0.0"
   }
 }

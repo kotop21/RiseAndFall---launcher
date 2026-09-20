@@ -1,1 +1,2 @@
-export const BUILD_VERSION: string | null = null;
+// Generated at build time - DO NOT EDIT MANUALLY
+export const BUILD_VERSION = "2.0.0";

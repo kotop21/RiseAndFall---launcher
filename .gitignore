@@ -38,3 +38,6 @@ yarn-error.log*
 .env
 trash.py
 test-game/
+build_test_mac.py
+__pycache__/
+*.py[cod]

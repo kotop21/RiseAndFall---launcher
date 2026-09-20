@@ -19,7 +19,7 @@ function notify(count: number | null) {
     try {
       listener(count);
     } catch (err) {
-      logger.error("online", "Listener callback error:", err);
+      logger.error("online", "listener callback error:", err);
     }
   }
 }
@@ -32,7 +32,7 @@ function getStoredKey(): string | null {
       if (stored?.trim()) inMemoryKey = stored.trim();
     }
   } catch (err) {
-    logger.error("online", "Failed to access localStorage for session key:", err);
+    logger.error("online", "failed to read session key from localStorage:", err);
   }
   return inMemoryKey;
 }
@@ -47,7 +47,7 @@ function setStoredKey(key: string): boolean {
       localStorage.setItem(SESSION_STORAGE_KEY, inMemoryKey);
     }
   } catch (err) {
-    logger.error("online", "Failed to persist session key to localStorage:", err);
+    logger.error("online", "failed to save session key to localStorage:", err);
   }
   return isNew;
 }
@@ -69,15 +69,22 @@ export async function sendHeartbeat(): Promise<boolean> {
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      logger.error("online", `Heartbeat request failed with HTTP ${res.status}`);
+      logger.error("online", `failed with HTTP ${res.status}`);
       notify(null);
       return false;
     }
 
     const data = (await res.json()) as Partial<OnlineResponse>;
-    if (data?.key?.trim()) setStoredKey(data.key);
+    if (data?.key?.trim()) {
+      setStoredKey(data.key);
+    }
 
-    if (typeof data?.online === "number" && Number.isFinite(data.online) && data.online >= 0) {
+    if (
+      typeof data?.online === "number" &&
+      Number.isFinite(data.online) &&
+      data.online >= 0
+    ) {
+      logger.info("online", `ok (players: ${data.online})`);
       notify(data.online);
       return true;
     }
@@ -87,13 +94,14 @@ export async function sendHeartbeat(): Promise<boolean> {
   } catch (err: unknown) {
     clearTimeout(timeoutId);
     const isAbort =
-      (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError")) ||
+      (err instanceof Error &&
+        (err.name === "AbortError" || err.message === "AbortError")) ||
       controller.signal.aborted;
 
     if (isAbort) {
-      logger.error("online", "Heartbeat request timed out");
+      logger.error("online", "request timed out");
     } else {
-      logger.error("online", "Heartbeat network error:", err);
+      logger.error("online", "network error:", err);
     }
 
     notify(null);
@@ -109,7 +117,7 @@ function scheduleNext(delayMs: number) {
       const success = await sendHeartbeat();
       scheduleNext(success ? HEARTBEAT_INTERVAL_MS : RETRY_INTERVAL_MS);
     } catch (err) {
-      logger.error("online", "Error in heartbeat scheduler cycle:", err);
+      logger.error("online", "scheduler error:", err);
       scheduleNext(RETRY_INTERVAL_MS);
     }
   }, delayMs);
@@ -123,7 +131,7 @@ export function startOnlineTracker() {
       scheduleNext(success ? HEARTBEAT_INTERVAL_MS : RETRY_INTERVAL_MS);
     })
     .catch((err) => {
-      logger.error("online", "Failed initial heartbeat:", err);
+      logger.error("online", "initial heartbeat error:", err);
       scheduleNext(RETRY_INTERVAL_MS);
     });
 }
