@@ -62,20 +62,21 @@ jobs:
           name: internal-cli-bin-release
           path: dist/bin
 
-      - name: Bundle & Compile Windows Release Executable (No Console)
+      - name: Bundle & Compile Windows Executable
         shell: bash
         env:
           API_URL: ${{ secrets.API_URL }}
         run: |
           mkdir -p dist/build
           bun run scripts/generate-version.ts
-          bun build index.tsx --outdir dist/build --target node --define process.env.API_URL=""${API_URL}"" --external @gpuix/native-darwin-arm64 --external @gpuix/native-darwin-universal
+          bun build index.tsx --outdir dist/build --target node --define process.env.API_URL="\"${API_URL}\"" --external @gpuix/native-darwin-arm64 --external @gpuix/native-darwin-universal
           
           cat scripts/runtime-napi.ts dist/build/index.js > dist/build/bundle.js
-          
+
           deno compile \
             --allow-all \
             --no-check \
+            --no-npm \
             --no-terminal \
             --unsafely-ignore-certificate-errors \
             --target x86_64-pc-windows-msvc \
