@@ -16,6 +16,7 @@ export interface LauncherConfig {
   gameProfiles: GameBuildProfile[];
   activeProfileId: string;
   discordRpc: boolean;
+  lowPerformanceMode: boolean;
 }
 
 export interface LauncherState {

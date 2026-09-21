@@ -1,7 +1,24 @@
-import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
 import type { StyleDesc, MotionTransition } from "@gpuix/react";
-import { motion } from "@gpuix/react";
+import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { logger } from "@/lib/logger";
+
+let isMotionDisabledGlobal = false;
+
+export function setDisableMotionAnimations(disabled: boolean) {
+  isMotionDisabledGlobal = disabled;
+}
+
+export function isMotionAnimationsDisabled(): boolean {
+  return isMotionDisabledGlobal;
+}
 
 export type ViewTransition =
   | "slide-down"
@@ -41,7 +58,7 @@ export function Views({
   value,
   defaultValue = "",
   defaultTransition = "fade",
-  duration = 0.2,
+  duration = 0.15,
   onValueChange,
   children,
 }: ViewsProps) {
@@ -85,7 +102,7 @@ export function View({
   id,
   transition,
   duration,
-  offset = 40,
+  offset = 20,
   style = {},
   children,
 }: ViewProps) {
@@ -98,7 +115,8 @@ export function View({
   const selectedTransition = transition ?? ctx.defaultTransition;
   const selectedDuration = duration ?? ctx.duration;
 
-  if (selectedTransition === "none") {
+  // Если отключены анимации или transition === "none" — рендерим чистый div
+  if (isMotionDisabledGlobal || selectedTransition === "none") {
     return (
       <div
         style={{

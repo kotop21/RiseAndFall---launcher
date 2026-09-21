@@ -58,7 +58,8 @@
     "setPathFirst": "Select path to assign to this profile",
     "launchArgsProfileHint": "Arguments applied specifically for {profile}.",
     "integrations": "Integrations",
-    "enableDiscordRpc": "Enable Discord Rich Presence"
+    "enableDiscordRpc": "Enable Discord Rich Presence",
+    "lowPerformanceMode": "Low Performance Mode"
   },
   "install": {
     "titleInstall": "Install Game",
@@ -235,6 +236,11 @@
     "discordRpcEnabledTitle": "Discord RPC Enabled",
     "discordRpcEnabledDesc": "Presence status active",
     "discordRpcDisabledTitle": "Discord RPC Disabled",
-    "discordRpcDisabledDesc": "Presence status turned off"
+    "discordRpcDisabledDesc": "Presence status turned off",
+    "lowPerfEnabledTitle": "Low Performance Mode Enabled",
+    "lowPerfEnabledDesc": "Animations disabled, UI optimized for retro hardware.",
+    "lowPerfDisabledTitle": "Low Performance Mode Disabled",
+    "lowPerfDisabledDesc": "Smooth animations and transitions restored."
   }
 }
+

@@ -58,7 +58,8 @@
     "setPathFirst": "Укажите путь для этого профиля",
     "launchArgsProfileHint": "Аргументы запуска сохраняются индивидуально для {profile}. ",
     "integrations": "Интеграции",
-    "enableDiscordRpc": "Отображать активность в Discord"
+    "enableDiscordRpc": "Отображать активность в Discord",
+    "lowPerformanceMode": "Режим низкой производительности"
   },
   "install": {
     "titleInstall": "Установка игры",
@@ -235,6 +236,11 @@
     "discordRpcEnabledTitle": "Discord RPC включен",
     "discordRpcEnabledDesc": "Статус активности включен",
     "discordRpcDisabledTitle": "Discord RPC отключен",
-    "discordRpcDisabledDesc": "Статус активности выключен"
+    "discordRpcDisabledDesc": "Статус активности выключен",
+    "lowPerfEnabledTitle": "Режим низкой производительности включен",
+    "lowPerfEnabledDesc": "Анимации отключены, интерфейс оптимизирован под ретро-железо.",
+    "lowPerfDisabledTitle": "Режим низкой производительности выключен",
+    "lowPerfDisabledDesc": "Плавные анимации и переходы восстановлены."
   }
 }
+

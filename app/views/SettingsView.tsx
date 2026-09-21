@@ -1,3 +1,4 @@
+import { setLowSpecMode } from "@/components/ui/motion-compat";
 import { discordRpc } from "@/lib/discord-rpc";
 import { useState, useEffect } from "react";
 import {
@@ -115,10 +116,13 @@ export function SettingsView({
 
     try {
       const current = formState.gameDir.trim();
-      const parentDir =
+      let parentDir =
         current.includes("/") || current.includes("\\")
           ? current.replace(/[\\/][^\\/]+[\\/]?$/, "")
           : undefined;
+      if (parentDir && /^[a-zA-Z]:$/.test(parentDir)) {
+        parentDir += "\\";
+      }
 
       const selected = await pickFolder({
         title: t("settings.gamePath"),
@@ -545,6 +549,33 @@ export function SettingsView({
                   description: checked
                     ? t("toasts.discordRpcEnabledDesc")
                     : t("toasts.discordRpcDisabledDesc"),
+                  type: "info",
+                  duration: 2500,
+                });
+              }}
+            />
+          </Row>
+
+          <Row justify="between" align="center" style={{ width: "100%" }}>
+            <P style={{ color: theme.colors.fg, fontSize: 14 }}>
+              {t("settings.lowPerformanceMode")}
+            </P>
+            <Switch
+              checked={formState.lowPerformanceMode ?? false}
+              onCheckedChange={(checked) => {
+                setFormState((prev) => ({ ...prev, lowPerformanceMode: checked }));
+                setLowSpecMode(checked);
+                onChangeConfig({
+                  ...config,
+                  lowPerformanceMode: checked,
+                });
+                toast({
+                  title: checked
+                    ? t("toasts.lowPerfEnabledTitle")
+                    : t("toasts.lowPerfDisabledTitle"),
+                  description: checked
+                    ? t("toasts.lowPerfEnabledDesc")
+                    : t("toasts.lowPerfDisabledDesc"),
                   type: "info",
                   duration: 2500,
                 });

@@ -30,18 +30,35 @@ async function checkFileExists(path: string): Promise<boolean> {
   }
 }
 
+function getPowershellPath(): string {
+  const sysRoot =
+    process.platform === "win32"
+      ? process.env.SystemRoot || process.env.WINDIR
+      : undefined;
+  if (sysRoot) {
+    return join(sysRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+  }
+  return "powershell.exe";
+}
+
 async function runProcess(cmd: string[]): Promise<string[] | null> {
   return new Promise<string[] | null>((resolve) => {
     try {
       const [executable, ...args] = cmd;
       const proc = spawn(executable, args, {
         stdio: ["ignore", "pipe", "pipe"],
+        windowsHide: true,
       });
 
       let stdout = "";
+      let stderr = "";
 
       proc.stdout?.on("data", (chunk) => {
         stdout += chunk.toString();
+      });
+
+      proc.stderr?.on("data", (chunk) => {
+        stderr += chunk.toString();
       });
 
       proc.on("error", (err) => {
@@ -51,6 +68,9 @@ async function runProcess(cmd: string[]): Promise<string[] | null> {
 
       proc.on("close", (exitCode) => {
         if (exitCode !== 0 || !stdout.trim()) {
+          if (stderr.trim()) {
+            logger.error("file-picker", `dialog process stderr: ${stderr.trim()}`);
+          }
           resolve(null);
           return;
         }
@@ -112,25 +132,45 @@ export async function openFileDialog(
         : "All files (*.*)|*.*";
 
     const multiselect = multiple ? "$d.Multiselect = $true;" : "";
-    const initDir = defaultPath?.trim()
-      ? `$d.InitialDirectory = '${defaultPath.trim().replace(/'/g, "''")}';`
+    const cleanDefault = defaultPath?.trim();
+    const normalizedDefault =
+      cleanDefault && /^[a-zA-Z]:$/.test(cleanDefault)
+        ? `${cleanDefault}\\`
+        : cleanDefault;
+
+    const initDir = normalizedDefault
+      ? `$init = '${normalizedDefault.replace(/'/g, "''")}'; while ($init -and -not (Test-Path -LiteralPath $init)) { $p = Split-Path -Parent $init; if (-not $p -or $p -eq $init) { break; }; $init = $p; }; if ($init -and (Test-Path -LiteralPath $init)) { $d.InitialDirectory = $init; };`
       : "";
 
     const psCommand = `
-      Add-Type -AssemblyName System.Windows.Forms;
-      $d = New-Object System.Windows.Forms.OpenFileDialog;
-      $d.Title = '${title.replace(/'/g, "''")}';
-      $d.Filter = '${filter}';
-      ${initDir}
-      ${multiselect}
-      if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        $d.FileNames -join [Environment]::NewLine
-      }
+      try {
+        Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop;
+        $f = New-Object System.Windows.Forms.Form -Property @{TopMost = $true};
+        $d = New-Object System.Windows.Forms.OpenFileDialog;
+        $d.Title = '${title.replace(/'/g, "''")}';
+        $d.Filter = '${filter}';
+        ${initDir}
+        ${multiselect}
+        if ($d.ShowDialog($f) -eq [System.Windows.Forms.DialogResult]::OK) {
+          [Console]::WriteLine(($d.FileNames -join [Environment]::NewLine));
+        };
+        $f.Dispose();
+        $d.Dispose();
+      } catch {}
     `
       .replace(/\s+/g, " ")
       .trim();
 
-    return runProcess(["powershell", "-NoProfile", "-Command", psCommand]);
+    return runProcess([
+      getPowershellPath(),
+      "-NoProfile",
+      "-NonInteractive",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-STA",
+      "-Command",
+      psCommand,
+    ]);
   }
 
   if (platform === "linux") {
@@ -178,24 +218,47 @@ export async function openFolderDialog(
 
     rawPaths = await runProcess(["osascript", "-e", script]);
   } else if (platform === "win32") {
-    const initDir = defaultPath?.trim()
-      ? `$d.SelectedPath = '${defaultPath.trim().replace(/'/g, "''")}';`
+    const cleanDefault = defaultPath?.trim();
+    const normalizedDefault =
+      cleanDefault && /^[a-zA-Z]:$/.test(cleanDefault)
+        ? `${cleanDefault}\\`
+        : cleanDefault;
+
+    const initDir = normalizedDefault
+      ? `$init = '${normalizedDefault.replace(/'/g, "''")}'; while ($init -and -not (Test-Path -LiteralPath $init)) { $p = Split-Path -Parent $init; if (-not $p -or $p -eq $init) { break; }; $init = $p; }; if ($init -and (Test-Path -LiteralPath $init)) { $d.SelectedPath = $init; };`
       : "";
+
+    const escapedTitle = title.replace(/'/g, "''");
     const psCommand = `
-      Add-Type -AssemblyName System.Windows.Forms;
-      $d = New-Object System.Windows.Forms.FolderBrowserDialog;
-      $d.Description = '${title.replace(/'/g, "''")}';
-      ${initDir}
-      if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        $d.SelectedPath
+      try {
+        Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop;
+        $f = New-Object System.Windows.Forms.Form -Property @{TopMost = $true};
+        $d = New-Object System.Windows.Forms.FolderBrowserDialog;
+        $d.Description = '${escapedTitle}';
+        ${initDir}
+        if ($d.ShowDialog($f) -eq [System.Windows.Forms.DialogResult]::OK) {
+          [Console]::WriteLine($d.SelectedPath);
+        };
+        $f.Dispose();
+        $d.Dispose();
+      } catch {
+        $s = New-Object -ComObject Shell.Application;
+        $b = $s.BrowseForFolder(0, '${escapedTitle}', 17, 0);
+        if ($b) {
+          [Console]::WriteLine($b.Self.Path);
+        };
       }
     `
       .replace(/\s+/g, " ")
       .trim();
 
     rawPaths = await runProcess([
-      "powershell",
+      getPowershellPath(),
       "-NoProfile",
+      "-NonInteractive",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-STA",
       "-Command",
       psCommand,
     ]);

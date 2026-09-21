@@ -84,10 +84,13 @@ export function InstallView({
 
     try {
       const current = installPath.trim();
-      const parentDir =
+      let parentDir =
         current.includes("/") || current.includes("\\")
           ? current.replace(/[\\/][^\\/]+[\\/]?$/, "")
           : undefined;
+      if (parentDir && /^[a-zA-Z]:$/.test(parentDir)) {
+        parentDir += "\\";
+      }
 
       const selected = await pickFolder({
         title: t("install.installDir"),

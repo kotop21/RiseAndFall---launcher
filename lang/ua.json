@@ -58,7 +58,8 @@
     "setPathFirst": "Вкажіть шлях для цього профілю",
     "launchArgsProfileHint": "Параметри запуску зберігаються окремо для {profile}.",
     "integrations": "Інтеграції",
-    "enableDiscordRpc": "Відображати активність у Discord"
+    "enableDiscordRpc": "Відображати активність у Discord",
+    "lowPerformanceMode": "Режим низької продуктивності"
   },
   "install": {
     "titleInstall": "Встановлення гри",
@@ -235,6 +236,11 @@
     "discordRpcEnabledTitle": "Discord RPC увімкнено",
     "discordRpcEnabledDesc": "Статус активності увімкнено",
     "discordRpcDisabledTitle": "Discord RPC вимкнено",
-    "discordRpcDisabledDesc": "Статус активності вимкнено"
+    "discordRpcDisabledDesc": "Статус активності вимкнено",
+    "lowPerfEnabledTitle": "Режим низької продуктивності увімкнено",
+    "lowPerfEnabledDesc": "Анімації вимкнено, інтерфейс оптимізовано під ретро-залізо.",
+    "lowPerfDisabledTitle": "Режим низької продуктивності вимкнено",
+    "lowPerfDisabledDesc": "Плавні анімації та переходи відновлено."
   }
 }
+

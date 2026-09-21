@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { motion } from "@gpuix/react";
+import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { theme } from "../theme";
 
 interface NavigationContextValue {
