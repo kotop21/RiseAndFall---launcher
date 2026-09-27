@@ -3,6 +3,11 @@ import { dirname, join } from "node:path";
 import { getConfigPath } from "./config/dir";
 
 let logFilePath: string | null = null;
+let isSilenced = process.env.NODE_ENV === "test" || Boolean(process.env.BUN_TEST);
+
+export function setLoggerSilenced(silent: boolean): void {
+  isSilenced = silent;
+}
 
 function formatDigits(n: number): string {
   return n < 10 ? `0${n}` : `${n}`;
@@ -17,6 +22,8 @@ function getTimeString(): string {
 }
 
 export function initLogger(launcherVersion: string): void {
+  if (isSilenced) return;
+
   try {
     const configDir = dirname(getConfigPath());
     const logsDir = join(configDir, "logs");
@@ -62,6 +69,8 @@ function formatArg(arg: unknown): string {
 }
 
 function writeLine(prefix: string, args: unknown[], isError = false): void {
+  if (isSilenced) return;
+
   const time = getTimeString();
   const details = args.map(formatArg).join(" ");
   const message = details ? `${time} ${prefix}: ${details}` : `${time} ${prefix}`;
@@ -82,4 +91,6 @@ function writeLine(prefix: string, args: unknown[], isError = false): void {
 export const logger = {
   info: (prefix: string, ...args: unknown[]) => writeLine(prefix, args, false),
   error: (prefix: string, ...args: unknown[]) => writeLine(prefix, args, true),
+  silence: (silent = true) => setLoggerSilenced(silent),
 };
+

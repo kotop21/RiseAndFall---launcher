@@ -1,8 +1,16 @@
-import type { ReleaseItem } from "./types";
+import type { ReleaseItem, ReleaseAsset } from "./types";
 import { MOCK_RELEASES } from "./mock";
 import { logger } from "@/lib/logger";
 
 const RELEASES_API_URL = "https://api.github.com/repos/kotop21/RiseAndFall---launcher/releases";
+
+interface GitHubReleaseAssetRaw {
+  id: number;
+  name: string;
+  size: number;
+  content_type: string;
+  browser_download_url: string;
+}
 
 interface GitHubReleaseRaw {
   tag_name: string;
@@ -10,6 +18,8 @@ interface GitHubReleaseRaw {
   body: string | null;
   html_url: string;
   published_at: string;
+  zipball_url?: string;
+  assets?: GitHubReleaseAssetRaw[];
 }
 
 let cachedReleases: ReleaseItem[] | null = null;
@@ -67,11 +77,29 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
         (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime(),
       );
 
-      cachedReleases = sorted.slice(0, 5).map((item) => ({
-        version: item.tag_name,
-        title: formatReleaseTitle(item.name, item.body, item.tag_name),
-        url: item.html_url,
-      }));
+      cachedReleases = sorted.slice(0, 5).map((item) => {
+        const assets: ReleaseAsset[] = Array.isArray(item.assets)
+          ? item.assets.map((a) => ({
+              id: a.id,
+              name: a.name,
+              size: a.size,
+              contentType: a.content_type,
+              downloadUrl: a.browser_download_url,
+            }))
+          : [];
+
+        const zipAsset = assets.find((a) => a.name.toLowerCase().endsWith(".zip"));
+        const exeAsset = assets.find((a) => a.name.toLowerCase().endsWith(".exe"));
+        const downloadUrl = zipAsset?.downloadUrl || exeAsset?.downloadUrl || item.zipball_url || null;
+
+        return {
+          version: item.tag_name,
+          title: formatReleaseTitle(item.name, item.body, item.tag_name),
+          url: item.html_url,
+          downloadUrl,
+          assets,
+        };
+      });
 
       return cachedReleases;
     } catch (err) {

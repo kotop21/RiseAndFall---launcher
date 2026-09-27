@@ -94,7 +94,9 @@
     "openFolder": "Открыть папку с игрой",
     "openDgVoodoo": "Настройки dgVoodoo",
     "exportSettings": "Экспорт настроек игры",
-    "importSettings": "Импорт настроек игры"
+    "importSettings": "Импорт настроек игры",
+    "update": "Обновить",
+    "updating": "Обновление..."
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -240,7 +242,17 @@
     "lowPerfEnabledTitle": "Режим низкой производительности включен",
     "lowPerfEnabledDesc": "Анимации отключены, интерфейс оптимизирован под ретро-железо.",
     "lowPerfDisabledTitle": "Режим низкой производительности выключен",
-    "lowPerfDisabledDesc": "Плавные анимации и переходы восстановлены."
+    "lowPerfDisabledDesc": "Плавные анимации и переходы восстановлены.",
+    "updateAvailableTitle": "Доступно обновление",
+    "updateAvailableDesc": "Вышла новая версия {version}",
+    "updateDownloadingTitle": "Загрузка обновления",
+    "updateDownloadingDesc": "Загрузка файлов {version}...",
+    "updateDevSuccessTitle": "Тест обновления (Dev)",
+    "updateDevSuccessDesc": "Файлы распакованы и проверены",
+    "updateSuccessTitle": "Обновление готово",
+    "updateSuccessDesc": "Перезапуск лаунчера...",
+    "updateErrorTitle": "Ошибка обновления",
+    "updateErrorDesc": "Не удалось установить обновление"
   }
 }
 

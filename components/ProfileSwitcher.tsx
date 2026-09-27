@@ -22,7 +22,9 @@ export function ProfileSwitcher({
   const safeProfiles = profiles?.length ? profiles : [];
 
   if (onlyConfigured) {
-    const configuredProfiles = safeProfiles.filter((p) => Boolean(p.path?.trim()));
+    const configuredProfiles = safeProfiles.filter((p) =>
+      Boolean(p.path?.trim()),
+    );
 
     if (configuredProfiles.length <= 1) {
       return null;
@@ -42,11 +44,7 @@ export function ProfileSwitcher({
           value={activeProfileId || configuredProfiles[0]?.id || "slot-1"}
           onValueChange={onSelectProfile}
         >
-          <SegmentedNav
-            items={navItems}
-            itemWidth={46}
-            itemHeight={28}
-          />
+          <SegmentedNav items={navItems} itemWidth={46} itemHeight={28} />
         </NavigationRoot>
       </div>
     );
@@ -81,11 +79,7 @@ export function ProfileSwitcher({
         value={activeProfileId || "slot-1"}
         onValueChange={onSelectProfile}
       >
-        <SegmentedNav
-          items={slotNavItems}
-          itemWidth={46}
-          itemHeight={28}
-        />
+        <SegmentedNav items={slotNavItems} itemWidth={46} itemHeight={28} />
       </NavigationRoot>
     </div>
   );

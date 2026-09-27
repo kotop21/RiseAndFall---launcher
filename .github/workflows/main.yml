@@ -1,13 +1,11 @@
-name: Release Launcher
+name: Build Main Launcher
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   test:
@@ -50,13 +48,13 @@ jobs:
       - name: Upload CLI Bin
         uses: actions/upload-artifact@v4
         with:
-          name: internal-cli-bin-release
+          name: internal-cli-bin-main
           path: packages/raf-settings/raf-settings.exe
           retention-days: 1
 
   build-release:
     runs-on: windows-latest
-    needs: [build-cli, test]
+    needs: [build-cli]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -80,7 +78,7 @@ jobs:
       - name: Download CLI Bin
         uses: actions/download-artifact@v4
         with:
-          name: internal-cli-bin-release
+          name: internal-cli-bin-main
           path: dist/bin
 
       - name: Bundle & Compile Windows Executable
@@ -120,16 +118,3 @@ jobs:
             dist/gpuix-native.win32-x64-msvc.node
             dist/bin/raf-settings.exe
             dist/RiseAndFall-launcher_*.zip
-
-      - name: Create Draft GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          draft: true
-          files: |
-            dist/RiseAndFall-launcher_*.zip
-            dist/raf-launcher.exe
-            dist/gpuix-native.win32-x64-msvc.node
-            dist/bin/raf-settings.exe

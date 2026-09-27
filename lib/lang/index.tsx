@@ -17,6 +17,10 @@ export function getCurrentLanguage(): SupportedLang {
   return activeAppLang;
 }
 
+export function setLanguage(lang: SupportedLang): void {
+  activeAppLang = lang;
+}
+
 export function getTranslation(lang: SupportedLang, path: string): string {
   const dict = DICTIONARIES[lang] ?? DICTIONARIES.en;
   const keys = path.split(".");

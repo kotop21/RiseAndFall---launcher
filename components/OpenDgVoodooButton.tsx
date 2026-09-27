@@ -13,7 +13,10 @@ interface OpenDgVoodooButtonProps {
   style?: Record<string, any>;
 }
 
-export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonProps) {
+export function OpenDgVoodooButton({
+  gameDir = "",
+  style,
+}: OpenDgVoodooButtonProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [fileExists, setFileExists] = useState(false);
@@ -77,7 +80,9 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
     }
 
     try {
-      const res = await launchExe(join(cleanDir, "dgVoodooCpl.exe"), { cwd: cleanDir });
+      const res = await launchExe(join(cleanDir, "dgVoodooCpl.exe"), {
+        cwd: cleanDir,
+      });
       if (!res.success) {
         toast(formatErrorToast(res.error, "PROCESS_SPAWN_FAILED"));
       }
@@ -94,9 +99,18 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
   };
 
   return (
-    <Button variant="outline" size="sm" disabled={isDisabled} onClick={handleOpen} style={style}>
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={isDisabled}
+      onClick={handleOpen}
+      style={style}
+    >
       <Row gap={8} align="center" justify="center">
-        <SlidersHorizontal size={14} color={isDisabled ? theme.colors.mutedFg : theme.colors.fg} />
+        <SlidersHorizontal
+          size={14}
+          color={isDisabled ? theme.colors.mutedFg : theme.colors.fg}
+        />
         {getButtonLabel()}
       </Row>
     </Button>

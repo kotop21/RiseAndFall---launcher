@@ -94,7 +94,9 @@
     "openFolder": "Open Game Folder",
     "openDgVoodoo": "Open dgVoodoo Config",
     "exportSettings": "Export Game Settings",
-    "importSettings": "Import Game Settings"
+    "importSettings": "Import Game Settings",
+    "update": "Update",
+    "updating": "Updating..."
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -240,7 +242,17 @@
     "lowPerfEnabledTitle": "Low Performance Mode Enabled",
     "lowPerfEnabledDesc": "Animations disabled, UI optimized for retro hardware.",
     "lowPerfDisabledTitle": "Low Performance Mode Disabled",
-    "lowPerfDisabledDesc": "Smooth animations and transitions restored."
+    "lowPerfDisabledDesc": "Smooth animations and transitions restored.",
+    "updateAvailableTitle": "Update Available",
+    "updateAvailableDesc": "New version {version} is available",
+    "updateDownloadingTitle": "Downloading Update",
+    "updateDownloadingDesc": "Fetching {version} files...",
+    "updateDevSuccessTitle": "Update Test (Dev)",
+    "updateDevSuccessDesc": "Files verified and staged",
+    "updateSuccessTitle": "Update Ready",
+    "updateSuccessDesc": "Restarting launcher...",
+    "updateErrorTitle": "Update Failed",
+    "updateErrorDesc": "Could not install update"
   }
 }
 

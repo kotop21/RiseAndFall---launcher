@@ -7,6 +7,10 @@ dist/
 bundle/
 hermes/dist/
 native-win/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
 
 # Hermes-node build tree & kits
 hermes-node/
@@ -26,6 +30,7 @@ hermes-node/
 
 # OS specific
 .DS_Store
+**/.DS_Store
 Thumbs.db
 
 # IDE & logs
@@ -35,8 +40,15 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local environment & secrets
 .env
+.env.*
+.env*.local
+
+# Scratch and local test scripts
 trash.py
+**/trash.py
 test-game/
 build_test_mac.py
 __pycache__/

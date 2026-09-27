@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "bun index.tsx",
     "typecheck": "tsc --noEmit",
-    "prebuild": "bun run typecheck",
+    "test": "bun test",
+    "prebuild": "bun run typecheck && bun run test",
     "build": "python3 build.py"
   },
   "devDependencies": {

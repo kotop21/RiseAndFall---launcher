@@ -6,6 +6,25 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          bun install
+
+      - name: Run Tests
+        run: |
+          bun test
+
   build-cli:
     runs-on: windows-latest
     steps:
@@ -84,6 +103,9 @@ jobs:
 
           cp node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node dist/
 
+          DEV_VERSION=$(node -p "require('./package.json').version")
+          powershell -Command "Compress-Archive -Path dist/raf-launcher.exe, dist/gpuix-native.win32-x64-msvc.node, dist/bin -DestinationPath dist/RiseAndFall-launcher-dev_v${DEV_VERSION}.zip -Force"
+
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -92,3 +114,4 @@ jobs:
             dist/raf-launcher.exe
             dist/gpuix-native.win32-x64-msvc.node
             dist/bin/raf-settings.exe
+            dist/RiseAndFall-launcher-dev_*.zip

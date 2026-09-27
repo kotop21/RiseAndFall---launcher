@@ -94,7 +94,9 @@
     "openFolder": "Відкрити теку з грою",
     "openDgVoodoo": "Налаштування dgVoodoo",
     "exportSettings": "Експорт налаштувань гри",
-    "importSettings": "Імпорт налаштувань гри"
+    "importSettings": "Імпорт налаштувань гри",
+    "update": "Оновити",
+    "updating": "Оновлення..."
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -240,7 +242,17 @@
     "lowPerfEnabledTitle": "Режим низької продуктивності увімкнено",
     "lowPerfEnabledDesc": "Анімації вимкнено, інтерфейс оптимізовано під ретро-залізо.",
     "lowPerfDisabledTitle": "Режим низької продуктивності вимкнено",
-    "lowPerfDisabledDesc": "Плавні анімації та переходи відновлено."
+    "lowPerfDisabledDesc": "Плавні анімації та переходи відновлено.",
+    "updateAvailableTitle": "Доступне оновлення",
+    "updateAvailableDesc": "Вийшла нова версія {version}",
+    "updateDownloadingTitle": "Завантаження оновлення",
+    "updateDownloadingDesc": "Завантаження файлів {version}...",
+    "updateDevSuccessTitle": "Тест оновлення (Dev)",
+    "updateDevSuccessDesc": "Файли розпаковано та перевірено",
+    "updateSuccessTitle": "Оновлення готове",
+    "updateSuccessDesc": "Перезапуск лаунчера...",
+    "updateErrorTitle": "Помилка оновлення",
+    "updateErrorDesc": "Не вдалося встановити оновлення"
   }
 }
 

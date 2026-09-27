@@ -17,6 +17,10 @@ import { openBrowser } from "@/lib/browser/open";
 import type { ReleaseItem } from "@/lib/github/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { getLauncherVersion } from "@/lib/utils/version";
+import { updateLauncher, isDifferentVersion } from "@/lib/updater";
+
+let hasNotifiedUpdate = false;
 
 export function UpdateList() {
   const { t } = useTranslation();
@@ -24,6 +28,10 @@ export function UpdateList() {
   const cached = getCachedReleases();
   const [releases, setReleases] = useState<ReleaseItem[]>(() => cached ?? []);
   const [isLoading, setIsLoading] = useState(!cached);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateProgressText, setUpdateProgressText] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -33,6 +41,23 @@ export function UpdateList() {
         if (isMounted) {
           setReleases(data);
           setIsLoading(false);
+
+          if (!hasNotifiedUpdate && data.length > 0) {
+            const latest = data[0];
+            const currentVer = getLauncherVersion();
+            if (isDifferentVersion(latest.version, currentVer)) {
+              hasNotifiedUpdate = true;
+              toast({
+                title: t("toasts.updateAvailableTitle"),
+                description: t("toasts.updateAvailableDesc").replace(
+                  "{version}",
+                  latest.version,
+                ),
+                type: "info",
+                duration: 4000,
+              });
+            }
+          }
         }
       })
       .catch((err) => {
@@ -46,6 +71,71 @@ export function UpdateList() {
       isMounted = false;
     };
   }, []);
+
+  const handleUpdate = async (release: ReleaseItem) => {
+    if (isUpdating) return;
+    setIsUpdating(true);
+    setUpdateProgressText(t("buttons.updating"));
+
+    toast({
+      title: t("toasts.updateDownloadingTitle"),
+      description: t("toasts.updateDownloadingDesc").replace(
+        "{version}",
+        release.version,
+      ),
+      type: "info",
+      duration: 3500,
+    });
+
+    try {
+      const result = await updateLauncher(release, {
+        onProgress: (p) => {
+          if (p.phase === "downloading" && p.percent !== undefined) {
+            setUpdateProgressText(`${p.percent}%`);
+          } else if (p.phase === "extracting") {
+            setUpdateProgressText(t("buttons.updating"));
+          }
+        },
+      });
+
+      if (!result.success) {
+        toast({
+          title: t("toasts.updateErrorTitle"),
+          description: result.error || t("toasts.updateErrorDesc"),
+          type: "error",
+        });
+        setIsUpdating(false);
+        setUpdateProgressText(null);
+        return;
+      }
+
+      if (result.isDev) {
+        toast({
+          title: t("toasts.updateDevSuccessTitle"),
+          description: t("toasts.updateDevSuccessDesc"),
+          type: "info",
+          duration: 4000,
+        });
+        setIsUpdating(false);
+        setUpdateProgressText(null);
+      } else {
+        toast({
+          title: t("toasts.updateSuccessTitle"),
+          description: t("toasts.updateSuccessDesc"),
+          type: "info",
+          duration: 5000,
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: t("toasts.updateErrorTitle"),
+        description: err?.message || t("toasts.updateErrorDesc"),
+        type: "error",
+      });
+      setIsUpdating(false);
+      setUpdateProgressText(null);
+    }
+  };
 
   const handleOpenRelease = async (url: string) => {
     try {
@@ -104,8 +194,8 @@ export function UpdateList() {
                   <Skeleton
                     style={{
                       width: 90,
-                      height: 22,
-                      borderRadius: theme.radius.sm,
+                      height: 26,
+                      borderRadius: theme.radius.md,
                     }}
                   />
                 )}
@@ -160,7 +250,21 @@ export function UpdateList() {
 
               <Row gap={8} align="center">
                 {isLatest && (
-                  <Badge variant="success">{t("main.latestUpdate")}</Badge>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    disabled={isUpdating}
+                    onClick={() => handleUpdate(release)}
+                    style={{
+                      height: 26,
+                      paddingLeft: 10,
+                      paddingRight: 10,
+                    }}
+                  >
+                    {isUpdating
+                      ? updateProgressText || t("buttons.updating")
+                      : t("buttons.update")}
+                  </Button>
                 )}
                 <Button
                   variant="ghost"
