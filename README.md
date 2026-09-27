@@ -1,24 +1,15 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.png">
-    <img alt="Rise and Fall Launcher Logo" src="assets/logo-dark.png" width="48%">
-  </picture>
-</p>
+<div align="center">
+
+# Rise & Fall Launcher ⚔️
+
+**Next-generation, high-performance desktop launcher & profile manager for Rise & Fall: Civilizations at War.**
+
+*Rise & Fall Launcher is an unofficial, community-driven open-source project.<br>
+Not affiliated with, endorsed by, or connected to Midway Games, Stainless Steel Studios, or any of their subsidiaries.*
+
+</div>
 
 <p align="center">
-  <strong>Next-generation, high-performance desktop launcher & profile manager for Rise & Fall: Civilizations at War.</strong>
-</p>
-
-<p align="center">
-  <em>Rise & Fall Launcher is an unofficial, community-driven open-source project.<br>
-  Not affiliated with, endorsed by, or connected to Midway Games, Stainless Steel Studios, or any of their subsidiaries.</em>
-</p>
-
-<p align="center">
-  <a href="https://github.com/kotop21/RiseAndFall---launcher/releases">
-    <img alt="GitHub Release" src="https://img.shields.io/github/v/release/kotop21/RiseAndFall---launcher?style=flat&color=3b82f6">
-  </a>
   <a href="https://github.com/kotop21/RiseAndFall---launcher/actions">
     <img alt="CI Status" src="https://img.shields.io/github/actions/workflow/status/kotop21/RiseAndFall---launcher/main.yml?branch=main&label=CI&style=flat">
   </a>
