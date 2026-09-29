@@ -1,13 +1,12 @@
 import * as __path from "node:path";
 import * as __fs from "node:fs";
 
-declare const Deno: any;
-
 if (typeof process !== "undefined" && process.platform === "win32") {
   let exePath = "";
   try {
-    if (typeof Deno !== "undefined" && typeof Deno.execPath === "function") {
-      exePath = Deno.execPath();
+    const denoObj = globalThis.Deno;
+    if (denoObj && typeof denoObj.execPath === "function") {
+      exePath = denoObj.execPath();
     }
   } catch {}
 

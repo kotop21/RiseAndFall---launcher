@@ -138,7 +138,7 @@ RELEASE=1 python3 build.py
 2. Checks and fetches the `@gpuix` Windows native addon (`gpuix-native.win32-x64-msvc.node`) from npm if absent.
 3. Injects `API_URL` configuration from `.env` or process environment.
 4. Generates version metadata via `bun run scripts/generate-version.js`.
-5. Bundles React/TS into `dist/build/` and prepends N-API runtime glue (`scripts/runtime-napi.ts`).
+5. Bundles React/TS into `dist/build/` and prepends N-API runtime glue (`scripts/runtime-napi.js`).
 6. Builds the Docker builder image from `Dockerfile` and compiles `raf-launcher.exe` using Deno Canary QuickJS.
 7. Outputs ready-to-run artifacts in `dist/`.
 
@@ -154,7 +154,7 @@ bun build index.tsx --outdir dist/build --target node \
   --external @gpuix/native-darwin-universal
 
 # 3. Prepend N-API runtime glue
-cat scripts/runtime-napi.ts dist/build/index.js > dist/build/bundle.js
+cat scripts/runtime-napi.js dist/build/index.js > dist/build/bundle.js
 
 # 4. Compile standalone Windows binary via Deno (Release Mode)
 deno compile \
@@ -185,7 +185,7 @@ cp node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node di
 | [`build.py`](build.py) | Python build orchestrator executed via `bun run build`. Coordinates Docker builds, N-API injection, and binary compilation. |
 | [`Dockerfile`](Dockerfile) | Debian-based Docker container setup with Deno Canary QuickJS for cross-compiling the standalone Windows binary. |
 | [`lang/`](lang/) | Localization dictionaries supporting English (`en.json`), Ukrainian (`ua.json`), and Russian (`ru.json`). |
-| [`scripts/`](scripts/) | Automation scripts for runtime version generation (`generate-version.js`) and N-API bootstrapping (`runtime-napi.ts`). |
+| [`scripts/`](scripts/) | Automation scripts for runtime version generation (`generate-version.js`) and N-API bootstrapping (`runtime-napi.js`). |
 | [`test/`](test/) | Comprehensive `bun:test` test suites covering config migrations, updater logic, registry CLI discovery, and error normalization. |
 | [`assets/`](assets/) | Application branding, icons, light/dark logos, and interface preview captures. |
 | [`.github/workflows/`](.github/workflows/) | GitHub Actions CI/CD pipelines (`dev.yml`, `main.yml`, `release.yml`). |

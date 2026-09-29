@@ -99,7 +99,7 @@ jobs:
             --external @gpuix/native-darwin-universal \
             --external @gpuix/native-win32-x64-msvc
           
-          cat scripts/runtime-napi.ts dist/build/index.js > dist/build/bundle.js
+          cat scripts/runtime-napi.js dist/build/index.js > dist/build/bundle.js
 
           deno compile \
             --allow-all \

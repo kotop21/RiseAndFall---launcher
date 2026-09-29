@@ -108,7 +108,7 @@ def read_api_url():
     return "http://localhost:3000"
 
 def inject_runtime_napi(bundle_path):
-    napi_script_path = os.path.join("scripts", "runtime-napi.ts")
+    napi_script_path = os.path.join("scripts", "runtime-napi.js")
     if not os.path.exists(napi_script_path) or not os.path.exists(bundle_path):
         return
     with open(napi_script_path, "r", encoding="utf-8") as f:
