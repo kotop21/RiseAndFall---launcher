@@ -102,7 +102,6 @@ jobs:
           deno compile \
             --allow-all \
             --no-check \
-            --no-terminal \
             --node-modules-dir=none \
             --unsafely-ignore-certificate-errors \
             --target x86_64-pc-windows-msvc \
