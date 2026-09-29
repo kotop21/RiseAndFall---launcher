@@ -137,7 +137,7 @@ RELEASE=1 python3 build.py
 1. Validates Docker daemon availability.
 2. Checks and fetches the `@gpuix` Windows native addon (`gpuix-native.win32-x64-msvc.node`) from npm if absent.
 3. Injects `API_URL` configuration from `.env` or process environment.
-4. Generates version metadata via `bun run scripts/generate-version.ts`.
+4. Generates version metadata via `bun run scripts/generate-version.js`.
 5. Bundles React/TS into `dist/build/` and prepends N-API runtime glue (`scripts/runtime-napi.ts`).
 6. Builds the Docker builder image from `Dockerfile` and compiles `raf-launcher.exe` using Deno Canary QuickJS.
 7. Outputs ready-to-run artifacts in `dist/`.
@@ -146,7 +146,7 @@ RELEASE=1 python3 build.py
 If you are running on Windows and have Deno Canary installed natively:
 ```bash
 # 1. Generate version metadata
-bun run scripts/generate-version.ts
+bun run scripts/generate-version.js
 
 # 2. Bundle source code with Bun
 bun build index.tsx --outdir dist/build --target node \
@@ -185,7 +185,7 @@ cp node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node di
 | [`build.py`](build.py) | Python build orchestrator executed via `bun run build`. Coordinates Docker builds, N-API injection, and binary compilation. |
 | [`Dockerfile`](Dockerfile) | Debian-based Docker container setup with Deno Canary QuickJS for cross-compiling the standalone Windows binary. |
 | [`lang/`](lang/) | Localization dictionaries supporting English (`en.json`), Ukrainian (`ua.json`), and Russian (`ru.json`). |
-| [`scripts/`](scripts/) | Automation scripts for runtime version generation (`generate-version.ts`) and N-API bootstrapping (`runtime-napi.ts`). |
+| [`scripts/`](scripts/) | Automation scripts for runtime version generation (`generate-version.js`) and N-API bootstrapping (`runtime-napi.ts`). |
 | [`test/`](test/) | Comprehensive `bun:test` test suites covering config migrations, updater logic, registry CLI discovery, and error normalization. |
 | [`assets/`](assets/) | Application branding, icons, light/dark logos, and interface preview captures. |
 | [`.github/workflows/`](.github/workflows/) | GitHub Actions CI/CD pipelines (`dev.yml`, `main.yml`, `release.yml`). |

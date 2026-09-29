@@ -136,7 +136,7 @@ def main():
     log_info(f"Build target mode: {'RELEASE (no-terminal)' if is_release else 'DEV (console enabled)'}")
 
     log_info("Generating version...")
-    run_command(["bun", "run", "scripts/generate-version.ts"])
+    run_command(["bun", "run", "scripts/generate-version.js"])
 
     log_info("Bundling JS via Bun with injected API_URL...")
     define_arg = f'process.env.API_URL={json.dumps(api_url)}'
