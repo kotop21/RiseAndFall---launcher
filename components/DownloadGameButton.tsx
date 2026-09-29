@@ -8,6 +8,7 @@ interface DownloadGameButtonProps {
   size?: "default" | "sm" | "lg";
   onClick?: () => void;
   disabled?: boolean;
+  isInstalling?: boolean;
   style?: StyleDesc;
 }
 
@@ -16,12 +17,19 @@ export function DownloadGameButton({
   size = "lg",
   onClick,
   disabled = false,
+  isInstalling = false,
   style,
 }: DownloadGameButtonProps) {
   const { t } = useTranslation();
   const isReinstall = variant === "reinstall";
   const iconColor = disabled ? theme.colors.mutedFg : theme.colors.primaryFg;
   const textColor = disabled ? theme.colors.mutedFg : theme.colors.primaryFg;
+
+  const buttonText = isInstalling
+    ? t("install.processing")
+    : isReinstall
+      ? t("buttons.reinstall")
+      : t("buttons.download");
 
   const h = size === "sm" ? 36 : 46;
   const px = size === "sm" ? 16 : 24;
@@ -63,7 +71,7 @@ export function DownloadGameButton({
             fontSize: size === "sm" ? 12 : 14,
           }}
         >
-          {isReinstall ? t("buttons.reinstall") : t("buttons.download")}
+          {buttonText}
         </P>
       </Row>
     </div>

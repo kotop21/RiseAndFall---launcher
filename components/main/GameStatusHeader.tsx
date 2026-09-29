@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
 import { Row, Column, Badge, H1, Muted, theme } from "@/ui";
 import { Tag, Layers, Calendar } from "@/icon";
 import { ProfileSwitcher } from "@/components/ProfileSwitcher";
-import { hasDgVoodooCplExe } from "@/lib/utils/game-files";
+import { useGameStatus } from "@/lib/utils/game-status";
 import { getLauncherVersion } from "@/lib/utils/version";
 import { useTranslation } from "@/lib/lang";
 import type { LauncherConfig } from "@/lib/config/types";
@@ -28,23 +27,9 @@ export function GameStatusHeader({
   onChangeConfig,
 }: GameStatusHeaderProps) {
   const { t, lang } = useTranslation();
-  const [isDgVoodooReady, setIsDgVoodooReady] = useState(false);
+  const { dgVoodooExists: isDgVoodooReady } = useGameStatus(config.gameDir);
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
-  useEffect(() => {
-    let isMounted = true;
-
-    (async () => {
-      const exists = await hasDgVoodooCplExe(config.gameDir);
-      if (isMounted) {
-        setIsDgVoodooReady(exists);
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [config.gameDir]);
 
   const handleSelectSlot = async (slotId: string) => {
     if (slotId === config.activeProfileId) return;

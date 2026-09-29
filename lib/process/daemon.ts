@@ -1,5 +1,5 @@
 import type { ChildProcess } from "node:child_process";
-import { getProcessCpuUsage, killProcessTree } from "./killer";
+import { isProcessAlive } from "./killer";
 import { logger } from "@/lib/logger";
 
 export interface ProcessDaemonResult {
@@ -14,11 +14,8 @@ export async function watchProcessDaemon(
 ): Promise<ProcessDaemonResult> {
   const startTime = Date.now();
   const pid = proc.pid;
-  let terminatedDueToHang = false;
 
   let pollInterval: ReturnType<typeof setInterval> | null = null;
-  let lastCpuSignature = "";
-  let freezeStartTime: number | null = null;
 
   const cleanup = () => {
     if (pollInterval) {
@@ -27,51 +24,32 @@ export async function watchProcessDaemon(
     }
   };
 
-  if (pid && pid > 0 && process.platform === "win32") {
-    pollInterval = setInterval(async () => {
-      try {
-        if (proc.exitCode !== null || proc.killed) {
-          cleanup();
-          return;
-        }
-
-        const currentCpuSignature = await getProcessCpuUsage(pid);
-        if (!currentCpuSignature) return;
-
-        if (currentCpuSignature === lastCpuSignature) {
-          if (!freezeStartTime) {
-            freezeStartTime = Date.now();
-          } else if (Date.now() - freezeStartTime >= 5000) {
-            terminatedDueToHang = true;
-            cleanup();
-            logger.info("daemon", `Process PID ${pid} hung detected. Terminating process tree...`);
-            await killProcessTree(pid);
-          }
-        } else {
-          lastCpuSignature = currentCpuSignature;
-          freezeStartTime = null;
-        }
-      } catch (err) {
-        logger.error("daemon", `Poll interval error for PID ${pid}:`, err);
-      }
-    }, 2000);
-  }
-
   try {
     await new Promise<void>((resolve) => {
       let settled = false;
       const done = () => {
         if (!settled) {
           settled = true;
+          cleanup();
           resolve();
         }
       };
+
       proc.once("close", done);
       proc.once("exit", done);
       proc.once("error", (err) => {
         logger.error("daemon", `Process PID ${pid} emitted error event:`, err);
         done();
       });
+
+      // Периодическая легковесная неблокирующая проверка (0% CPU, 0 MB ОЗУ)
+      if (pid && pid > 0) {
+        pollInterval = setInterval(() => {
+          if (proc.exitCode !== null || proc.killed || !isProcessAlive(pid)) {
+            done();
+          }
+        }, 2000);
+      }
     });
   } catch (err) {
     logger.error("daemon", `Unexpected error waiting for process PID ${pid}:`, err);
@@ -81,7 +59,7 @@ export async function watchProcessDaemon(
     const result: ProcessDaemonResult = {
       elapsedSeconds,
       elapsedMinutes: Math.max(1, Math.floor(elapsedSeconds / 60)),
-      terminatedDueToHang,
+      terminatedDueToHang: false,
     };
 
     if (onFinish) {

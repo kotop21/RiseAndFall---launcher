@@ -16,13 +16,8 @@ export const API_ROUTES = {
   get onlineCount() {
     return `${getBaseUrl()}/api/online/count`;
   },
-  download: (keys: string[] | string = "") => {
-    const query = Array.isArray(keys)
-      ? keys.filter(Boolean).join(",")
-      : keys.trim();
-    return query
-      ? `${getBaseUrl()}/api/download/${query}`
-      : `${getBaseUrl()}/api/download`;
+  get manifest() {
+    return `${getBaseUrl()}/api/manifest`;
   },
 } as const;
 
@@ -35,6 +30,14 @@ export interface OnlineCountResponse {
   online: number;
 }
 
-export interface AvailableFilesResponse {
-  available: Record<string, string>;
+export interface ManifestPackage {
+  id: string;
+  name: string;
+  mirrors: string[];
+}
+
+export interface ManifestResponse {
+  mode: string;
+  version: string;
+  packages: ManifestPackage[];
 }

@@ -1,8 +1,14 @@
 import { join } from "node:path";
-import { unlink, readFile, open } from "node:fs/promises";
+import { unlink, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { unpack } from "msgpackr";
-import { downloadSingleFileStream } from "@/lib/api/download";
+import {
+  fetchManifest,
+  downloadFromMirrors,
+  formatSpeed,
+  type ManifestPackage,
+  type ManifestResponse,
+} from "@/lib/api";
 import { ensureDirectory } from "@/lib/explorer/create";
 import { extractZip } from "@/lib/explorer/extract";
 import { cleanGameDirectory } from "@/lib/explorer/clean";
@@ -14,6 +20,10 @@ import type { LauncherConfig } from "@/lib/config/types";
 import { createLauncherError, normalizeError, type LauncherAppError } from "@/lib/errors";
 import { getCurrentLanguage, getTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
+import { setBackgroundActivity } from "@/lib/render/frame-loop";
+
+export { formatSpeed };
+export * from "./install-manager";
 
 export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" | "error";
 
@@ -22,6 +32,7 @@ export interface InstallProgress {
   message: string;
   bytesDownloaded?: number;
   totalBytes?: number;
+  bytesPerSecond?: number;
 }
 
 export interface InstallGameOptions {
@@ -33,6 +44,31 @@ export interface InstallGameOptions {
 }
 
 export async function installGamePackage({
+  targetDir,
+  lang,
+  cleanBeforeInstall = false,
+  signal,
+  onProgress,
+}: InstallGameOptions): Promise<{
+  success: boolean;
+  config?: LauncherConfig;
+  error?: LauncherAppError;
+}> {
+  setBackgroundActivity("install-game", true);
+  try {
+    return await doInstallGamePackage({
+      targetDir,
+      lang,
+      cleanBeforeInstall,
+      signal,
+      onProgress,
+    });
+  } finally {
+    setBackgroundActivity("install-game", false);
+  }
+}
+
+async function doInstallGamePackage({
   targetDir,
   lang,
   cleanBeforeInstall = false,
@@ -79,14 +115,47 @@ export async function installGamePackage({
     }
   }
 
-  const packages = [
-    { key: "game", label: getTranslation(currentLang, "install.pkgBaseGame") },
-    {
-      key: `lang:${lang}`,
-      label: getTranslation(currentLang, "install.pkgLangPack").replace("{lang}", lang.toUpperCase()),
-    },
-    { key: "mod:bfm", label: getTranslation(currentLang, "install.pkgModBfm") },
-  ];
+  logger.info("install", "Fetching installation manifest...");
+  onProgress?.({
+    status: "downloading",
+    message: getTranslation(currentLang, "install.fetchingManifest"),
+  });
+
+  let manifest: ManifestResponse;
+  try {
+    manifest = await fetchManifest(signal);
+  } catch (err: unknown) {
+    const normalized = normalizeError(err, "MANIFEST_FAILED");
+    logger.error("install", "Failed to fetch installation manifest:", normalized);
+    onProgress?.({ status: "error", message: normalized.description });
+    return {
+      success: false,
+      error: createLauncherError(normalized.code, normalized.description, err),
+    };
+  }
+
+  // Queue ordering:
+  // 1) id === "game"
+  // 2) id === `lang_${lang}`
+  // 3) id === "mod_bfm"
+  const targetIds = ["game", `lang_${lang}`, "mod_bfm"];
+  const packages: ManifestPackage[] = [];
+  for (const id of targetIds) {
+    const pkg = manifest.packages.find((p) => p.id === id);
+    if (pkg) {
+      packages.push(pkg);
+    }
+  }
+
+  if (packages.length === 0 || !packages.some((p) => p.id === "game")) {
+    const err = createLauncherError(
+      "MANIFEST_FAILED",
+      "Manifest is missing the required base game package ('game')",
+    );
+    logger.error("install", err.description);
+    onProgress?.({ status: "error", message: err.description });
+    return { success: false, error: err };
+  }
 
   let cumulativeBytes = 0;
 
@@ -99,7 +168,9 @@ export async function installGamePackage({
     }
 
     const pkg = packages[i];
-    const stepLabel = `[${i + 1}/${packages.length}] ${pkg.label}`;
+    const stepLabel = `[${i + 1}/${packages.length}] ${pkg.name}`;
+
+    logger.info("install", `Starting package download: ${pkg.name} (${pkg.id})`);
 
     onProgress?.({
       status: "downloading",
@@ -107,90 +178,78 @@ export async function installGamePackage({
       bytesDownloaded: cumulativeBytes,
     });
 
-    const streamRes = await downloadSingleFileStream(pkg.key, signal);
-    if (!streamRes.ok || !streamRes.stream) {
-      const err = streamRes.error ?? createLauncherError("DOWNLOAD_FAILED");
-      logger.error("install", `Package download stream failed for ${pkg.key}:`, err);
-      onProgress?.({ status: "error", message: err.description });
-      return { success: false, error: err };
-    }
-
-    const currentFileTotal = streamRes.totalBytes || 0;
-    const tempArchivePath = join(cleanDir, `pkg_${i}_${Date.now()}.zip`);
-
-    let fileHandle = null;
-    let reader = null;
+    const tempArchivePath = join(cleanDir, `pkg_${pkg.id}_${Date.now()}.zip`);
 
     try {
-      fileHandle = await open(tempArchivePath, "w");
-      reader = streamRes.stream.getReader();
+      const dlRes = await downloadFromMirrors(pkg.mirrors, tempArchivePath, {
+        signal,
+        onProgress: (p) => {
+          const currentMB = (p.bytesDownloaded / 1024 / 1024).toFixed(1);
+          const speedStr = formatSpeed(p.bytesPerSecond ?? 0);
+          const sizeStr =
+            p.totalBytes && p.totalBytes > 0
+              ? `${currentMB} / ${(p.totalBytes / 1024 / 1024).toFixed(1)} MB`
+              : `${currentMB} MB`;
 
-      let stepBytes = 0;
-      let lastProgressUpdate = Date.now();
-
-      while (true) {
-        if (signal?.aborted) throw createLauncherError("INSTALL_CANCELLED");
-
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        if (value) {
-          await fileHandle.write(value);
-          stepBytes += value.length;
-
-          const now = Date.now();
-          if (now - lastProgressUpdate > 150) {
-            lastProgressUpdate = now;
-            const currentMB = (stepBytes / 1024 / 1024).toFixed(1);
-            const totalMB = currentFileTotal > 0 ? `${(currentFileTotal / 1024 / 1024).toFixed(1)} MB` : "Unknown";
-
-            onProgress?.({
-              status: "downloading",
-              message: `${stepLabel}: ${currentMB} / ${totalMB}`,
-              bytesDownloaded: cumulativeBytes + stepBytes,
-              totalBytes: currentFileTotal,
-            });
-
-            await new Promise((r) => setTimeout(r, 0));
-          }
-        }
-      }
-
-      await fileHandle.close();
-      fileHandle = null;
-
-      cumulativeBytes += stepBytes;
-
-      if (signal?.aborted) throw createLauncherError("INSTALL_CANCELLED");
-
-      onProgress?.({
-        status: "extracting",
-        message: getTranslation(currentLang, "install.extracting").replace("{step}", stepLabel),
-        bytesDownloaded: cumulativeBytes,
+          onProgress?.({
+            status: "downloading",
+            message: `${stepLabel}: ${sizeStr} (${speedStr})`,
+            bytesDownloaded: cumulativeBytes + p.bytesDownloaded,
+            totalBytes: p.totalBytes,
+            bytesPerSecond: p.bytesPerSecond,
+          });
+        },
       });
 
+      cumulativeBytes += dlRes.bytesDownloaded;
+    } catch (err: unknown) {
+      try {
+        await unlink(tempArchivePath);
+      } catch {}
+
+      if (signal?.aborted) {
+        try {
+          await cleanGameDirectory(cleanDir);
+        } catch {}
+        return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+      }
+
+      logger.error("install", `All mirrors failed for package ${pkg.id}`, {
+        mirrors: pkg.mirrors,
+      });
+
+      const normalized = normalizeError(err, "DOWNLOAD_FAILED");
+      const launchErr = createLauncherError(normalized.code, normalized.description, err);
+      onProgress?.({ status: "error", message: launchErr.description });
+      return { success: false, error: launchErr };
+    }
+
+    if (signal?.aborted) {
+      try {
+        await unlink(tempArchivePath);
+        await cleanGameDirectory(cleanDir);
+      } catch {}
+      return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+    }
+
+    onProgress?.({
+      status: "extracting",
+      message: getTranslation(currentLang, "install.extracting").replace("{step}", stepLabel),
+      bytesDownloaded: cumulativeBytes,
+    });
+
+    try {
       if (!(await extractZip(tempArchivePath, cleanDir))) {
         throw createLauncherError("EXTRACTION_FAILED");
       }
+      logger.info("install", `Package extracted successfully: ${pkg.name} (${pkg.id})`);
     } catch (err: unknown) {
-      if (reader) {
-        try {
-          await reader.cancel();
-        } catch {}
-      }
-
-      if (fileHandle) {
-        try {
-          await fileHandle.close();
-        } catch {}
-      }
-
       try {
         await unlink(tempArchivePath);
       } catch {}
 
       const normalized = normalizeError(err, "EXTRACTION_FAILED");
-      logger.error("install", `Error while processing package ${pkg.key}:`, normalized);
+      logger.error("install", `Error while extracting package ${pkg.id}:`, normalized);
 
       if (normalized.code === "INSTALL_CANCELLED" || signal?.aborted) {
         try {
@@ -203,11 +262,6 @@ export async function installGamePackage({
       onProgress?.({ status: "error", message: launchErr.description });
       return { success: false, error: launchErr };
     } finally {
-      if (fileHandle) {
-        try {
-          await fileHandle.close();
-        } catch {}
-      }
       try {
         await unlink(tempArchivePath);
       } catch {}
@@ -228,7 +282,7 @@ export async function installGamePackage({
 
   const activeId = currentCfg.activeProfileId || "slot-1";
   const updatedProfiles = (currentCfg.gameProfiles || DEFAULT_CONFIG.gameProfiles).map((p) =>
-    p.id === activeId ? { ...p, path: cleanDir } : p
+    p.id === activeId ? { ...p, path: cleanDir } : p,
   );
 
   const updatedConfig: LauncherConfig = {

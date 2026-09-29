@@ -47,14 +47,20 @@ export function getSettingsCliPath(): string {
  * Проверяет, доступна ли утилита в системе.
  * Если возвращает false, лаунчер может просто скрывать/отключать кнопки импорта/экспорта.
  */
-export function hasSettingsCli(): boolean {
+let cachedCliAvailable: boolean | null = null;
+
+export function hasSettingsCli(forceRefresh = false): boolean {
   if (!isWindows()) {
     return false;
   }
-
+  if (!forceRefresh && cachedCliAvailable !== null) {
+    return cachedCliAvailable;
+  }
   const cliPath = getSettingsCliPath();
-  return existsSync(cliPath);
+  cachedCliAvailable = existsSync(cliPath);
+  return cachedCliAvailable;
 }
+
 
 export interface CliExecutionResult {
   success: boolean;

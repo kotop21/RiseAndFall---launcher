@@ -23,6 +23,8 @@ export type LauncherErrorCode =
   | "SETTINGS_CLI_EXPORT_FAILED"
   | "SETTINGS_CLI_IMPORT_FAILED"
   | "SETTINGS_CLI_INVALID_FILE"
+  | "MIRRORS_UNAVAILABLE"
+  | "MANIFEST_FAILED"
   | "UNKNOWN_ERROR";
 
 export interface LauncherErrorDetails {

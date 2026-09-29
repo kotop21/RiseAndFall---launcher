@@ -144,10 +144,14 @@ def main():
         "bun", "build", "index.tsx",
         "--outdir", "dist/build",
         "--target", "node",
+        "--minify",
+        "--sourcemap=external",
         "--define", define_arg,
+        "--define", 'process.env.NODE_ENV="production"',
         "--external", "@gpuix/native-darwin-arm64",
         "--external", "@gpuix/native-darwin-universal"
     ])
+
 
     index_bundle = os.path.join(build_dir, "index.js")
     inject_runtime_napi(index_bundle)

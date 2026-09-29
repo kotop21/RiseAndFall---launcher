@@ -4,13 +4,13 @@ import { logger } from "@/lib/logger";
 
 const execAsync = promisify(exec);
 
-export async function getProcessCpuUsage(pid: number): Promise<string> {
-  if (process.platform !== "win32") return "";
+export function isProcessAlive(pid: number): boolean {
+  if (!pid || pid <= 0) return false;
   try {
-    const { stdout } = await execAsync(`wmic process where ProcessId=${pid} get UserModeTime,KernelTime /Value`);
-    return stdout.trim();
-  } catch {
-    return "";
+    process.kill(pid, 0);
+    return true;
+  } catch (err: any) {
+    return err?.code === "EPERM";
   }
 }
 
@@ -28,3 +28,4 @@ export async function killProcessTree(pid: number): Promise<boolean> {
     return false;
   }
 }
+

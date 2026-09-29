@@ -26,7 +26,6 @@
     "currentOnline": "Current Online:",
     "totalPlaytime": "Total Playtime:",
     "gameRunning": "Game Running...",
-    "checking": "Checking...",
     "gameMissing": "Game Missing",
     "windowsOnly": "Windows Only",
     "startGame": "Start Game",
@@ -80,9 +79,7 @@
     "btnReinstallConfirm": "Confirm Reinstall (Click Again)",
     "statusStarting": "Starting installation...",
     "statusPreparingReinstall": "Preparing reinstall...",
-    "pkgBaseGame": "Base Game",
-    "pkgLangPack": "Language Pack ({lang})",
-    "pkgModBfm": "BFM Mod",
+    "fetchingManifest": "Fetching installation manifest...",
     "cleaningOld": "Cleaning previous installation...",
     "connecting": "Connecting for {step}...",
     "extracting": "Extracting {step}...",
@@ -198,6 +195,14 @@
     "SETTINGS_CLI_INVALID_FILE": {
       "title": "Invalid File",
       "description": "Unsupported settings format."
+    },
+    "MIRRORS_UNAVAILABLE": {
+      "title": "Mirrors Unavailable",
+      "description": "Failed to download package from all available mirrors."
+    },
+    "MANIFEST_FAILED": {
+      "title": "Manifest Error",
+      "description": "Failed to load installation manifest from server."
     }
   },
   "toasts": {
@@ -255,4 +260,3 @@
     "updateErrorDesc": "Could not install update"
   }
 }
-

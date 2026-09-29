@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ToastProvider, Flex, Views, View, theme } from "@/ui";
 import { Header } from "@/components/Header";
 import { MainView } from "./views/MainView";
@@ -7,6 +7,7 @@ import { InstallView } from "./views/InstallView";
 import { WelcomeView } from "./views/WelcomeView";
 import { saveConfig } from "@/lib/config/save";
 import { LanguageProvider } from "@/lib/lang";
+import { installationManager } from "@/lib/manager/install";
 import type { LauncherConfig } from "@/lib/config/types";
 
 interface AppProps {
@@ -57,6 +58,16 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
     setConfig(nextCfg);
     setActiveView("main");
   };
+
+  useEffect(() => {
+    return installationManager.onInstalled((installedPath, updatedConfig) => {
+      if (updatedConfig) {
+        setConfig(updatedConfig);
+      } else {
+        handleInstallSuccess(installedPath);
+      }
+    });
+  }, [config]);
 
   const handleCancelInstall = () => {
     setActiveView(installSource === "settings" ? "settings" : "main");

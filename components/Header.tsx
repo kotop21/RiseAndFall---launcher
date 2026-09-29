@@ -16,12 +16,15 @@ import { Play, Users, Clock, Settings, Calendar, Timer } from "@/icon";
 import { launchExe } from "@/lib/process/launch";
 import { recordGameSession } from "@/lib/config/session";
 import { isWindows } from "@/lib/utils/os";
-import { hasRiseAndFallExe } from "@/lib/utils/game-files";
+import { useGameStatus } from "@/lib/utils/game-status";
+import { launcherTracker } from "@/lib/process/launcher-tracker";
 import { useOnlineTracker } from "@/lib/api/online";
+import { useInstallation } from "@/lib/manager/install";
 import { DownloadGameButton } from "./DownloadGameButton";
 import type { LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+
 
 interface HeaderProps {
   config: LauncherConfig;
@@ -37,6 +40,7 @@ export function Header({
   onOpenInstall,
 }: HeaderProps) {
   const { t, lang } = useTranslation();
+  const installation = useInstallation();
 
   const formatLastLaunch = (rawDate: string | null) => {
     if (!rawDate) return t("main.neverPlayed");
@@ -59,9 +63,10 @@ export function Header({
   const { toast } = useToast();
   const onlineCount = useOnlineTracker();
   const [isRunning, setIsRunning] = useState(false);
-  const [gameExists, setGameExists] = useState(false);
-  const [isValidating, setIsValidating] = useState(true);
   const isWin = isWindows();
+  const isPathConfigured = Boolean(config.gameDir?.trim());
+  const { gameExists, isValidating } = useGameStatus(config.gameDir);
+
 
   const formatLauncherPlaytime = (mins: number) => {
     if (!mins || mins <= 0) return "0 min";
@@ -69,32 +74,6 @@ export function Header({
     return `${Math.floor(mins / 60)} hrs ${mins % 60} min`;
   };
 
-  const isPathConfigured = Boolean(config.gameDir?.trim());
-
-  useEffect(() => {
-    let isMounted = true;
-    setIsValidating(true);
-
-    (async () => {
-      if (!isPathConfigured) {
-        if (isMounted) {
-          setGameExists(false);
-          setIsValidating(false);
-        }
-        return;
-      }
-
-      const exists = await hasRiseAndFallExe(config.gameDir);
-      if (isMounted) {
-        setGameExists(exists);
-        setIsValidating(false);
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [config.gameDir, isPathConfigured]);
 
   const formatPlaytime = (totalMinutes: number): string => {
     if (!totalMinutes || totalMinutes <= 0) return "0 min";
@@ -124,6 +103,7 @@ export function Header({
     if (isRunning) return;
     setIsRunning(true);
     discordRpc.setGameRunning(true);
+    launcherTracker.saveToDisk().catch(() => {});
 
     toast({
       title: t("header.startingGame"),
@@ -143,6 +123,8 @@ export function Header({
         onSessionEnd: async (daemonResult) => {
           setIsRunning(false);
           discordRpc.setGameRunning(false);
+          launcherTracker.saveToDisk().catch(() => {});
+
 
           try {
             const nextConfig = await recordGameSession(
@@ -286,7 +268,13 @@ export function Header({
           </Column>
         </Row>
 
-        {!isPathConfigured || (!isValidating && !gameExists) ? (
+        {installation.isInstalling ? (
+          <DownloadGameButton
+            variant={installation.isReinstall ? "reinstall" : "download"}
+            isInstalling={true}
+            onClick={onOpenInstall}
+          />
+        ) : !isPathConfigured || (!isValidating && !gameExists) ? (
           <DownloadGameButton
             onClick={onOpenInstall}
             disabled={isValidating || isRunning}

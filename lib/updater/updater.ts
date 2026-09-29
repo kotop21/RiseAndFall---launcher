@@ -1,11 +1,14 @@
 import { tmpdir } from "node:os";
 import { join, dirname, basename, relative } from "node:path";
-import { mkdir, writeFile, open, rm, readdir, stat } from "node:fs/promises";
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { mkdir, writeFile, open, rm, readdir, stat, copyFile } from "node:fs/promises";
+import { existsSync, readdirSync, statSync, createWriteStream } from "node:fs";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { spawn } from "node:child_process";
 import { extractZip } from "@/lib/explorer/extract";
 import { logger } from "@/lib/logger";
 import { getLauncherVersion } from "@/lib/utils/version";
+import { setBackgroundActivity } from "@/lib/render/frame-loop";
 import type { ReleaseItem } from "@/lib/github/types";
 import type { UpdateOptions, UpdateProgress, UpdateResult } from "./types";
 
@@ -128,28 +131,13 @@ export async function downloadReleaseArchive(
   const lenHeader = res.headers.get("content-length");
   const totalBytes = lenHeader ? parseInt(lenHeader, 10) : undefined;
 
-  let fileHandle = null;
-  let reader = null;
-
   try {
-    fileHandle = await open(targetFilePath, "w");
-    reader = res.body.getReader();
-
     let bytesDownloaded = 0;
     let lastProgressUpdate = 0;
 
-    while (true) {
-      if (signal?.aborted) {
-        throw new Error("Update cancelled by user");
-      }
-
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      if (value) {
-        await fileHandle.write(value);
-        bytesDownloaded += value.length;
-
+    const progressTransform = new Transform({
+      transform(chunk: Buffer | Uint8Array, _encoding, callback) {
+        bytesDownloaded += chunk.length;
         const now = Date.now();
         if (now - lastProgressUpdate > 100) {
           lastProgressUpdate = now;
@@ -167,21 +155,18 @@ export async function downloadReleaseArchive(
             percent,
           });
         }
-      }
-    }
+        callback(null, chunk);
+      },
+    });
 
-    await fileHandle.close();
-    fileHandle = null;
+    const nodeReadable = Readable.fromWeb(res.body as any);
+    const fileWriteStream = createWriteStream(targetFilePath, { highWaterMark: 64 * 1024 });
 
+    await pipeline(nodeReadable, progressTransform, fileWriteStream, { signal });
     logger.info("updater", `Download finished (${bytesDownloaded} bytes)`);
     return true;
   } catch (err) {
     logger.error("updater", "Download error:", err);
-    if (fileHandle) {
-      try {
-        await fileHandle.close();
-      } catch {}
-    }
     try {
       await rm(targetFilePath, { force: true });
     } catch {}
@@ -190,6 +175,18 @@ export async function downloadReleaseArchive(
 }
 
 export async function updateLauncher(
+  release: ReleaseItem,
+  options?: UpdateOptions,
+): Promise<UpdateResult> {
+  setBackgroundActivity("launcher-update", true);
+  try {
+    return await doUpdateLauncher(release, options);
+  } finally {
+    setBackgroundActivity("launcher-update", false);
+  }
+}
+
+async function doUpdateLauncher(
   release: ReleaseItem,
   options?: UpdateOptions,
 ): Promise<UpdateResult> {
@@ -239,7 +236,7 @@ export async function updateLauncher(
     } else {
       // Direct exe downloaded
       const directTarget = join(stagingDir, "raf-launcher.exe");
-      await writeFile(directTarget, await open(archivePath, "r").then((h) => h.readFile()));
+      await copyFile(archivePath, directTarget);
     }
 
     // Determine payload root (handle if zip had a single enclosing folder)

@@ -26,7 +26,6 @@
     "currentOnline": "Онлайн:",
     "totalPlaytime": "Час у грі:",
     "gameRunning": "Гра запущена...",
-    "checking": "Перевірка...",
     "gameMissing": "Гру не знайдено",
     "windowsOnly": "Тільки Windows",
     "startGame": "Грати",
@@ -80,9 +79,7 @@
     "btnReinstallConfirm": "Підтвердити перевстановлення",
     "statusStarting": "Початок встановлення...",
     "statusPreparingReinstall": "Підготовка до перевстановлення...",
-    "pkgBaseGame": "Основна гра",
-    "pkgLangPack": "Мовний пакет ({lang})",
-    "pkgModBfm": "Мод BFM",
+    "fetchingManifest": "Отримання маніфесту встановлення...",
     "cleaningOld": "Очищення попередньої версії...",
     "connecting": "З'єднання: {step}...",
     "extracting": "Розпакування: {step}...",
@@ -198,6 +195,14 @@
     "SETTINGS_CLI_INVALID_FILE": {
       "title": "Невірний файл",
       "description": "Невідповідний формат налаштувань."
+    },
+    "MIRRORS_UNAVAILABLE": {
+      "title": "Дзеркала недоступні",
+      "description": "Не вдалося завантажити пакет з усіх доступних дзеркал."
+    },
+    "MANIFEST_FAILED": {
+      "title": "Помилка маніфесту",
+      "description": "Не вдалося завантажити маніфест встановлення з сервера."
     }
   },
   "toasts": {
@@ -255,4 +260,3 @@
     "updateErrorDesc": "Не вдалося встановити оновлення"
   }
 }
-

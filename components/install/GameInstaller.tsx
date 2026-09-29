@@ -24,7 +24,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "@/icon";
-import { installGamePackage, type InstallStatus } from "@/lib/manager/install";
+import { useInstallation } from "@/lib/manager/install";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
 import { isWindows } from "@/lib/utils/os";
@@ -43,15 +43,20 @@ const LANG_NAV_ITEMS = [
 
 export function GameInstaller({
   defaultInstallPath = "",
-  isReinstall = false,
+  isReinstall: isReinstallProp = false,
   onInstalled,
   onCancel,
 }: GameInstallerProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { pickFolder } = useFileDialog();
+  const installation = useInstallation();
+
+  const isInstalling = installation.isInstalling;
+  const isReinstall = isInstalling ? installation.isReinstall : isReinstallProp;
 
   const getInitialPath = () => {
+    if (installation.targetDir) return installation.targetDir;
     if (defaultInstallPath) return defaultInstallPath;
     if (!isReinstall) {
       return isWindows() ? "C:\\Games\\Rise and Fall" : "Rise and Fall";
@@ -59,19 +64,37 @@ export function GameInstaller({
     return "";
   };
 
-  const [installPath, setInstallPath] = useState(getInitialPath);
-  const [selectedLang, setSelectedLang] = useState<string>("en");
-  const [status, setStatus] = useState<InstallStatus>("idle");
-  const [statusMessage, setStatusMessage] = useState("");
+  const [localInstallPath, setLocalInstallPath] = useState(getInitialPath);
+  const [localLang, setLocalLang] = useState<string>("en");
   const [confirmReinstall, setConfirmReinstall] = useState(false);
   const [confirmAbort, setConfirmAbort] = useState(false);
   const [isPickingFolder, setIsPickingFolder] = useState(false);
 
-  const abortControllerRef = useRef<AbortController | null>(null);
   const resetConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetAbortTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isInstalling = status === "downloading" || status === "extracting";
+  const status = installation.status;
+  const installPath = isInstalling || (status === "completed" && installation.targetDir)
+    ? installation.targetDir
+    : localInstallPath;
+
+  const selectedLang = isInstalling || (status === "completed" && installation.lang)
+    ? installation.lang
+    : localLang;
+
+  const statusMessage = installation.progress?.message || (
+    status === "downloading"
+      ? (isReinstall ? t("install.statusPreparingReinstall") : t("install.statusStarting"))
+      : ""
+  );
+
+  const setInstallPath = (path: string) => {
+    if (!isInstalling) setLocalInstallPath(path);
+  };
+
+  const setSelectedLang = (val: string) => {
+    if (!isInstalling) setLocalLang(val);
+  };
 
   useEffect(() => {
     return () => {
@@ -124,39 +147,18 @@ export function GameInstaller({
       return;
     }
 
-    abortControllerRef.current = new AbortController();
     setConfirmAbort(false);
-    setStatus("downloading");
-    setStatusMessage(
-      isReinstall
-        ? t("install.statusPreparingReinstall")
-        : t("install.statusStarting"),
-    );
 
-    const res = await installGamePackage({
+    const res = await installation.startInstall({
       targetDir: target,
       lang: selectedLang === "ru" ? "ru" : "en",
-      cleanBeforeInstall: isReinstall,
-      signal: abortControllerRef.current.signal,
-      onProgress: (p) => {
-        if (!abortControllerRef.current?.signal.aborted) {
-          setStatus(p.status);
-          setStatusMessage(p.message);
-        }
-      },
+      isReinstall,
+      onInstalled,
     });
-
-    if (abortControllerRef.current?.signal.aborted) {
-      setStatus("idle");
-      setStatusMessage("");
-      return;
-    }
 
     if (res.success) {
       onInstalled?.(target);
-    } else {
-      setStatus("idle");
-      setStatusMessage("");
+    } else if (res.error && res.error.code !== "INSTALL_CANCELLED") {
       toast(formatErrorToast(res.error, "DOWNLOAD_FAILED"));
     }
   };
@@ -188,14 +190,7 @@ export function GameInstaller({
 
     if (resetAbortTimer.current) clearTimeout(resetAbortTimer.current);
     setConfirmAbort(false);
-
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-
-    setStatus("idle");
-    setStatusMessage("");
+    installation.abort();
   };
 
   return (
@@ -297,7 +292,6 @@ export function GameInstaller({
         <Button
           variant="secondary"
           size="sm"
-          disabled={isInstalling}
           onClick={onCancel}
         >
           {t("install.cancel")}

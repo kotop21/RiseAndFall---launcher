@@ -5,6 +5,8 @@ import { initConfig } from "@/lib/config";
 import { initLogger, logger } from "@/lib/logger";
 import { getLauncherVersion } from "@/lib/utils/version";
 import { setupAdaptiveRenderer } from "@/lib/render/frame-loop";
+import { installationManager } from "@/lib/manager/install";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { App } from "./app/App";
 
 initLogger(getLauncherVersion());
@@ -25,13 +27,19 @@ async function main() {
 
   const { renderer, startLoop } = setupAdaptiveRenderer(windowOptions);
 
-  render(<App initialConfig={config} isFirstLaunch={isFirstLaunch} />, {
-    renderer,
-    ...windowOptions,
-  });
+  render(
+    <ErrorBoundary>
+      <App initialConfig={config} isFirstLaunch={isFirstLaunch} />
+    </ErrorBoundary>,
+    {
+      renderer,
+      ...windowOptions,
+    },
+  );
 
   startLoop({
     onTerminated: () => {
+      installationManager.abort();
       process.exit(0);
     },
   });

@@ -26,7 +26,6 @@
     "currentOnline": "Онлайн:",
     "totalPlaytime": "Время в игре:",
     "gameRunning": "Игра запущена...",
-    "checking": "Проверка...",
     "gameMissing": "Игра не найдена",
     "windowsOnly": "Только Windows",
     "startGame": "Запустить игру",
@@ -80,9 +79,7 @@
     "btnReinstallConfirm": "Подтвердить переустановку",
     "statusStarting": "Начало установки...",
     "statusPreparingReinstall": "Подготовка к переустановке...",
-    "pkgBaseGame": "Основная игра",
-    "pkgLangPack": "Языковой пакет ({lang})",
-    "pkgModBfm": "Мод BFM",
+    "fetchingManifest": "Получение манифеста установки...",
     "cleaningOld": "Очистка предыдущей установки...",
     "connecting": "Подключение: {step}...",
     "extracting": "Распаковка: {step}...",
@@ -198,6 +195,14 @@
     "SETTINGS_CLI_INVALID_FILE": {
       "title": "Неверный файл",
       "description": "Неподходящий формат настроек."
+    },
+    "MIRRORS_UNAVAILABLE": {
+      "title": "Зеркала недоступны",
+      "description": "Не удалось скачать пакет со всех доступных зеркал."
+    },
+    "MANIFEST_FAILED": {
+      "title": "Ошибка манифеста",
+      "description": "Не удалось загрузить манифест установки с сервера."
     }
   },
   "toasts": {
@@ -255,4 +260,3 @@
     "updateErrorDesc": "Не удалось установить обновление"
   }
 }
-

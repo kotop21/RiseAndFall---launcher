@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
 import { join } from "node:path";
 import { Button, Row, useToast, theme } from "@/ui";
 import { SlidersHorizontal } from "@/icon";
 import { launchExe } from "@/lib/process/launch";
 import { isWindows } from "@/lib/utils/os";
-import { hasDgVoodooCplExe } from "@/lib/utils/game-files";
+import { useGameStatus } from "@/lib/utils/game-status";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
 
@@ -19,33 +18,9 @@ export function OpenDgVoodooButton({
 }: OpenDgVoodooButtonProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [fileExists, setFileExists] = useState(false);
-  const [isValidating, setIsValidating] = useState(true);
   const isWin = isWindows();
+  const { dgVoodooExists: fileExists, isValidating } = useGameStatus(gameDir);
 
-  useEffect(() => {
-    let isMounted = true;
-    setIsValidating(true);
-
-    (async () => {
-      try {
-        const exists = await hasDgVoodooCplExe(gameDir);
-        if (isMounted) {
-          setFileExists(exists);
-          setIsValidating(false);
-        }
-      } catch {
-        if (isMounted) {
-          setFileExists(false);
-          setIsValidating(false);
-        }
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [gameDir]);
 
   const isDisabled = isValidating || !fileExists || !isWin;
 

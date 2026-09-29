@@ -6,6 +6,22 @@ interface FrameLoopOptions {
   lowSpecMode?: boolean;
 }
 
+const activeBackgroundOperations = new Set<string>();
+let wakeAdaptiveRenderer: (() => void) | null = null;
+
+export function setBackgroundActivity(operationId: string, isActive: boolean): void {
+  if (isActive) {
+    activeBackgroundOperations.add(operationId);
+  } else {
+    activeBackgroundOperations.delete(operationId);
+  }
+  wakeAdaptiveRenderer?.();
+}
+
+export function isBackgroundActivityActive(): boolean {
+  return activeBackgroundOperations.size > 0;
+}
+
 export function setupAdaptiveRenderer(windowOptions: {
   title: string;
   width: number;
@@ -15,9 +31,25 @@ export function setupAdaptiveRenderer(windowOptions: {
   lowSpecMode?: boolean;
 }) {
   let lastActivityTime = performance.now();
+  let isThrottledSleep = false;
+  let timer: any = null;
+  let stopped = false;
+  let runLoop: (() => void) | null = null;
+
+  const wakeUp = () => {
+    lastActivityTime = performance.now();
+    if (isThrottledSleep && timer !== null && runLoop) {
+      clearTimeout(timer);
+      timer = null;
+      isThrottledSleep = false;
+      runLoop();
+    }
+  };
+
+  wakeAdaptiveRenderer = wakeUp;
 
   const handleEvent = (_event: any) => {
-    lastActivityTime = performance.now();
+    wakeUp();
   };
 
   const renderer = createRenderer(handleEvent) as GpuixRenderer;
@@ -33,18 +65,18 @@ export function setupAdaptiveRenderer(windowOptions: {
     setLowSpecMode(true);
   }
 
+  const isWin = process.platform === "win32";
+
   const startLoop = (options: FrameLoopOptions = {}) => {
     if (!renderer.requiresTick()) {
       return { stop: () => {} };
     }
 
-    let timer: any = null;
-    let stopped = false;
-
     const stop = () => {
       stopped = true;
       if (timer !== null) clearTimeout(timer);
       timer = null;
+      wakeAdaptiveRenderer = null;
     };
 
     const loop = () => {
@@ -60,27 +92,42 @@ export function setupAdaptiveRenderer(windowOptions: {
       }
 
       const elapsed = performance.now() - started;
-      const isIdle = performance.now() - lastActivityTime > 1200;
+      const isIdle = performance.now() - lastActivityTime > 2000;
+      const hasBgActivity = activeBackgroundOperations.size > 0;
 
-      // Глобальная адаптивная частота кадров:
-      // При взаимодействии: 60 FPS на нормальном железе, 30 FPS на ретро ПК.
-      // В простое (AFK): 30 FPS на нормальном железе, 20 FPS на ретро ПК.
       let targetFrameMs: number;
-      if (isLowSpec) {
-        targetFrameMs = isIdle ? 50 : 33.3; // 20 FPS в AFK / 30 FPS при кликах
+
+      if (hasBgActivity) {
+        // Активная фоновая операция: держим 60 FPS для плавных прогресс-баров и анимаций
+        targetFrameMs = isLowSpec ? 33.3 : 16.6;
+        isThrottledSleep = false;
+      } else if (isIdle) {
+        if (isWin) {
+          // На Windows GPUI использует нативный поток с блокирующим циклом сообщений.
+          // В AFK достаточно проверять закрытие окна раз в 500 мс (0.0% CPU)
+          targetFrameMs = 500;
+          isThrottledSleep = true;
+        } else {
+          targetFrameMs = isLowSpec ? 66.6 : 33.3;
+          isThrottledSleep = true;
+        }
       } else {
-        targetFrameMs = isIdle ? 33.3 : 16.6; // 30 FPS в AFK / 60 FPS при кликах
+        // Активное взаимодействие пользователя: 60 FPS (или 30 FPS в low-spec)
+        targetFrameMs = isLowSpec ? 33.3 : 16.6;
+        isThrottledSleep = false;
       }
 
-      const minYield = isLowSpec ? 8 : 0;
+      const minYield = (isLowSpec && !isThrottledSleep) ? 8 : 0;
       const wait = Math.max(minYield, targetFrameMs - elapsed);
 
       timer = setTimeout(loop, wait);
     };
 
+    runLoop = loop;
     loop();
     return { stop };
   };
 
   return { renderer, startLoop };
 }
+

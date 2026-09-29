@@ -1,17 +1,23 @@
 import { useEffect } from "react";
-import { Column, Row, Label, Button, useFileDialog, useToast, theme } from "@/ui";
+import {
+  Column,
+  Row,
+  Label,
+  Button,
+  useFileDialog,
+  useToast,
+  theme,
+} from "@/ui";
 import { Download, Upload } from "@/icon";
 import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
 import { DownloadGameButton } from "@/components/DownloadGameButton";
-import {
-  exportGameSettings,
-  importGameSettings,
-  hasSettingsCli,
-} from "@/lib/settings-cli";
+import { exportGameSettings, importGameSettings } from "@/lib/settings-cli";
 import { isWindows } from "@/lib/utils/os";
+import { useGameStatus } from "@/lib/utils/game-status";
 import { formatErrorToast, createLauncherError } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { useInstallation } from "@/lib/manager/install";
 
 interface SettingsActionsProps {
   gameDir?: string;
@@ -25,8 +31,9 @@ export function SettingsActions({
   const { t } = useTranslation();
   const { pickFolder, pickFile } = useFileDialog();
   const { toast } = useToast();
+  const installation = useInstallation();
 
-  const isCliAvailable = hasSettingsCli();
+  const { cliExists: isCliAvailable } = useGameStatus(gameDir);
 
   useEffect(() => {
     if (!isWindows()) {
@@ -119,6 +126,7 @@ export function SettingsActions({
           <DownloadGameButton
             variant="reinstall"
             size="sm"
+            isInstalling={installation.isInstalling}
             onClick={onOpenInstall}
             style={{ width: "100%" }}
           />

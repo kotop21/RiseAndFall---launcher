@@ -1,3 +1,6 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { pack, unpack } from "msgpackr";
+import { getConfigPath } from "@/lib/config/dir";
 import { saveConfig } from "@/lib/config/save";
 import { initConfig } from "@/lib/config/init";
 import { logger } from "@/lib/logger";
@@ -28,7 +31,8 @@ class LauncherTimeTracker {
           const addedMinutes = Math.floor(this.accumulatedSeconds / 60);
           this.accumulatedSeconds %= 60;
           this.totalMinutes += addedMinutes;
-          this.persist();
+          // Только реактивное обновление в памяти, без дисковых I/O
+          this.onUpdateCallback?.(this.totalMinutes);
         }
       }
     }, 1000);
@@ -50,15 +54,16 @@ class LauncherTimeTracker {
     return this.totalMinutes;
   }
 
-  private async persist() {
+  public async saveToDisk(): Promise<void> {
     try {
       const { config } = await initConfig();
+      if (config.launcherPlaytimeMinutes === this.totalMinutes) return;
       const nextConfig = {
         ...config,
         launcherPlaytimeMinutes: this.totalMinutes,
       };
       await saveConfig(nextConfig);
-      this.onUpdateCallback?.(this.totalMinutes);
+      logger.info("tracker", `Persisted launcher playtime: ${this.totalMinutes} min`);
     } catch (err) {
       logger.error("tracker", "Failed to persist launcher playtime:", err);
     }
@@ -66,6 +71,15 @@ class LauncherTimeTracker {
 
   private persistSync() {
     this.destroy();
+    try {
+      const cfgPath = getConfigPath();
+      if (existsSync(cfgPath)) {
+        const raw = readFileSync(cfgPath);
+        const data = (unpack(raw) || {}) as Record<string, any>;
+        data.launcherPlaytimeMinutes = this.totalMinutes;
+        writeFileSync(cfgPath, pack(data));
+      }
+    } catch {}
   }
 
   public destroy() {
@@ -76,5 +90,6 @@ class LauncherTimeTracker {
     this.isStarted = false;
   }
 }
+
 
 export const launcherTracker = new LauncherTimeTracker();
