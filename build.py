@@ -149,7 +149,8 @@ def main():
         "--define", define_arg,
         "--define", 'process.env.NODE_ENV="production"',
         "--external", "@gpuix/native-darwin-arm64",
-        "--external", "@gpuix/native-darwin-universal"
+        "--external", "@gpuix/native-darwin-universal",
+        "--external", "@gpuix/native-win32-x64-msvc"
     ])
 
 

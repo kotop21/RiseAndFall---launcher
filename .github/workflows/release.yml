@@ -90,14 +90,22 @@ jobs:
         run: |
           mkdir -p dist/build
           bun run scripts/generate-version.ts
-          bun build index.tsx --outdir dist/build --target node --define process.env.API_URL="\"${API_URL}\"" --external @gpuix/native-darwin-arm64 --external @gpuix/native-darwin-universal
+          bun build index.tsx \
+            --outdir dist/build \
+            --target node \
+            --minify \
+            --sourcemap=external \
+            --define process.env.API_URL="\"${API_URL}\"" \
+            --define process.env.NODE_ENV="\"production\"" \
+            --external @gpuix/native-darwin-arm64 \
+            --external @gpuix/native-darwin-universal \
+            --external @gpuix/native-win32-x64-msvc
           
           cat scripts/runtime-napi.ts dist/build/index.js > dist/build/bundle.js
 
           deno compile \
             --allow-all \
             --no-check \
-            --no-npm \
             --no-terminal \
             --unsafely-ignore-certificate-errors \
             --target x86_64-pc-windows-msvc \
@@ -114,12 +122,8 @@ jobs:
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: raf-launcher-windows-release-x64
-          path: |
-            dist/raf-launcher.exe
-            dist/gpuix-native.win32-x64-msvc.node
-            dist/bin/raf-settings.exe
-            dist/RiseAndFall-launcher_*.zip
+          name: raf-launcher-windows-release-zip
+          path: dist/RiseAndFall-launcher_*.zip
 
       - name: Create Draft GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -128,8 +132,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           draft: true
-          files: |
-            dist/RiseAndFall-launcher_*.zip
-            dist/raf-launcher.exe
-            dist/gpuix-native.win32-x64-msvc.node
-            dist/bin/raf-settings.exe
+          files: dist/RiseAndFall-launcher_*.zip
