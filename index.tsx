@@ -1,3 +1,4 @@
+import "./scripts/runtime-napi";
 import { launcherTracker } from "@/lib/process/launcher-tracker";
 import { discordRpc } from "@/lib/discord-rpc";
 import { render } from "@gpuix/react";

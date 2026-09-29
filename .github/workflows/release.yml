@@ -100,20 +100,18 @@ jobs:
             --external @gpuix/native-darwin-arm64 \
             --external @gpuix/native-darwin-universal \
             --external @gpuix/native-win32-x64-msvc
-          
-          cat scripts/runtime-napi.js dist/build/index.js > dist/build/bundle.js
 
           deno compile \
             --allow-all \
             --no-check \
             --no-terminal \
-            --node-modules-dir=none \
+            --no-config \
             --unsafely-ignore-certificate-errors \
             --target x86_64-pc-windows-msvc \
             --engine quickjs \
             --icon assets/icon.ico \
             --output dist/raf-launcher.exe \
-            dist/build/bundle.js
+            dist/build/index.js
 
           cp node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node dist/
 

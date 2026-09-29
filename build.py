@@ -107,17 +107,6 @@ def read_api_url():
                     return val
     return "http://localhost:3000"
 
-def inject_runtime_napi(bundle_path):
-    napi_script_path = os.path.join("scripts", "runtime-napi.js")
-    if not os.path.exists(napi_script_path) or not os.path.exists(bundle_path):
-        return
-    with open(napi_script_path, "r", encoding="utf-8") as f:
-        preamble = f.read()
-    with open(bundle_path, "r", encoding="utf-8") as f:
-        code = f.read()
-    with open(bundle_path, "w", encoding="utf-8") as f:
-        f.write(preamble + "\n" + code)
-
 def main():
     ensure_docker()
     root_dir = os.path.abspath(os.path.dirname(__file__))
@@ -152,10 +141,6 @@ def main():
         "--external", "@gpuix/native-darwin-universal",
         "--external", "@gpuix/native-win32-x64-msvc"
     ])
-
-
-    index_bundle = os.path.join(build_dir, "index.js")
-    inject_runtime_napi(index_bundle)
 
     cache_bust = str(int(time.time()))
     image_name = "bungpuix-raf-builder"
