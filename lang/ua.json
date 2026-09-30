@@ -92,6 +92,8 @@
     "openDgVoodoo": "Налаштування dgVoodoo",
     "exportSettings": "Експорт налаштувань гри",
     "importSettings": "Імпорт налаштувань гри",
+    "save": "Зберегти",
+    "revert": "Скинути",
     "update": "Оновити",
     "updating": "Оновлення..."
   },
@@ -257,6 +259,8 @@
     "updateSuccessTitle": "Оновлення готове",
     "updateSuccessDesc": "Перезапуск лаунчера...",
     "updateErrorTitle": "Помилка оновлення",
-    "updateErrorDesc": "Не вдалося встановити оновлення"
+    "updateErrorDesc": "Не вдалося встановити оновлення",
+    "unsavedTitle": "Незбережені зміни",
+    "unsavedDesc": "Збережіть або скасуйте зміни перед виходом."
   }
 }

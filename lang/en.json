@@ -92,6 +92,8 @@
     "openDgVoodoo": "Open dgVoodoo Config",
     "exportSettings": "Export Game Settings",
     "importSettings": "Import Game Settings",
+    "save": "Save",
+    "revert": "Revert",
     "update": "Update",
     "updating": "Updating..."
   },
@@ -257,6 +259,8 @@
     "updateSuccessTitle": "Update Ready",
     "updateSuccessDesc": "Restarting launcher...",
     "updateErrorTitle": "Update Failed",
-    "updateErrorDesc": "Could not install update"
+    "updateErrorDesc": "Could not install update",
+    "unsavedTitle": "Unsaved Changes",
+    "unsavedDesc": "Save or revert modifications before leaving."
   }
 }

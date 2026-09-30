@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { ensureDirectory, createFile } from "@/lib/explorer/create";
 import { cleanGameDirectory } from "@/lib/explorer/clean";
 import { extractSingleZip, extractZip } from "@/lib/explorer/extract";
+import { openExplorer } from "@/lib/explorer/open";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mkdir, writeFile, rm, exists, readdir, readFile } from "node:fs/promises";
@@ -128,5 +129,17 @@ describe("Explorer: Archive Extraction", () => {
     expect(extractedText).toBe("EXTRACTED_CONTENT");
 
     await rm(tempDir, { recursive: true, force: true });
+  });
+});
+
+describe("Explorer: Open Explorer", () => {
+  it("returns false for empty or whitespace paths", () => {
+    expect(openExplorer("")).toBe(false);
+    expect(openExplorer("   ")).toBe(false);
+  });
+
+  it("returns false for non-existent path", () => {
+    expect(openExplorer("/non/existent/path/for/test/404")).toBe(false);
+    expect(openExplorer("D:\\Games\\NonExistentPath404")).toBe(false);
   });
 });

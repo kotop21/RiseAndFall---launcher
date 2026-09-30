@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import {
   Column,
   Row,
@@ -13,48 +13,39 @@ import {
 } from "@/ui";
 import { Folder, RotateCcw, Check, Layers, Trash2 } from "@/icon";
 import { ProfileSwitcher } from "@/components/ProfileSwitcher";
-import type { LauncherConfig } from "@/lib/config/types";
+import type { LauncherConfig, GameBuildProfile } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
 
-interface GameProfilesProps {
+export interface ProfileFormState {
+  activeProfileId: string;
+  gameDir: string;
+  gameArg: string;
+  gameProfiles: GameBuildProfile[];
+}
+
+export interface GameProfilesProps {
   config: LauncherConfig;
-  onChangeConfig: (nextConfig: LauncherConfig) => Promise<void> | void;
-  onSaved?: () => void;
+  formState: ProfileFormState;
+  setFormState: Dispatch<SetStateAction<ProfileFormState>>;
+  hasProfileChanges: boolean;
+  onSaveProfiles: () => Promise<void>;
+  onRevertProfiles: () => void;
 }
 
 export function GameProfiles({
   config,
-  onChangeConfig,
-  onSaved,
+  formState,
+  setFormState,
+  hasProfileChanges,
+  onSaveProfiles,
+  onRevertProfiles,
 }: GameProfilesProps) {
   const { t } = useTranslation();
   const { pickFolder } = useFileDialog();
   const { toast } = useToast();
 
-  const [formState, setFormState] = useState({
-    activeProfileId: config.activeProfileId || "slot-1",
-    gameDir: config.gameDir || "",
-    gameArg: config.gameArg || "",
-    gameProfiles: config.gameProfiles?.length ? [...config.gameProfiles] : [],
-  });
   const [isPickingFolder, setIsPickingFolder] = useState(false);
-
-  useEffect(() => {
-    setFormState({
-      activeProfileId: config.activeProfileId || "slot-1",
-      gameDir: config.gameDir || "",
-      gameArg: config.gameArg || "",
-      gameProfiles: config.gameProfiles?.length ? [...config.gameProfiles] : [],
-    });
-  }, [config]);
-
-  const hasProfileChanges =
-    JSON.stringify(formState.gameProfiles) !==
-      JSON.stringify(config.gameProfiles || []) ||
-    formState.activeProfileId !== (config.activeProfileId || "slot-1") ||
-    formState.gameDir !== (config.gameDir || "") ||
-    formState.gameArg !== (config.gameArg || "");
 
   const handleSelectSlot = (slotId: string) => {
     if (slotId === formState.activeProfileId) return;
@@ -153,45 +144,6 @@ export function GameProfiles({
       gameDir: nextTarget?.path || "",
       gameArg: nextTarget?.gameArg || prev.gameArg,
     }));
-  };
-
-  const handleRevertProfiles = () => {
-    const defaultActiveId = config.activeProfileId || "slot-1";
-    const baseTarget = config.gameProfiles?.find(
-      (p) => p.id === defaultActiveId,
-    );
-
-    setFormState({
-      activeProfileId: defaultActiveId,
-      gameDir: baseTarget?.path || "",
-      gameArg: baseTarget?.gameArg || config.gameArg,
-      gameProfiles: config.gameProfiles ? [...config.gameProfiles] : [],
-    });
-  };
-
-  const handleSaveProfiles = async () => {
-    try {
-      const activeProf = formState.gameProfiles.find(
-        (p) => p.id === formState.activeProfileId,
-      );
-      const toSave: LauncherConfig = {
-        ...config,
-        activeProfileId: formState.activeProfileId,
-        gameProfiles: formState.gameProfiles,
-        gameDir: activeProf?.path || "",
-        gameArg: activeProf?.gameArg || formState.gameArg,
-      };
-      await onChangeConfig(toSave);
-      toast({
-        title: t("toasts.settingsSavedTitle"),
-        description: t("toasts.settingsSavedDesc"),
-        type: "info",
-        duration: 2500,
-      });
-      onSaved?.();
-    } catch (err) {
-      toast(formatErrorToast(err, "CONFIG_WRITE_FAILED"));
-    }
   };
 
   const activeSlotIndex = Math.max(
@@ -319,11 +271,11 @@ export function GameProfiles({
           variant="secondary"
           size="sm"
           disabled={!hasProfileChanges}
-          onClick={handleRevertProfiles}
+          onClick={onRevertProfiles}
         >
           <Row gap={8} align="center">
             <RotateCcw size={14} color={theme.colors.fg} />
-            {t("settings.revert")}
+            {t("buttons.revert")}
           </Row>
         </Button>
 
@@ -331,11 +283,11 @@ export function GameProfiles({
           variant="default"
           size="sm"
           disabled={!hasProfileChanges}
-          onClick={handleSaveProfiles}
+          onClick={onSaveProfiles}
         >
           <Row gap={8} align="center">
             <Check size={14} color={theme.colors.primaryFg} />
-            {t("settings.save")}
+            {t("buttons.save")}
           </Row>
         </Button>
       </Row>

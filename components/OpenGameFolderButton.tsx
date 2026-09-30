@@ -8,12 +8,14 @@ import { useTranslation } from "@/lib/lang";
 interface OpenGameFolderButtonProps {
   gameDir?: string;
   label?: string;
+  disabled?: boolean;
   style?: Record<string, any>;
 }
 
 export function OpenGameFolderButton({
   gameDir = "",
   label,
+  disabled = false,
   style,
 }: OpenGameFolderButtonProps) {
   const { t } = useTranslation();
@@ -21,7 +23,7 @@ export function OpenGameFolderButton({
   const buttonLabel = label || t("buttons.openFolder");
 
   const handleOpen = async () => {
-    let targetDir = gameDir.trim();
+    let targetDir = gameDir.trim().replace(/^["']|["']$/g, "").trim();
 
     if (!targetDir) {
       toast({
@@ -37,7 +39,7 @@ export function OpenGameFolderButton({
     }
 
     try {
-      if (!(await openExplorer(targetDir))) {
+      if (!openExplorer(targetDir)) {
         toast({
           title: t("toasts.explorerErrorTitle"),
           description: t("toasts.explorerErrorDesc"),
@@ -55,7 +57,7 @@ export function OpenGameFolderButton({
     <Button
       variant="outline"
       size="sm"
-      disabled={isPathEmpty}
+      disabled={disabled}
       onClick={handleOpen}
       style={style}
     >
