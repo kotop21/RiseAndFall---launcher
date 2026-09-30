@@ -25,6 +25,7 @@ RUN mkdir -p /out && \
     deno compile \
       --allow-all \
       --no-check \
+      --no-config \
       --unsafely-ignore-certificate-errors \
       --target x86_64-pc-windows-msvc \
       --engine quickjs \
