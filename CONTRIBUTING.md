@@ -139,7 +139,7 @@ This script automatically:
 1. Validates that Docker is running.
 2. Ensures the `@gpuix` Windows native addon is available.
 3. Generates version stamps and bundles source code with N-API glue.
-4. Runs a Debian container with Deno Canary QuickJS to compile `dist/raf-launcher.exe`.
+4. Runs a Debian container with Deno Canary v8 to compile `dist/raf-launcher.exe`.
 
 ---
 

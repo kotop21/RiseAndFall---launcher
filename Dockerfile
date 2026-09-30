@@ -28,7 +28,7 @@ RUN mkdir -p /out && \
       --no-config \
       --unsafely-ignore-certificate-errors \
       --target x86_64-pc-windows-msvc \
-      --engine quickjs \
+      --engine v8 \
       --icon assets/icon.ico \
       $DENO_FLAGS \
       --output /out/raf-launcher.exe \

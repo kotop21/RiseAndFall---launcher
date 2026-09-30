@@ -43,7 +43,7 @@ Not affiliated with, endorsed by, or connected to Midway Games, Stainless Steel 
 
 ## ⚡ Core Features
 
-- 🚀 **GPU-Accelerated Native GUI:** Built upon `@gpuix/react` and Bun, compiled to a compact standalone Windows executable using the Deno QuickJS engine with zero runtime overhead and rapid startup.
+- 🚀 **GPU-Accelerated Native GUI:** Built upon `@gpuix/react` and Bun, compiled to a compact standalone Windows executable using the Deno v8 engine with zero runtime overhead and rapid startup.
 - 🎮 **Automated Game Installer & DirectX Setup:** Single-click streaming installation with chunk verification, automated archive extraction, and integrated **dgVoodoo2** DirectX wrapper for smooth rendering on modern GPUs.
 - 🛠️ **Native Go Settings Engine (`raf-settings.exe`):** High-speed companion CLI built in Go 1.23 that interfaces directly with the Windows Registry (`HKCU\Software\Midway Home Entertainment\Rise and Fall`) for automated sanitization, export, and import of game configurations.
 - 🧩 **Multi-Profile Management & Playtime Tracking:** 5 isolated profile slots allowing instant switching of resolution, launch arguments, and mods, paired with persistent playtime tracking and session history.
@@ -119,7 +119,7 @@ bun test
 ### 6. Compiling Windows Executable
 
 #### Method A: Automated Containerized Build via Docker & Python (Recommended)
-The project includes a unified build orchestrator ([`build.py`](build.py)) and Docker environment ([`Dockerfile`](Dockerfile)). This approach ensures a reproducible environment by running Deno Canary QuickJS inside a container without needing Deno installed on your host machine:
+The project includes a unified build orchestrator ([`build.py`](build.py)) and Docker environment ([`Dockerfile`](Dockerfile)). This approach ensures a reproducible environment by running Deno Canary v8 inside a container without needing Deno installed on your host machine:
 
 ```bash
 # Development build (console terminal enabled)
@@ -139,7 +139,7 @@ RELEASE=1 python3 build.py
 3. Injects `API_URL` configuration from `.env` or process environment.
 4. Generates version metadata via `bun run scripts/generate-version.js`.
 5. Bundles React/TS into `dist/build/` and prepends N-API runtime glue (`scripts/runtime-napi.js`).
-6. Builds the Docker builder image from `Dockerfile` and compiles `raf-launcher.exe` using Deno Canary QuickJS.
+6. Builds the Docker builder image from `Dockerfile` and compiles `raf-launcher.exe` using Deno Canary v8.
 7. Outputs ready-to-run artifacts in `dist/`.
 
 #### Method B: Direct Host Compilation (Without Docker)
@@ -163,7 +163,7 @@ deno compile \
   --no-npm \
   --no-terminal \
   --target x86_64-pc-windows-msvc \
-  --engine quickjs \
+  --engine v8 \
   --icon assets/icon.ico \
   --output dist/raf-launcher.exe \
   dist/build/bundle.js
@@ -183,7 +183,7 @@ cp node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node di
 | [`lib/`](lib/) | Core domain services: binary updater, config persistence, process management, Windows registry client, error handling, and logger. |
 | [`packages/raf-settings/`](packages/raf-settings/) | Go 1.23 CLI binary source for Windows Registry configuration export, import, and sanitization. |
 | [`build.py`](build.py) | Python build orchestrator executed via `bun run build`. Coordinates Docker builds, N-API injection, and binary compilation. |
-| [`Dockerfile`](Dockerfile) | Debian-based Docker container setup with Deno Canary QuickJS for cross-compiling the standalone Windows binary. |
+| [`Dockerfile`](Dockerfile) | Debian-based Docker container setup with Deno Canary v8 for cross-compiling the standalone Windows binary. |
 | [`lang/`](lang/) | Localization dictionaries supporting English (`en.json`), Ukrainian (`ua.json`), and Russian (`ru.json`). |
 | [`scripts/`](scripts/) | Automation scripts for runtime version generation (`generate-version.js`) and N-API bootstrapping (`runtime-napi.js`). |
 | [`test/`](test/) | Comprehensive `bun:test` test suites covering config migrations, updater logic, registry CLI discovery, and error normalization. |
