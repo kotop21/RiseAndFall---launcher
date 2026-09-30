@@ -1,4 +1,10 @@
-import { createContext, useContext, useMemo, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useEffect,
+  type ReactNode,
+} from "react";
 import en from "../../lang/en.json";
 import ru from "../../lang/ru.json";
 import ua from "../../lang/ua.json";
@@ -11,6 +17,8 @@ const DICTIONARIES: Record<SupportedLang, any> = {
   ua,
 };
 
+const translationCache = new Map<string, string>();
+
 let activeAppLang: SupportedLang = "en";
 
 export function getCurrentLanguage(): SupportedLang {
@@ -22,14 +30,25 @@ export function setLanguage(lang: SupportedLang): void {
 }
 
 export function getTranslation(lang: SupportedLang, path: string): string {
+  const cacheKey = `${lang}:${path}`;
+  const cached = translationCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
   const dict = DICTIONARIES[lang] ?? DICTIONARIES.en;
   const keys = path.split(".");
   let val: any = dict;
+
   for (const k of keys) {
-    if (!val || typeof val !== "object") return path;
+    if (!val || typeof val !== "object") {
+      translationCache.set(cacheKey, path);
+      return path;
+    }
     val = val[k];
   }
-  return typeof val === "string" ? val : path;
+
+  const result = typeof val === "string" ? val : path;
+  translationCache.set(cacheKey, result);
+  return result;
 }
 
 interface LanguageContextValue {

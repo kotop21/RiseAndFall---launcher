@@ -87,6 +87,7 @@ jobs:
           API_URL: ${{ secrets.API_URL }}
         run: |
           mkdir -p dist/build
+          bun run scripts/clean-json.js
           bun run scripts/generate-version.js
           bun build index.tsx \
             --outdir dist/build \
