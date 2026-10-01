@@ -1,5 +1,5 @@
-import { LauncherAppError, type LauncherErrorCode, type LauncherErrorDetails } from "./types";
 import { getCurrentLanguage, getTranslation } from "@/lib/lang";
+import { LauncherAppError, type LauncherErrorCode, type LauncherErrorDetails } from "./types";
 
 export function createLauncherError(
   code: LauncherErrorCode,
@@ -8,7 +8,8 @@ export function createLauncherError(
 ): LauncherAppError {
   const currentLang = getCurrentLanguage();
   const title = getTranslation(currentLang, `errors.${code}.title`);
-  const description = customDescription || getTranslation(currentLang, `errors.${code}.description`);
+  const description =
+    customDescription || getTranslation(currentLang, `errors.${code}.description`);
 
   return new LauncherAppError({
     code,
@@ -18,7 +19,10 @@ export function createLauncherError(
   });
 }
 
-export function normalizeError(err: unknown, fallbackCode: LauncherErrorCode = "UNKNOWN_ERROR"): LauncherErrorDetails {
+export function normalizeError(
+  err: unknown,
+  fallbackCode: LauncherErrorCode = "UNKNOWN_ERROR",
+): LauncherErrorDetails {
   const currentLang = getCurrentLanguage();
 
   if (err instanceof LauncherAppError) {

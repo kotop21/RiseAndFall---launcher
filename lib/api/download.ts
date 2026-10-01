@@ -3,13 +3,9 @@ import { mkdir, unlink } from "node:fs/promises";
 import { dirname } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import {
-  API_ROUTES,
-  type ManifestPackage,
-  type ManifestResponse,
-} from "./client";
 import { createLauncherError, LauncherAppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { API_ROUTES, type ManifestPackage, type ManifestResponse } from "./client";
 
 export type { ManifestPackage, ManifestResponse };
 
@@ -37,9 +33,7 @@ export interface DownloadFromMirrorsOptions {
   onProgress?: (progress: DownloadProgress) => void;
 }
 
-export async function fetchManifest(
-  signal?: AbortSignal,
-): Promise<ManifestResponse> {
+export async function fetchManifest(signal?: AbortSignal): Promise<ManifestResponse> {
   const url = API_ROUTES.manifest;
 
   try {
@@ -66,14 +60,10 @@ export async function fetchManifest(
   } catch (err: unknown) {
     const isAbort =
       signal?.aborted ||
-      (err instanceof Error &&
-        (err.name === "AbortError" || err.message === "AbortError"));
+      (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError"));
 
     if (isAbort) {
-      throw createLauncherError(
-        "INSTALL_CANCELLED",
-        "Manifest fetch aborted by user",
-      );
+      throw createLauncherError("INSTALL_CANCELLED", "Manifest fetch aborted by user");
     }
 
     if (err instanceof LauncherAppError) {
@@ -123,10 +113,7 @@ export async function downloadFromMirrors(
 
   if (!mirrors || mirrors.length === 0) {
     logger.error("download", "No mirrors provided for download");
-    throw createLauncherError(
-      "MIRRORS_UNAVAILABLE",
-      "No download mirrors provided",
-    );
+    throw createLauncherError("MIRRORS_UNAVAILABLE", "No download mirrors provided");
   }
 
   await mkdir(dirname(targetFilePath), { recursive: true });
@@ -140,10 +127,7 @@ export async function downloadFromMirrors(
       try {
         await unlink(targetFilePath);
       } catch {}
-      throw createLauncherError(
-        "INSTALL_CANCELLED",
-        "Download aborted by user",
-      );
+      throw createLauncherError("INSTALL_CANCELLED", "Download aborted by user");
     }
 
     try {
@@ -200,7 +184,9 @@ export async function downloadFromMirrors(
         },
       });
 
-      const nodeReadable = Readable.fromWeb(res.body as any);
+      const nodeReadable = Readable.fromWeb(
+        res.body as unknown as Parameters<typeof Readable.fromWeb>[0],
+      );
       const fileWriteStream = createWriteStream(targetFilePath, {
         highWaterMark: 2 * 1024 * 1024,
       });
@@ -212,9 +198,7 @@ export async function downloadFromMirrors(
       const finalNow = Date.now();
       const finalTimeDiff = (finalNow - lastSpeedTime) / 1000;
       if (finalTimeDiff > 0.05) {
-        currentSpeed = Math.round(
-          (bytesDownloaded - lastSpeedBytes) / finalTimeDiff,
-        );
+        currentSpeed = Math.round((bytesDownloaded - lastSpeedBytes) / finalTimeDiff);
       }
 
       onProgress?.({
@@ -235,22 +219,14 @@ export async function downloadFromMirrors(
 
       const isAbort =
         signal?.aborted ||
-        (err instanceof Error &&
-          (err.name === "AbortError" || err.message === "AbortError"));
+        (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError"));
 
       if (isAbort) {
-        throw createLauncherError(
-          "INSTALL_CANCELLED",
-          "Download aborted by user",
-        );
+        throw createLauncherError("INSTALL_CANCELLED", "Download aborted by user");
       }
 
       lastError = err;
-      logger.warn(
-        "download",
-        `Mirror failed: ${url}, trying next mirror...`,
-        err,
-      );
+      logger.warn("download", `Mirror failed: ${url}, trying next mirror...`, err);
     }
   }
 

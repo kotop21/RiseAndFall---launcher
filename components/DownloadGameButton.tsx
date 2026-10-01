@@ -1,7 +1,7 @@
 import type { StyleDesc } from "@gpuix/react";
-import { Row, P, theme } from "@/ui";
 import { Download, RefreshCw } from "@/icon";
 import { useTranslation } from "@/lib/lang";
+import { P, Row, theme } from "@/ui";
 
 interface DownloadGameButtonProps {
   variant?: "download" | "reinstall";
@@ -51,9 +51,7 @@ export function DownloadGameButton({
         backgroundColor: disabled ? theme.colors.muted : theme.colors.primary,
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
-        hover: disabled
-          ? undefined
-          : { backgroundColor: theme.colors.primaryHover },
+        hover: disabled ? undefined : { backgroundColor: theme.colors.primaryHover },
         active: disabled ? undefined : { opacity: 0.9 },
         ...style,
       }}

@@ -1,5 +1,5 @@
-import { executeSettingsCli, hasSettingsCli } from "./client";
 import { logger } from "@/lib/logger";
+import { executeSettingsCli, hasSettingsCli } from "./client";
 
 export interface ImportSettingsResult {
   success: boolean;
@@ -9,9 +9,7 @@ export interface ImportSettingsResult {
 /**
  * Импортирует и валидирует настройки игры из указанного JSON-файла в реестр Windows
  */
-export async function importGameSettings(
-  jsonFilePath: string,
-): Promise<ImportSettingsResult> {
+export async function importGameSettings(jsonFilePath: string): Promise<ImportSettingsResult> {
   const cleanPath = jsonFilePath.trim();
 
   if (!cleanPath) {

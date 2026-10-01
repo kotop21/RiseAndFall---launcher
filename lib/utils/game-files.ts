@@ -1,5 +1,5 @@
-import { join } from "node:path";
 import { access } from "node:fs/promises";
+import { join } from "node:path";
 
 async function checkFileExists(path: string): Promise<boolean> {
   try {
@@ -10,9 +10,7 @@ async function checkFileExists(path: string): Promise<boolean> {
   }
 }
 
-export async function hasRiseAndFallExe(
-  gameDir?: string | null,
-): Promise<boolean> {
+export async function hasRiseAndFallExe(gameDir?: string | null): Promise<boolean> {
   const root = gameDir?.trim();
   if (!root || root.length === 0) {
     return false;
@@ -22,9 +20,7 @@ export async function hasRiseAndFallExe(
   return await checkFileExists(targetPath);
 }
 
-export async function hasDgVoodooCplExe(
-  gameDir?: string | null,
-): Promise<boolean> {
+export async function hasDgVoodooCplExe(gameDir?: string | null): Promise<boolean> {
   const root = gameDir?.trim();
   if (!root || root.length === 0) {
     return false;

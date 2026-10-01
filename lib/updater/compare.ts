@@ -4,8 +4,12 @@ export function cleanVersion(v: string | null | undefined): string {
 }
 
 export function compareVersions(v1: string, v2: string): number {
-  const parts1 = cleanVersion(v1).split(".").map((n) => parseInt(n, 10) || 0);
-  const parts2 = cleanVersion(v2).split(".").map((n) => parseInt(n, 10) || 0);
+  const parts1 = cleanVersion(v1)
+    .split(".")
+    .map((n) => parseInt(n, 10) || 0);
+  const parts2 = cleanVersion(v2)
+    .split(".")
+    .map((n) => parseInt(n, 10) || 0);
 
   const maxLen = Math.max(parts1.length, parts2.length);
   for (let i = 0; i < maxLen; i++) {

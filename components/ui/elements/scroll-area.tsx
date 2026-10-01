@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 
 export interface ScrollAreaProps {
   children: ReactNode;
@@ -7,17 +7,13 @@ export interface ScrollAreaProps {
   style?: StyleDesc;
 }
 
-export function ScrollArea({
-  children,
-  direction = "vertical",
-  style = {},
-}: ScrollAreaProps) {
+export function ScrollArea({ children, direction = "vertical", style = {} }: ScrollAreaProps) {
   const overflowStyle: StyleDesc =
     direction === "vertical"
       ? { overflowY: "scroll", overflowX: "hidden" }
       : direction === "horizontal"
-      ? { overflowX: "scroll", overflowY: "hidden" }
-      : { overflow: "scroll" };
+        ? { overflowX: "scroll", overflowY: "hidden" }
+        : { overflow: "scroll" };
 
   return (
     <div

@@ -1,18 +1,15 @@
-import { Column, Row, Label, P, Switch, useToast, theme } from "@/ui";
 import { setLowSpecMode } from "@/components/ui/motion-compat";
-import { discordRpc } from "@/lib/discord-rpc";
 import type { LauncherConfig } from "@/lib/config/types";
+import { discordRpc } from "@/lib/discord-rpc";
 import { useTranslation } from "@/lib/lang";
+import { Column, Label, P, Row, Switch, theme, useToast } from "@/ui";
 
 interface SettingsIntegrationsProps {
   config: LauncherConfig;
   onChangeConfig: (nextConfig: LauncherConfig) => Promise<void> | void;
 }
 
-export function SettingsIntegrations({
-  config,
-  onChangeConfig,
-}: SettingsIntegrationsProps) {
+export function SettingsIntegrations({ config, onChangeConfig }: SettingsIntegrationsProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -23,12 +20,8 @@ export function SettingsIntegrations({
       discordRpc: checked,
     });
     toast({
-      title: checked
-        ? t("toasts.discordRpcEnabledTitle")
-        : t("toasts.discordRpcDisabledTitle"),
-      description: checked
-        ? t("toasts.discordRpcEnabledDesc")
-        : t("toasts.discordRpcDisabledDesc"),
+      title: checked ? t("toasts.discordRpcEnabledTitle") : t("toasts.discordRpcDisabledTitle"),
+      description: checked ? t("toasts.discordRpcEnabledDesc") : t("toasts.discordRpcDisabledDesc"),
       type: "info",
       duration: 2500,
     });
@@ -41,12 +34,8 @@ export function SettingsIntegrations({
       lowPerformanceMode: checked,
     });
     toast({
-      title: checked
-        ? t("toasts.lowPerfEnabledTitle")
-        : t("toasts.lowPerfDisabledTitle"),
-      description: checked
-        ? t("toasts.lowPerfEnabledDesc")
-        : t("toasts.lowPerfDisabledDesc"),
+      title: checked ? t("toasts.lowPerfEnabledTitle") : t("toasts.lowPerfDisabledTitle"),
+      description: checked ? t("toasts.lowPerfEnabledDesc") : t("toasts.lowPerfDisabledDesc"),
       type: "info",
       duration: 2500,
     });
@@ -56,19 +45,12 @@ export function SettingsIntegrations({
     <Column gap={8} style={{ width: "100%" }}>
       <Label>{t("settings.integrations")}</Label>
       <Row justify="between" align="center" style={{ width: "100%" }}>
-        <P style={{ color: theme.colors.fg, fontSize: 14 }}>
-          {t("settings.enableDiscordRpc")}
-        </P>
-        <Switch
-          checked={Boolean(config.discordRpc)}
-          onCheckedChange={handleToggleDiscord}
-        />
+        <P style={{ color: theme.colors.fg, fontSize: 14 }}>{t("settings.enableDiscordRpc")}</P>
+        <Switch checked={Boolean(config.discordRpc)} onCheckedChange={handleToggleDiscord} />
       </Row>
 
       <Row justify="between" align="center" style={{ width: "100%" }}>
-        <P style={{ color: theme.colors.fg, fontSize: 14 }}>
-          {t("settings.lowPerformanceMode")}
-        </P>
+        <P style={{ color: theme.colors.fg, fontSize: 14 }}>{t("settings.lowPerformanceMode")}</P>
         <Switch
           checked={Boolean(config.lowPerformanceMode)}
           onCheckedChange={handleToggleLowPerf}

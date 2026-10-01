@@ -1,17 +1,11 @@
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, type ReactNode, useContext, useEffect, useMemo } from "react";
 import en from "../../lang/en.json";
 import ru from "../../lang/ru.json";
 import ua from "../../lang/ua.json";
 
 export type SupportedLang = "en" | "ru" | "ua";
 
-const DICTIONARIES: Record<SupportedLang, any> = {
+const DICTIONARIES: Record<SupportedLang, unknown> = {
   en,
   ru,
   ua,
@@ -36,14 +30,14 @@ export function getTranslation(lang: SupportedLang, path: string): string {
 
   const dict = DICTIONARIES[lang] ?? DICTIONARIES.en;
   const keys = path.split(".");
-  let val: any = dict;
+  let val: unknown = dict;
 
   for (const k of keys) {
     if (!val || typeof val !== "object") {
       translationCache.set(cacheKey, path);
       return path;
     }
-    val = val[k];
+    val = (val as Record<string, unknown>)[k];
   }
 
   const result = typeof val === "string" ? val : path;
@@ -61,13 +55,7 @@ const LanguageContext = createContext<LanguageContextValue>({
   t: (key) => key,
 });
 
-export function LanguageProvider({
-  lang,
-  children,
-}: {
-  lang: string;
-  children: ReactNode;
-}) {
+export function LanguageProvider({ lang, children }: { lang: string; children: ReactNode }) {
   const safeLang: SupportedLang = lang === "ru" || lang === "ua" ? lang : "en";
 
   useEffect(() => {
@@ -81,9 +69,7 @@ export function LanguageProvider({
   }, [safeLang]);
 
   return (
-    <LanguageContext.Provider value={{ lang: safeLang, t }}>
-      {children}
-    </LanguageContext.Provider>
+    <LanguageContext.Provider value={{ lang: safeLang, t }}>{children}</LanguageContext.Provider>
   );
 }
 

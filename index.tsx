@@ -1,14 +1,14 @@
 import "./scripts/runtime-napi";
-import { launcherTracker } from "@/lib/process/launcher-tracker";
-import { discordRpc } from "@/lib/discord-rpc";
 import { render } from "@gpuix/react";
 import { initConfig } from "@/lib/config";
+import { discordRpc } from "@/lib/discord-rpc";
 import { initLogger, logger } from "@/lib/logger";
-import { getLauncherVersion } from "@/lib/utils/version";
-import { setupAdaptiveRenderer } from "@/lib/render/frame-loop";
 import { installationManager } from "@/lib/manager/install";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { launcherTracker } from "@/lib/process/launcher-tracker";
+import { setupAdaptiveRenderer } from "@/lib/render/frame-loop";
+import { getLauncherVersion } from "@/lib/utils/version";
 import { App } from "./app/App";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 initLogger(getLauncherVersion());
 

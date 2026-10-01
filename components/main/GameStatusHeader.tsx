@@ -1,10 +1,10 @@
-import { Row, Column, Badge, H1, Muted, theme } from "@/ui";
-import { Tag, Layers, Calendar } from "@/icon";
 import { ProfileSwitcher } from "@/components/ProfileSwitcher";
+import { Calendar, Layers, Tag } from "@/icon";
+import type { LauncherConfig } from "@/lib/config/types";
+import { useTranslation } from "@/lib/lang";
 import { useGameStatus } from "@/lib/utils/game-status";
 import { getLauncherVersion } from "@/lib/utils/version";
-import { useTranslation } from "@/lib/lang";
-import type { LauncherConfig } from "@/lib/config/types";
+import { Badge, Column, H1, Muted, Row, theme } from "@/ui";
 
 const QUOTES = [
   "«Command from above. Conquer on foot.»",
@@ -22,14 +22,10 @@ interface GameStatusHeaderProps {
   onChangeConfig: (nextConfig: LauncherConfig) => Promise<void> | void;
 }
 
-export function GameStatusHeader({
-  config,
-  onChangeConfig,
-}: GameStatusHeaderProps) {
+export function GameStatusHeader({ config, onChangeConfig }: GameStatusHeaderProps) {
   const { t, lang } = useTranslation();
   const { dgVoodooExists: isDgVoodooReady } = useGameStatus(config.gameDir);
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-
 
   const handleSelectSlot = async (slotId: string) => {
     if (slotId === config.activeProfileId) return;
@@ -48,8 +44,7 @@ export function GameStatusHeader({
     try {
       const d = new Date(rawDate);
       if (Number.isNaN(d.getTime())) return t("main.neverPlayed");
-      const locale =
-        lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
+      const locale = lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
       const formatted = d.toLocaleDateString(locale, {
         day: "numeric",
         month: "short",
@@ -84,9 +79,7 @@ export function GameStatusHeader({
         <Badge variant={isDgVoodooReady ? "success" : "destructive"}>
           <Row gap={6} align="center">
             <Layers size={12} color={theme.colors.fg} />
-            {isDgVoodooReady
-              ? t("main.dgVoodooReady")
-              : t("main.dgVoodooMissing")}
+            {isDgVoodooReady ? t("main.dgVoodooReady") : t("main.dgVoodooMissing")}
           </Row>
         </Badge>
 

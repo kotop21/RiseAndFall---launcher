@@ -1,26 +1,23 @@
 import { join } from "node:path";
-import { Button, Row, useToast, theme } from "@/ui";
+import type { StyleDesc } from "@gpuix/react";
 import { SlidersHorizontal } from "@/icon";
-import { launchExe } from "@/lib/process/launch";
-import { isWindows } from "@/lib/utils/os";
-import { useGameStatus } from "@/lib/utils/game-status";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { launchExe } from "@/lib/process/launch";
+import { useGameStatus } from "@/lib/utils/game-status";
+import { isWindows } from "@/lib/utils/os";
+import { Button, Row, theme, useToast } from "@/ui";
 
 interface OpenDgVoodooButtonProps {
   gameDir?: string;
-  style?: Record<string, any>;
+  style?: StyleDesc;
 }
 
-export function OpenDgVoodooButton({
-  gameDir = "",
-  style,
-}: OpenDgVoodooButtonProps) {
+export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const isWin = isWindows();
   const { dgVoodooExists: fileExists, isValidating } = useGameStatus(gameDir);
-
 
   const isDisabled = isValidating || !fileExists || !isWin;
 
@@ -74,18 +71,9 @@ export function OpenDgVoodooButton({
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={isDisabled}
-      onClick={handleOpen}
-      style={style}
-    >
+    <Button variant="outline" size="sm" disabled={isDisabled} onClick={handleOpen} style={style}>
       <Row gap={8} align="center" justify="center">
-        <SlidersHorizontal
-          size={14}
-          color={isDisabled ? theme.colors.mutedFg : theme.colors.fg}
-        />
+        <SlidersHorizontal size={14} color={isDisabled ? theme.colors.mutedFg : theme.colors.fg} />
         {getButtonLabel()}
       </Row>
     </Button>

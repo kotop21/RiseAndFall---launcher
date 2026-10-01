@@ -14,18 +14,8 @@ export function getConfigPath(): string {
   }
 
   if (os === "darwin") {
-    return join(
-      home,
-      "Library",
-      "Application Support",
-      "RafLauncher",
-      "config.bin",
-    );
+    return join(home, "Library", "Application Support", "RafLauncher", "config.bin");
   }
 
-  return join(
-    process.env.XDG_CONFIG_HOME || join(home, ".config"),
-    "raf-launcher",
-    "config.bin",
-  );
+  return join(process.env.XDG_CONFIG_HOME || join(home, ".config"), "raf-launcher", "config.bin");
 }

@@ -1,14 +1,9 @@
-import { useState, useEffect } from "react";
-import {
-  installGamePackage,
-  type InstallStatus,
-  type InstallProgress,
-  type InstallGameOptions,
-} from "./install";
-import { createLauncherError, normalizeError, type LauncherAppError } from "@/lib/errors";
-import { invalidateGameStatusCache } from "@/lib/utils/game-status";
-import { logger } from "@/lib/logger";
+import { useEffect, useState } from "react";
 import type { LauncherConfig } from "@/lib/config/types";
+import { createLauncherError, type LauncherAppError, normalizeError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
+import { invalidateGameStatusCache } from "@/lib/utils/game-status";
+import { type InstallProgress, type InstallStatus, installGamePackage } from "./install";
 
 export interface InstallationState {
   status: InstallStatus;

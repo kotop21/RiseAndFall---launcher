@@ -1,8 +1,9 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { pack, unpack } from "msgpackr";
 import { getConfigPath } from "@/lib/config/dir";
-import { saveConfig } from "@/lib/config/save";
 import { initConfig } from "@/lib/config/init";
+import { saveConfig } from "@/lib/config/save";
+import type { LauncherConfig } from "@/lib/config/types";
 import { logger } from "@/lib/logger";
 
 class LauncherTimeTracker {
@@ -75,7 +76,7 @@ class LauncherTimeTracker {
       const cfgPath = getConfigPath();
       if (existsSync(cfgPath)) {
         const raw = readFileSync(cfgPath);
-        const data = (unpack(raw) || {}) as Record<string, any>;
+        const data = (unpack(raw) || {}) as Partial<LauncherConfig>;
         data.launcherPlaytimeMinutes = this.totalMinutes;
         writeFileSync(cfgPath, pack(data));
       }
@@ -90,6 +91,5 @@ class LauncherTimeTracker {
     this.isStarted = false;
   }
 }
-
 
 export const launcherTracker = new LauncherTimeTracker();

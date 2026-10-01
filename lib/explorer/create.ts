@@ -1,6 +1,6 @@
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { existsSync } from "node:fs";
 import { logger } from "@/lib/logger";
 
 export async function ensureDirectory(dirPath: string): Promise<boolean> {
@@ -17,10 +17,7 @@ export async function ensureDirectory(dirPath: string): Promise<boolean> {
   }
 }
 
-export async function createFile(
-  filePath: string,
-  content: Uint8Array | string,
-): Promise<boolean> {
+export async function createFile(filePath: string, content: Uint8Array | string): Promise<boolean> {
   const target = filePath.trim();
   if (!target) return false;
   try {

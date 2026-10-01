@@ -1,5 +1,3 @@
-import type { ReleaseItem } from "@/lib/github/types";
-
 export type UpdatePhase =
   | "idle"
   | "checking"

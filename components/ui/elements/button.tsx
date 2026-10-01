@@ -1,13 +1,8 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 import { theme } from "../theme";
 
-export type ButtonVariant =
-  | "default"
-  | "secondary"
-  | "outline"
-  | "ghost"
-  | "destructive";
+export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "default" | "lg" | "icon";
 
 export interface ButtonProps {
@@ -27,10 +22,7 @@ export function Button({
   onClick,
   style = {},
 }: ButtonProps) {
-  const sizes: Record<
-    ButtonSize,
-    { h: number; px: number; fontSize: number; isIcon?: boolean }
-  > = {
+  const sizes: Record<ButtonSize, { h: number; px: number; fontSize: number; isIcon?: boolean }> = {
     sm: { h: 32, px: 12, fontSize: 12 },
     default: { h: 36, px: 16, fontSize: 14 },
     lg: { h: 40, px: 32, fontSize: 14 },

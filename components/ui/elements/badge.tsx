@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 import { theme } from "../theme";
 
 export type BadgeVariant = "default" | "secondary" | "outline" | "destructive" | "success";
@@ -11,12 +11,7 @@ export interface BadgeProps {
   style?: StyleDesc;
 }
 
-export function Badge({
-  children,
-  variant = "default",
-  maxChars = 24,
-  style = {},
-}: BadgeProps) {
+export function Badge({ children, variant = "default", maxChars = 24, style = {} }: BadgeProps) {
   const variants: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
     default: { bg: theme.colors.primary, text: theme.colors.primaryFg },
     secondary: { bg: theme.colors.secondary, text: theme.colors.secondaryFg },
@@ -38,7 +33,7 @@ export function Badge({
 
   let formatted = rawString.trim();
   if (formatted.length > maxChars) {
-    formatted = formatted.slice(0, maxChars).trimEnd() + "...";
+    formatted = `${formatted.slice(0, maxChars).trimEnd()}...`;
   }
 
   const words = formatted.split(/\s+/).filter(Boolean);

@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process";
 import { access } from "node:fs/promises";
 import { dirname } from "node:path";
-import { watchProcessDaemon, type ProcessDaemonResult } from "./daemon";
-import { isWindows } from "@/lib/utils/os";
-import { createLauncherError, LauncherAppError } from "@/lib/errors";
+import { createLauncherError, type LauncherAppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { isWindows } from "@/lib/utils/os";
+import { type ProcessDaemonResult, watchProcessDaemon } from "./daemon";
 
 export interface LaunchExeOptions {
   cwd?: string;
@@ -28,11 +28,11 @@ async function checkFileExists(path: string): Promise<boolean> {
 }
 
 export function sanitizeGameArgs(raw: string): string {
-  return raw && raw.trim() ? raw.replace(/(?<!\\)"/g, '\\"') : "";
+  return raw?.trim() ? raw.replace(/(?<!\\)"/g, '\\"') : "";
 }
 
 export function parseArgs(rawArgs: string): string[] {
-  if (!rawArgs || !rawArgs.trim()) return [];
+  if (!rawArgs?.trim()) return [];
   const matches = rawArgs.match(/(?:[^\s"]+|"[^"]*")+/g);
   return matches ? matches.map((arg) => arg.replace(/^"|"$/g, "")) : [];
 }
@@ -66,7 +66,9 @@ export async function launchExe(
     try {
       const sourceArgs = options.rawArgs ?? (options.args ? options.args.join(" ") : "");
       const formattedArgs = sanitizeGameArgs(sourceArgs);
-      const commandLine = formattedArgs ? `"${cleanExePath}" ${formattedArgs}` : `"${cleanExePath}"`;
+      const commandLine = formattedArgs
+        ? `"${cleanExePath}" ${formattedArgs}`
+        : `"${cleanExePath}"`;
 
       const proc = spawn(commandLine, {
         cwd: workingDir,
@@ -84,7 +86,10 @@ export async function launchExe(
         logger.error("launch", "Windows process spawned with invalid PID");
         return {
           success: false,
-          error: createLauncherError("PROCESS_SPAWN_FAILED", "Windows process spawned with an invalid PID."),
+          error: createLauncherError(
+            "PROCESS_SPAWN_FAILED",
+            "Windows process spawned with an invalid PID.",
+          ),
         };
       }
 
@@ -121,7 +126,7 @@ export async function launchExe(
 
     let spawnErr: unknown = null;
     await new Promise<void>((resolve) => {
-      proc.once("error", (err: any) => {
+      proc.once("error", (err: Error) => {
         spawnErr = err;
         resolve();
       });

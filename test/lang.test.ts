@@ -1,16 +1,16 @@
 import { describe, expect, it } from "bun:test";
-import { getTranslation, getCurrentLanguage, setLanguage } from "@/lib/lang";
-import { detectSystemLanguage } from "@/lib/lang/detect";
-import ru from "@/lang/ru.json";
 import en from "@/lang/en.json";
+import ru from "@/lang/ru.json";
 import ua from "@/lang/ua.json";
+import { getCurrentLanguage, getTranslation, setLanguage } from "@/lib/lang";
+import { detectSystemLanguage } from "@/lib/lang/detect";
 
-function getAllKeyPaths(obj: Record<string, any>, prefix = ""): string[] {
+function getAllKeyPaths(obj: Record<string, unknown>, prefix = ""): string[] {
   const keys: string[] = [];
   for (const [k, v] of Object.entries(obj)) {
     const fullPath = prefix ? `${prefix}.${k}` : k;
     if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-      keys.push(...getAllKeyPaths(v, fullPath));
+      keys.push(...getAllKeyPaths(v as Record<string, unknown>, fullPath));
     } else {
       keys.push(fullPath);
     }
@@ -27,9 +27,7 @@ describe("Lang: Detection & Translation Function", () => {
   it("translates nested keys correctly in current language", () => {
     setLanguage("ru");
     expect(getCurrentLanguage()).toBe("ru");
-    expect(getTranslation("ru", "main.title")).toBe(
-      "Rise And Fall: Civilization at War",
-    );
+    expect(getTranslation("ru", "main.title")).toBe("Rise And Fall: Civilization at War");
     expect(getTranslation("ru", "buttons.download")).toBe("Скачать игру");
 
     setLanguage("en");
@@ -42,7 +40,7 @@ describe("Lang: Detection & Translation Function", () => {
   });
 
   it("returns key as fallback when translation does not exist", () => {
-    const missing = getTranslation("en", "non.existent.deeply.nested.key" as any);
+    const missing = getTranslation("en", "non.existent.deeply.nested.key");
     expect(missing).toBe("non.existent.deeply.nested.key");
   });
 });

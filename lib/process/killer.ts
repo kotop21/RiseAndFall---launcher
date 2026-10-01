@@ -9,8 +9,8 @@ export function isProcessAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
     return true;
-  } catch (err: any) {
-    return err?.code === "EPERM";
+  } catch (err) {
+    return (err as NodeJS.ErrnoException)?.code === "EPERM";
   }
 }
 
@@ -28,4 +28,3 @@ export async function killProcessTree(pid: number): Promise<boolean> {
     return false;
   }
 }
-

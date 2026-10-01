@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { ToastProvider, Flex, Views, View, theme } from "@/ui";
+import { useCallback, useEffect, useState } from "react";
 import { Header } from "@/components/Header";
-import { MainView } from "./views/MainView";
-import { SettingsView } from "./views/SettingsView";
-import { InstallView } from "./views/InstallView";
-import { WelcomeView } from "./views/WelcomeView";
 import { saveConfig } from "@/lib/config/save";
+import type { LauncherConfig } from "@/lib/config/types";
 import { LanguageProvider } from "@/lib/lang";
 import { installationManager } from "@/lib/manager/install";
-import type { LauncherConfig } from "@/lib/config/types";
+import { Flex, ToastProvider, theme, View, Views } from "@/ui";
+import { InstallView } from "./views/InstallView";
+import { MainView } from "./views/MainView";
+import { SettingsView } from "./views/SettingsView";
+import { WelcomeView } from "./views/WelcomeView";
 
 interface AppProps {
   initialConfig: LauncherConfig;
@@ -20,9 +20,7 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
   const [activeView, setActiveView] = useState<"welcome" | "main" | "settings" | "install">(
     isFirstLaunch ? "welcome" : "main",
   );
-  const [installSource, setInstallSource] = useState<"main" | "settings">(
-    "main",
-  );
+  const [installSource, setInstallSource] = useState<"main" | "settings">("main");
 
   const isMain = activeView === "main";
   const isReinstall = installSource === "settings";
@@ -39,25 +37,26 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
 
   const handleSelectExistingFromWelcome = async (gameDir: string) => {
     const updatedProfiles = (config.gameProfiles || []).map((p) =>
-      p.id === (config.activeProfileId || "slot-1") ? { ...p, path: gameDir } : p
+      p.id === (config.activeProfileId || "slot-1") ? { ...p, path: gameDir } : p,
     );
     const nextCfg: LauncherConfig = { ...config, gameDir, gameProfiles: updatedProfiles };
     await handleUpdateConfig(nextCfg);
     setActiveView("main");
   };
 
-  const handleInstallSuccess = (installedPath: string) => {
-    const updatedProfiles = (config.gameProfiles || []).map((p) =>
-      p.id === (config.activeProfileId || "slot-1") ? { ...p, path: installedPath } : p
-    );
-    const nextCfg: LauncherConfig = {
-      ...config,
-      gameDir: installedPath,
-      gameProfiles: updatedProfiles,
-    };
-    setConfig(nextCfg);
+  const handleInstallSuccess = useCallback((installedPath: string) => {
+    setConfig((prevConfig) => {
+      const updatedProfiles = (prevConfig.gameProfiles || []).map((p) =>
+        p.id === (prevConfig.activeProfileId || "slot-1") ? { ...p, path: installedPath } : p,
+      );
+      return {
+        ...prevConfig,
+        gameDir: installedPath,
+        gameProfiles: updatedProfiles,
+      };
+    });
     setActiveView("main");
-  };
+  }, []);
 
   useEffect(() => {
     return installationManager.onInstalled((installedPath, updatedConfig) => {
@@ -67,7 +66,7 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
         handleInstallSuccess(installedPath);
       }
     });
-  }, [config]);
+  }, [handleInstallSuccess]);
 
   const handleCancelInstall = () => {
     setActiveView(installSource === "settings" ? "settings" : "main");
@@ -87,15 +86,9 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
         >
           <Views
             value={activeView}
-            onValueChange={(id) =>
-              setActiveView(id as "welcome" | "main" | "settings" | "install")
-            }
+            onValueChange={(id) => setActiveView(id as "welcome" | "main" | "settings" | "install")}
           >
-            <View
-              id="welcome"
-              transition="fade"
-              style={{ width: "100%", height: "100%" }}
-            >
+            <View id="welcome" transition="fade" style={{ width: "100%", height: "100%" }}>
               <WelcomeView
                 onAutoDetectLanguage={handleAutoDetectLanguage}
                 onSelectExistingGame={handleSelectExistingFromWelcome}
@@ -106,22 +99,11 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
               />
             </View>
 
-            <View
-              id="main"
-              transition="fade"
-              style={{ width: "100%", height: "100%" }}
-            >
-              <MainView
-                config={config}
-                onChangeConfig={handleUpdateConfig}
-              />
+            <View id="main" transition="fade" style={{ width: "100%", height: "100%" }}>
+              <MainView config={config} onChangeConfig={handleUpdateConfig} />
             </View>
 
-            <View
-              id="settings"
-              transition="slide-left"
-              style={{ width: "100%", height: "100%" }}
-            >
+            <View id="settings" transition="slide-left" style={{ width: "100%", height: "100%" }}>
               <SettingsView
                 config={config}
                 onChangeConfig={handleUpdateConfig}
@@ -133,11 +115,7 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
               />
             </View>
 
-            <View
-              id="install"
-              transition="slide-left"
-              style={{ width: "100%", height: "100%" }}
-            >
+            <View id="install" transition="slide-left" style={{ width: "100%", height: "100%" }}>
               <InstallView
                 defaultInstallPath={config.gameDir}
                 isReinstall={isReinstall}

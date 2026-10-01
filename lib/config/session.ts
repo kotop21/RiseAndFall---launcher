@@ -1,7 +1,7 @@
+import { logger } from "@/lib/logger";
 import { initConfig } from "./init";
 import { saveConfig } from "./save";
 import type { LauncherConfig } from "./types";
-import { logger } from "@/lib/logger";
 
 export async function recordGameSession(
   playtimeMinutes: number,
@@ -10,8 +10,7 @@ export async function recordGameSession(
   const { config } = await initConfig();
   const nextConfig: LauncherConfig = {
     ...config,
-    totalPlaytimeMinutes:
-      Math.max(0, config.totalPlaytimeMinutes) + Math.max(0, playtimeMinutes),
+    totalPlaytimeMinutes: Math.max(0, config.totalPlaytimeMinutes) + Math.max(0, playtimeMinutes),
     lastLaunchDate: launchDate.toISOString(),
   };
 

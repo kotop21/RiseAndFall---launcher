@@ -1,9 +1,8 @@
 export function getBaseUrl(): string {
-  return (
-    process.env.API_URL ||
-    process.env.BUN_PUBLIC_API_URL ||
-    "http://localhost:3000"
-  ).replace(/\/+$/, "");
+  return (process.env.API_URL || process.env.BUN_PUBLIC_API_URL || "http://localhost:3000").replace(
+    /\/+$/,
+    "",
+  );
 }
 
 export const API_ROUTES = {

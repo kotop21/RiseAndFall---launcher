@@ -13,4 +13,3 @@ export interface ReleaseItem {
   downloadUrl?: string | null;
   assets?: ReleaseAsset[];
 }
-

@@ -1,5 +1,5 @@
-import { executeSettingsCli, hasSettingsCli } from "./client";
 import { logger } from "@/lib/logger";
+import { executeSettingsCli, hasSettingsCli } from "./client";
 
 export interface ExportSettingsResult {
   success: boolean;
@@ -10,9 +10,7 @@ export interface ExportSettingsResult {
 /**
  * Экспортирует настройки игры из реестра Windows в целевую папку
  */
-export async function exportGameSettings(
-  targetDir: string,
-): Promise<ExportSettingsResult> {
+export async function exportGameSettings(targetDir: string): Promise<ExportSettingsResult> {
   const cleanDir = targetDir.trim();
 
   if (!cleanDir) {

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { hasRiseAndFallExe, hasDgVoodooCplExe } from "./game-files";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { hasSettingsCli } from "@/lib/settings-cli";
+import { hasDgVoodooCplExe, hasRiseAndFallExe } from "./game-files";
 
 export interface GameStatus {
   gameExists: boolean;
@@ -128,7 +128,7 @@ export function useGameStatus(gameDir?: string | null): GameStatus {
         window.removeEventListener?.("focus", onFocus);
       }
     };
-  }, [cleanDir, recheck]);
+  }, [recheck]);
 
   return {
     ...status,

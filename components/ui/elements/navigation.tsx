@@ -1,12 +1,12 @@
+import type { StyleDesc } from "@gpuix/react";
 import {
-  createContext,
-  useContext,
-  useState,
   cloneElement,
+  createContext,
   isValidElement,
   type ReactNode,
+  useContext,
+  useState,
 } from "react";
-import type { StyleDesc } from "@gpuix/react";
 import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { theme } from "../theme";
 
@@ -82,7 +82,7 @@ export function SegmentedNav({
 
   const activeIndex = Math.max(
     0,
-    items.findIndex((item) => item.id === activeTab)
+    items.findIndex((item) => item.id === activeTab),
   );
 
   const listPadding = 3;
@@ -134,9 +134,9 @@ export function SegmentedNav({
         }
 
         const iconNode =
-          item.icon && isValidElement(item.icon)
-            ? cloneElement(item.icon as any, {
-                color: (item.icon.props as any)?.color ?? textColor,
+          item.icon && isValidElement<{ color?: string }>(item.icon)
+            ? cloneElement(item.icon, {
+                color: item.icon.props?.color ?? textColor,
               })
             : item.icon;
 
@@ -152,7 +152,6 @@ export function SegmentedNav({
         return (
           <div
             key={item.id}
-            tabIndex={0}
             onClick={() => setActiveTab(item.id)}
             style={{
               position: "relative",

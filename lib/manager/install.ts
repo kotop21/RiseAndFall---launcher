@@ -1,29 +1,29 @@
-import { join } from "node:path";
-import { unlink, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { readFile, unlink } from "node:fs/promises";
+import { join } from "node:path";
 import { unpack } from "msgpackr";
 import {
-  fetchManifest,
   downloadFromMirrors,
+  fetchManifest,
   formatSpeed,
   type ManifestPackage,
   type ManifestResponse,
 } from "@/lib/api";
-import { ensureDirectory } from "@/lib/explorer/create";
-import { extractZip } from "@/lib/explorer/extract";
-import { cleanGameDirectory } from "@/lib/explorer/clean";
 import { getConfigPath } from "@/lib/config/dir";
-import { saveConfig } from "@/lib/config/save";
 import { DEFAULT_CONFIG } from "@/lib/config/init";
 import { migrateConfig } from "@/lib/config/migrate";
+import { saveConfig } from "@/lib/config/save";
 import type { LauncherConfig } from "@/lib/config/types";
-import { createLauncherError, normalizeError, type LauncherAppError } from "@/lib/errors";
+import { createLauncherError, type LauncherAppError, normalizeError } from "@/lib/errors";
+import { cleanGameDirectory } from "@/lib/explorer/clean";
+import { ensureDirectory } from "@/lib/explorer/create";
+import { extractZip } from "@/lib/explorer/extract";
 import { getCurrentLanguage, getTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
 import { setBackgroundActivity } from "@/lib/render/frame-loop";
 
-export { formatSpeed };
 export * from "./install-manager";
+export { formatSpeed };
 
 export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" | "error";
 
@@ -273,7 +273,7 @@ async function doInstallGamePackage({
   if (existsSync(cfgPath)) {
     try {
       const raw = await readFile(cfgPath);
-      const data = (unpack(raw) || {}) as Record<string, any>;
+      const data = (unpack(raw) || {}) as Record<string, unknown>;
       currentCfg = migrateConfig(data).config;
     } catch (err) {
       logger.error("install", "Failed reading current config for update:", err);

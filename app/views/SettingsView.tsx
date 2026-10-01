@@ -1,27 +1,17 @@
-import { useState, useEffect } from "react";
-import {
-  Column,
-  Row,
-  H2,
-  Muted,
-  Button,
-  Separator,
-  ScrollArea,
-  useToast,
-  theme,
-} from "@/ui";
-import { ArrowLeft, Check } from "@/icon";
-import { safeMotion as motion } from "@/components/ui/motion-compat";
+import { useEffect, useState } from "react";
 import {
   GameProfiles,
-  SettingsLanguage,
-  SettingsIntegrations,
-  SettingsActions,
   type ProfileFormState,
+  SettingsActions,
+  SettingsIntegrations,
+  SettingsLanguage,
 } from "@/components/settings";
+import { safeMotion as motion } from "@/components/ui/motion-compat";
+import { ArrowLeft, Check } from "@/icon";
 import type { LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { Button, Column, H2, Muted, Row, ScrollArea, Separator, theme, useToast } from "@/ui";
 
 interface SettingsViewProps {
   config: LauncherConfig;
@@ -30,12 +20,7 @@ interface SettingsViewProps {
   onOpenInstall?: () => void;
 }
 
-export function SettingsView({
-  config,
-  onChangeConfig,
-  onBack,
-  onOpenInstall,
-}: SettingsViewProps) {
+export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: SettingsViewProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -59,8 +44,7 @@ export function SettingsView({
   }, [config]);
 
   const hasProfileChanges =
-    JSON.stringify(formState.gameProfiles) !==
-      JSON.stringify(config.gameProfiles || []) ||
+    JSON.stringify(formState.gameProfiles) !== JSON.stringify(config.gameProfiles || []) ||
     formState.activeProfileId !== (config.activeProfileId || "slot-1") ||
     formState.gameDir !== (config.gameDir || "") ||
     formState.gameArg !== (config.gameArg || "");
@@ -74,9 +58,7 @@ export function SettingsView({
 
   const handleSaveProfiles = async () => {
     try {
-      const activeProf = formState.gameProfiles.find(
-        (p) => p.id === formState.activeProfileId,
-      );
+      const activeProf = formState.gameProfiles.find((p) => p.id === formState.activeProfileId);
       const toSave: LauncherConfig = {
         ...config,
         activeProfileId: formState.activeProfileId,
@@ -101,9 +83,7 @@ export function SettingsView({
 
   const handleRevertProfiles = () => {
     const defaultActiveId = config.activeProfileId || "slot-1";
-    const baseTarget = config.gameProfiles?.find(
-      (p) => p.id === defaultActiveId,
-    );
+    const baseTarget = config.gameProfiles?.find((p) => p.id === defaultActiveId);
 
     setFormState({
       activeProfileId: defaultActiveId,
@@ -132,10 +112,7 @@ export function SettingsView({
   };
 
   return (
-    <ScrollArea
-      direction="vertical"
-      style={{ flexGrow: 1, width: "100%", height: "100%" }}
-    >
+    <ScrollArea direction="vertical" style={{ flexGrow: 1, width: "100%", height: "100%" }}>
       <Column gap={20} style={{ width: "100%", padding: 24 }}>
         <Row gap={12} align="center">
           <motion.div

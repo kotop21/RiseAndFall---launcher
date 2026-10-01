@@ -1,18 +1,13 @@
-import { describe, expect, it, beforeEach, afterEach } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { pack, unpack } from "msgpackr";
 import { getConfigPath } from "@/lib/config/dir";
+import { DEFAULT_CONFIG, isForceWelcome } from "@/lib/config/init";
 import {
   CURRENT_CONFIG_VERSION,
-  DEFAULT_GAME_ARG,
   createDefaultProfiles,
+  DEFAULT_GAME_ARG,
   migrateConfig,
 } from "@/lib/config/migrate";
-import { DEFAULT_CONFIG, initConfig, isForceWelcome } from "@/lib/config/init";
-import { recordGameSession } from "@/lib/config/session";
-import { saveConfig } from "@/lib/config/save";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
-import { pack, unpack } from "msgpackr";
 
 describe("Config: Path & Defaults", () => {
   it("generates a valid config path ending in config.bin", () => {

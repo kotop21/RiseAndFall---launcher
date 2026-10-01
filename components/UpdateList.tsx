@@ -1,24 +1,13 @@
 import { useEffect, useState } from "react";
-import {
-  Column,
-  Row,
-  Card,
-  Badge,
-  P,
-  Muted,
-  Button,
-  Skeleton,
-  useToast,
-  theme,
-} from "@/ui";
 import { ExternalLink } from "@/icon";
-import { fetchReleases, getCachedReleases } from "@/lib/github/releases";
 import { openBrowser } from "@/lib/browser/open";
-import type { ReleaseItem } from "@/lib/github/types";
 import { formatErrorToast } from "@/lib/errors";
+import { fetchReleases, getCachedReleases } from "@/lib/github/releases";
+import type { ReleaseItem } from "@/lib/github/types";
 import { useTranslation } from "@/lib/lang";
+import { isDifferentVersion, updateLauncher } from "@/lib/updater";
 import { getLauncherVersion } from "@/lib/utils/version";
-import { updateLauncher, isDifferentVersion } from "@/lib/updater";
+import { Badge, Button, Card, Column, Muted, P, Row, Skeleton, theme, useToast } from "@/ui";
 
 let hasNotifiedUpdate = false;
 
@@ -29,9 +18,7 @@ export function UpdateList() {
   const [releases, setReleases] = useState<ReleaseItem[]>(() => cached ?? []);
   const [isLoading, setIsLoading] = useState(!cached);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [updateProgressText, setUpdateProgressText] = useState<string | null>(
-    null,
-  );
+  const [updateProgressText, setUpdateProgressText] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,10 +36,7 @@ export function UpdateList() {
               hasNotifiedUpdate = true;
               toast({
                 title: t("toasts.updateAvailableTitle"),
-                description: t("toasts.updateAvailableDesc").replace(
-                  "{version}",
-                  latest.version,
-                ),
+                description: t("toasts.updateAvailableDesc").replace("{version}", latest.version),
                 type: "info",
                 duration: 4000,
               });
@@ -70,7 +54,7 @@ export function UpdateList() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [toast, t]);
 
   const handleUpdate = async (release: ReleaseItem) => {
     if (isUpdating) return;
@@ -79,10 +63,7 @@ export function UpdateList() {
 
     toast({
       title: t("toasts.updateDownloadingTitle"),
-      description: t("toasts.updateDownloadingDesc").replace(
-        "{version}",
-        release.version,
-      ),
+      description: t("toasts.updateDownloadingDesc").replace("{version}", release.version),
       type: "info",
       duration: 3500,
     });
@@ -126,10 +107,11 @@ export function UpdateList() {
           duration: 5000,
         });
       }
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       toast({
         title: t("toasts.updateErrorTitle"),
-        description: err?.message || t("toasts.updateErrorDesc"),
+        description: message,
         type: "error",
       });
       setIsUpdating(false);
@@ -261,9 +243,7 @@ export function UpdateList() {
                       paddingRight: 10,
                     }}
                   >
-                    {isUpdating
-                      ? updateProgressText || t("buttons.updating")
-                      : t("buttons.update")}
+                    {isUpdating ? updateProgressText || t("buttons.updating") : t("buttons.update")}
                   </Button>
                 )}
                 <Button

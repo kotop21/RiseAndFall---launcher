@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 import { theme } from "../theme";
 
 export function Flex({
@@ -17,13 +17,13 @@ export function Flex({
   gap?: number;
   style?: StyleDesc;
 }) {
-  const alignMap: Record<string, string> = {
+  const alignMap: Record<"start" | "center" | "end" | "stretch", string> = {
     start: "flex-start",
     center: "center",
     end: "flex-end",
     stretch: "stretch",
   };
-  const justifyMap: Record<string, string> = {
+  const justifyMap: Record<"start" | "center" | "end" | "between" | "around", string> = {
     start: "flex-start",
     center: "center",
     end: "flex-end",
@@ -36,8 +36,8 @@ export function Flex({
       style={{
         display: "flex",
         flexDirection: direction,
-        alignItems: alignMap[align] as any,
-        justifyContent: justifyMap[justify] as any,
+        alignItems: alignMap[align],
+        justifyContent: justifyMap[justify],
         gap,
         ...style,
       }}

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { hasRiseAndFallExe, hasDgVoodooCplExe } from "@/lib/utils/game-files";
-import { getLauncherVersion } from "@/lib/utils/version";
-import { isWindows, isMac, isLinux } from "@/lib/utils/os";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { mkdir, writeFile, rm } from "node:fs/promises";
+import { hasDgVoodooCplExe, hasRiseAndFallExe } from "@/lib/utils/game-files";
+import { isLinux, isMac, isWindows } from "@/lib/utils/os";
+import { getLauncherVersion } from "@/lib/utils/version";
 
 describe("Utils: Game Files Validation", () => {
   it("detects RiseAndFall.exe when present in target directory", async () => {

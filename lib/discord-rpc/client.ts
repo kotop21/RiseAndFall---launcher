@@ -1,6 +1,6 @@
+import { existsSync } from "node:fs";
 import { connect, type Socket } from "node:net";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
 import { logger } from "@/lib/logger";
 import type { DiscordActivity } from "./types";
 
@@ -84,7 +84,7 @@ export class DiscordRpcClient {
 
     sock.on("data", () => {});
 
-    sock.on("error", (err: any) => {
+    sock.on("error", (err: Error) => {
       if (this.isConnected) {
         logger.error("discord-rpc", "Socket connection error:", err.message);
       }
@@ -109,8 +109,12 @@ export class DiscordRpcClient {
       header.writeInt32LE(op, 0);
       header.writeInt32LE(dataBuffer.length, 4);
       this.socket.write(Buffer.concat([header, dataBuffer]));
-    } catch (err: any) {
-      logger.error("discord-rpc", "Failed to send packet:", err.message);
+    } catch (err) {
+      logger.error(
+        "discord-rpc",
+        "Failed to send packet:",
+        err instanceof Error ? err.message : String(err),
+      );
     }
   }
 

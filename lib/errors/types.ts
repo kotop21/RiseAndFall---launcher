@@ -16,7 +16,6 @@ export type LauncherErrorCode =
   | "PROCESS_CRASHED"
   | "PROCESS_FROZEN"
   | "UNSUPPORTED_OS"
-  | "EXPLORER_FAILED"
   | "BROWSER_FAILED"
   | "GITHUB_API_FAILED"
   | "SETTINGS_CLI_NOT_FOUND"
@@ -38,7 +37,7 @@ export class LauncherAppError extends Error {
   readonly code: LauncherErrorCode;
   readonly title: string;
   readonly description: string;
-  readonly cause?: unknown;
+  override readonly cause?: unknown;
 
   constructor(details: LauncherErrorDetails) {
     super(details.description);

@@ -1,5 +1,5 @@
-import type { StyleDesc } from '@gpuix/react';
-import { motion } from '@gpuix/react';
+import type { StyleDesc } from "@gpuix/react";
+import { motion } from "@gpuix/react";
 import { theme } from "../theme";
 
 export interface SwitchProps {
@@ -14,16 +14,16 @@ export function Switch({ checked, onCheckedChange, disabled = false, style = {} 
     <div
       onClick={disabled ? undefined : () => onCheckedChange(!checked)}
       style={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        userSelect: 'none',
+        position: "relative",
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        userSelect: "none",
         width: 44,
         height: 24,
         borderRadius: theme.radius.full,
         backgroundColor: checked ? theme.colors.primary : theme.colors.secondary,
-        cursor: disabled ? 'not-allowed' : 'pointer',
+        cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
         ...style,
       }}
@@ -34,16 +34,16 @@ export function Switch({ checked, onCheckedChange, disabled = false, style = {} 
         }}
         transition={{
           duration: 0.15,
-          ease: 'easeOut',
+          ease: "easeOut",
         }}
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 2,
           width: 20,
           height: 20,
           borderRadius: theme.radius.full,
           backgroundColor: checked ? theme.colors.primaryFg : theme.colors.mutedFg,
-          pointerEvents: 'none',
+          pointerEvents: "none",
         }}
       />
     </div>

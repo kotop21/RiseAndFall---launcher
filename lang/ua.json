@@ -17,7 +17,6 @@
     "title": "Rise And Fall: Civilization at War",
     "dgVoodooReady": "dgVoodoo Готовий",
     "dgVoodooMissing": "dgVoodoo Відсутній",
-    "openGameFolder": "Відкрити теку гри",
     "latestUpdate": "Останнє",
     "lastLaunch": "Останній запуск: {date}",
     "neverPlayed": "Ще не запускалась"
@@ -88,14 +87,15 @@
   "buttons": {
     "download": "Завантажити гру",
     "reinstall": "Перевстановляти гру",
-    "openFolder": "Відкрити теку з грою",
     "openDgVoodoo": "Налаштування dgVoodoo",
     "exportSettings": "Експорт налаштувань гри",
     "importSettings": "Імпорт налаштувань гри",
     "save": "Зберегти",
     "revert": "Скинути",
     "update": "Оновити",
-    "updating": "Оновлення..."
+    "updating": "Оновлення...",
+    "donate": "Донат",
+    "donateTooltip": "Тримається на власному залізі та часі. Дякую за підтримку!"
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -166,10 +166,6 @@
       "title": "ОС не підтримується",
       "description": "Для запуску потрібен Windows або Wine."
     },
-    "EXPLORER_FAILED": {
-      "title": "Помилка провідника",
-      "description": "Не вдалося відкрити теку у файловому менеджері."
-    },
     "BROWSER_FAILED": {
       "title": "Помилка браузера",
       "description": "Не вдалося відкрити системний браузер."
@@ -214,10 +210,6 @@
     "welcomeAccessDeniedDesc": "Не вдалося відкрити діалог вибору теки.",
     "installPathRequiredTitle": "Вкажіть шлях",
     "installPathRequiredDesc": "Теку для встановлення не вказано.",
-    "explorerNotSetTitle": "Шлях не вказано",
-    "explorerNotSetDesc": "Спочатку вкажіть шлях до гри.",
-    "explorerErrorTitle": "Помилка провідника",
-    "explorerErrorDesc": "Тека не існує або недоступна провіднику.",
     "browserErrorTitle": "Помилка браузера",
     "browserErrorDesc": "Не вдалося відкрити системний браузер за посиланням.",
     "dgvPathRequiredTitle": "Вкажіть шлях",
@@ -239,7 +231,7 @@
     "settingsImportSuccessTitle": "Налаштування застосовано",
     "settingsImportSuccessDesc": "Параметри гри успішно оновлено.",
     "cliOsUnsupportedTitle": "Тільки Windows",
-    "cliOsUnsupportedDesc": "Налаштування гри доступні на Windows",
+    "cliOsUnsupportedDesc": "Імпорт та експорт налаштувань гри доступні тільки на Windows",
     "cliMissingTitle": "Файл не знайдено",
     "cliMissingDesc": "Утиліту не знайдено.",
     "discordRpcEnabledTitle": "Discord RPC увімкнено",

@@ -1,21 +1,21 @@
-import { useState, type Dispatch, type SetStateAction } from "react";
-import {
-  Column,
-  Row,
-  Label,
-  Muted,
-  Input,
-  Button,
-  Badge,
-  useFileDialog,
-  useToast,
-  theme,
-} from "@/ui";
-import { Folder, RotateCcw, Check, Layers, Trash2 } from "@/icon";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { ProfileSwitcher } from "@/components/ProfileSwitcher";
-import type { LauncherConfig, GameBuildProfile } from "@/lib/config/types";
+import { Check, Folder, Layers, RotateCcw, Trash2 } from "@/icon";
+import type { GameBuildProfile, LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import {
+  Badge,
+  Button,
+  Column,
+  Input,
+  Label,
+  Muted,
+  Row,
+  theme,
+  useFileDialog,
+  useToast,
+} from "@/ui";
 
 export interface ProfileFormState {
   activeProfileId: string;
@@ -34,7 +34,6 @@ export interface GameProfilesProps {
 }
 
 export function GameProfiles({
-  config,
   formState,
   setFormState,
   hasProfileChanges,
@@ -81,8 +80,7 @@ export function GameProfiles({
 
       if (!selected) return;
 
-      const pickedPath =
-        typeof selected === "object" ? selected.path : selected;
+      const pickedPath = typeof selected === "object" ? selected.path : selected;
       const isValid = typeof selected === "object" ? selected.isValid : true;
 
       if (!isValid) {
@@ -116,9 +114,7 @@ export function GameProfiles({
   };
 
   const handleClearCurrentSlot = () => {
-    const configuredCount = formState.gameProfiles.filter((p) =>
-      Boolean(p.path?.trim()),
-    ).length;
+    const configuredCount = formState.gameProfiles.filter((p) => Boolean(p.path?.trim())).length;
 
     if (configuredCount <= 1) {
       return;
@@ -132,9 +128,7 @@ export function GameProfiles({
     });
 
     const nextConfigured = updatedProfiles.find((p) => Boolean(p.path?.trim()));
-    const nextSlotId = nextConfigured
-      ? nextConfigured.id
-      : formState.activeProfileId;
+    const nextSlotId = nextConfigured ? nextConfigured.id : formState.activeProfileId;
     const nextTarget = updatedProfiles.find((p) => p.id === nextSlotId);
 
     setFormState((prev) => ({
@@ -150,15 +144,10 @@ export function GameProfiles({
     0,
     formState.gameProfiles.findIndex((p) => p.id === formState.activeProfileId),
   );
-  const activeSlotLabel = t("settings.slotLabel").replace(
-    "{n}",
-    String(activeSlotIndex + 1),
-  );
+  const activeSlotLabel = t("settings.slotLabel").replace("{n}", String(activeSlotIndex + 1));
   const activeProfile = formState.gameProfiles[activeSlotIndex];
   const isSlotConfigured = Boolean(activeProfile?.path?.trim());
-  const configuredCount = formState.gameProfiles.filter((p) =>
-    Boolean(p.path?.trim()),
-  ).length;
+  const configuredCount = formState.gameProfiles.filter((p) => Boolean(p.path?.trim())).length;
   const canDeleteProfile = isSlotConfigured && configuredCount > 1;
 
   return (
@@ -168,9 +157,7 @@ export function GameProfiles({
           <Row gap={8} align="center">
             <Layers size={14} color={theme.colors.mutedFg} />
             <Label>{t("settings.buildsTitle")}</Label>
-            <Badge variant={isSlotConfigured ? "success" : "secondary"}>
-              {activeSlotLabel}
-            </Badge>
+            <Badge variant={isSlotConfigured ? "success" : "secondary"}>{activeSlotLabel}</Badge>
           </Row>
 
           <ProfileSwitcher
@@ -209,9 +196,7 @@ export function GameProfiles({
               value={formState.gameDir}
               onChange={(val) => {
                 const updatedProfiles = formState.gameProfiles.map((p) =>
-                  p.id === formState.activeProfileId
-                    ? { ...p, path: val }
-                    : p,
+                  p.id === formState.activeProfileId ? { ...p, path: val } : p,
                 );
                 setFormState((prev) => ({
                   ...prev,
@@ -222,11 +207,7 @@ export function GameProfiles({
               placeholder={t("settings.setPathFirst")}
             />
           </div>
-          <Button
-            variant="secondary"
-            disabled={isPickingFolder}
-            onClick={handleSelectGamePath}
-          >
+          <Button variant="secondary" disabled={isPickingFolder} onClick={handleSelectGamePath}>
             <Row gap={8} align="center">
               <Folder size={14} color={theme.colors.fg} />
               {t("settings.browse")}
@@ -253,20 +234,10 @@ export function GameProfiles({
           }}
           placeholder='-datapath "Data\\" -redistpath "Redist\\"'
         />
-        <Muted>
-          {t("settings.launchArgsProfileHint").replace(
-            "{profile}",
-            activeSlotLabel,
-          )}
-        </Muted>
+        <Muted>{t("settings.launchArgsProfileHint").replace("{profile}", activeSlotLabel)}</Muted>
       </Column>
 
-      <Row
-        gap={10}
-        justify="end"
-        align="center"
-        style={{ width: "100%", marginTop: 2 }}
-      >
+      <Row gap={10} justify="end" align="center" style={{ width: "100%", marginTop: 2 }}>
         <Button
           variant="secondary"
           size="sm"
@@ -279,12 +250,7 @@ export function GameProfiles({
           </Row>
         </Button>
 
-        <Button
-          variant="default"
-          size="sm"
-          disabled={!hasProfileChanges}
-          onClick={onSaveProfiles}
-        >
+        <Button variant="default" size="sm" disabled={!hasProfileChanges} onClick={onSaveProfiles}>
           <Row gap={8} align="center">
             <Check size={14} color={theme.colors.primaryFg} />
             {t("buttons.save")}

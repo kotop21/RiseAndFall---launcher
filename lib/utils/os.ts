@@ -9,4 +9,3 @@ export function isMac(): boolean {
 export function isLinux(): boolean {
   return process.platform === "linux";
 }
-

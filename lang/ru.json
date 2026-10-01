@@ -17,7 +17,6 @@
     "title": "Rise And Fall: Civilization at War",
     "dgVoodooReady": "dgVoodoo Готов",
     "dgVoodooMissing": "dgVoodoo Отсутствует",
-    "openGameFolder": "Открыть папку игры",
     "latestUpdate": "Последнее",
     "lastLaunch": "Последний запуск: {date}",
     "neverPlayed": "Еще не запускалась"
@@ -88,14 +87,15 @@
   "buttons": {
     "download": "Скачать игру",
     "reinstall": "Переустановить игру",
-    "openFolder": "Открыть папку с игрой",
     "openDgVoodoo": "Настройки dgVoodoo",
     "exportSettings": "Экспорт настроек игры",
     "importSettings": "Импорт настроек игры",
     "save": "Сохранить",
     "revert": "Сбросить",
     "update": "Обновить",
-    "updating": "Обновление..."
+    "updating": "Обновление...",
+    "donate": "Донат",
+    "donateTooltip": "Держится на личном железе и времени. Спасибо за поддержку!"
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -166,10 +166,6 @@
       "title": "ОС не поддерживается",
       "description": "Требуется Windows или Wine."
     },
-    "EXPLORER_FAILED": {
-      "title": "Ошибка проводника",
-      "description": "Не удалось открыть папку в проводнике."
-    },
     "BROWSER_FAILED": {
       "title": "Ошибка браузера",
       "description": "Не удалось открыть браузер по умолчанию."
@@ -214,10 +210,6 @@
     "welcomeAccessDeniedDesc": "Не удалось открыть выбор папки.",
     "installPathRequiredTitle": "Укажите путь",
     "installPathRequiredDesc": "Папка для установки не указана.",
-    "explorerNotSetTitle": "Путь не указан",
-    "explorerNotSetDesc": "Сначала укажите путь к игре.",
-    "explorerErrorTitle": "Ошибка проводника",
-    "explorerErrorDesc": "Папка не существует или недоступна проводнику.",
     "browserErrorTitle": "Ошибка браузера",
     "browserErrorDesc": "Не удалось открыть браузер для перехода по ссылке.",
     "dgvPathRequiredTitle": "Укажите путь",
@@ -239,7 +231,7 @@
     "settingsImportSuccessTitle": "Настройки применены",
     "settingsImportSuccessDesc": "Параметры игры успешно обновлены.",
     "cliOsUnsupportedTitle": "Только Windows",
-    "cliOsUnsupportedDesc": "Настройки игры доступны на Windows",
+    "cliOsUnsupportedDesc": "Импорт и экспорт настроек игры доступны только на Windows",
     "cliMissingTitle": "Файл не найден",
     "cliMissingDesc": "Утилита не найдена.",
     "discordRpcEnabledTitle": "Discord RPC включен",

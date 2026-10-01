@@ -1,5 +1,5 @@
-import { BUILD_VERSION } from "./version.generated";
 import pkg from "@/package.json";
+import { BUILD_VERSION } from "./version.generated";
 
 export function getLauncherVersion(): string {
   if (BUILD_VERSION && typeof BUILD_VERSION === "string") {

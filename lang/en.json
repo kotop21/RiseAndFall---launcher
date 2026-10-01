@@ -17,7 +17,6 @@
     "title": "Rise And Fall: Civilization at War",
     "dgVoodooReady": "dgVoodoo Ready",
     "dgVoodooMissing": "dgVoodoo Missing",
-    "openGameFolder": "Open Game Directory",
     "latestUpdate": "Latest",
     "lastLaunch": "Last played: {date}",
     "neverPlayed": "Never played"
@@ -88,14 +87,15 @@
   "buttons": {
     "download": "Download Game",
     "reinstall": "Reinstall Game",
-    "openFolder": "Open Game Folder",
     "openDgVoodoo": "Open dgVoodoo Config",
     "exportSettings": "Export Game Settings",
     "importSettings": "Import Game Settings",
     "save": "Save",
     "revert": "Revert",
     "update": "Update",
-    "updating": "Updating..."
+    "updating": "Updating...",
+    "donate": "Donate",
+    "donateTooltip": "Runs on personal hardware & time. Thanks for supporting!"
   },
   "errors": {
     "GAME_EXE_NOT_FOUND": {
@@ -166,10 +166,6 @@
       "title": "OS Unsupported",
       "description": "Direct launch requires Windows or Wine."
     },
-    "EXPLORER_FAILED": {
-      "title": "Explorer Error",
-      "description": "Could not open folder in file manager."
-    },
     "BROWSER_FAILED": {
       "title": "Browser Error",
       "description": "Could not open default web browser."
@@ -214,10 +210,6 @@
     "welcomeAccessDeniedDesc": "Failed to open directory picker.",
     "installPathRequiredTitle": "Path Required",
     "installPathRequiredDesc": "Target game folder is missing.",
-    "explorerNotSetTitle": "Directory Not Set",
-    "explorerNotSetDesc": "Please specify the game installation path first.",
-    "explorerErrorTitle": "Explorer Error",
-    "explorerErrorDesc": "Target directory does not exist or system explorer cannot access it.",
     "browserErrorTitle": "Browser Error",
     "browserErrorDesc": "Failed to launch default web browser for changelog link.",
     "dgvPathRequiredTitle": "Path Required",
@@ -239,7 +231,7 @@
     "settingsImportSuccessTitle": "Import Complete",
     "settingsImportSuccessDesc": "Game settings applied successfully.",
     "cliOsUnsupportedTitle": "Windows Only",
-    "cliOsUnsupportedDesc": "Game settings need Windows",
+    "cliOsUnsupportedDesc": "Import and export of game settings are only available on Windows",
     "cliMissingTitle": "CLI Missing",
     "cliMissingDesc": "Utility file not found.",
     "discordRpcEnabledTitle": "Discord RPC Enabled",

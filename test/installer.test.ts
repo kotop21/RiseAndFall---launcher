@@ -1,14 +1,20 @@
 import { describe, expect, it } from "bun:test";
-import { installGamePackage, installationManager, InstallationManager } from "@/lib/manager/install";
+import { spawn } from "node:child_process";
+import { exists, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { mkdir, writeFile, rm, exists, readFile } from "node:fs/promises";
-import { spawn } from "node:child_process";
+import {
+  InstallationManager,
+  installationManager,
+  installGamePackage,
+} from "@/lib/manager/install";
 
 async function createZip(stagingDir: string, zipPath: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const proc = spawn("zip", ["-r", "-j", zipPath, stagingDir]);
-    proc.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`zip exited with ${code}`))));
+    proc.on("close", (code) =>
+      code === 0 ? resolve() : reject(new Error(`zip exited with ${code}`)),
+    );
     proc.on("error", reject);
   });
 }
@@ -199,10 +205,7 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
               {
                 id: "game",
                 name: "Rise and Fall: Civilizations at War (Base Game)",
-                mirrors: [
-                  `${url.origin}/dead-mirror.zip`,
-                  `${url.origin}/game-working.zip`,
-                ],
+                mirrors: [`${url.origin}/dead-mirror.zip`, `${url.origin}/game-working.zip`],
               },
             ],
           });
@@ -258,10 +261,7 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
               {
                 id: "game",
                 name: "Rise and Fall: Civilizations at War (Base Game)",
-                mirrors: [
-                  `${url.origin}/dead1.zip`,
-                  `${url.origin}/dead2.zip`,
-                ],
+                mirrors: [`${url.origin}/dead1.zip`, `${url.origin}/dead2.zip`],
               },
             ],
           });
@@ -451,4 +451,3 @@ describe("Installation Manager: Background Singleton & State Management", () => 
     }
   });
 });
-

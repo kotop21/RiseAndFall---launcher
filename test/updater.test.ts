@@ -1,15 +1,15 @@
 import { describe, expect, it } from "bun:test";
+import en from "@/lang/en.json";
+import ru from "@/lang/ru.json";
+import ua from "@/lang/ua.json";
+import { fetchReleases } from "@/lib/github/releases";
 import {
   cleanVersion,
   compareVersions,
   isDifferentVersion,
   isNewerVersion,
 } from "@/lib/updater/compare";
-import { resolveDownloadUrl, isDevMode } from "@/lib/updater/updater";
-import { fetchReleases } from "@/lib/github/releases";
-import ru from "@/lang/ru.json";
-import en from "@/lang/en.json";
-import ua from "@/lang/ua.json";
+import { isDevMode, resolveDownloadUrl } from "@/lib/updater/updater";
 
 describe("Updater: Version Comparison", () => {
   it("cleans versions properly", () => {

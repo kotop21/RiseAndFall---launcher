@@ -26,7 +26,7 @@ let flushTimer: ReturnType<typeof setInterval> | null = null;
 
 export function flushLogs(): void {
   if (!logFilePath || logBuffer.length === 0) return;
-  const chunk = logBuffer.join("\n") + "\n";
+  const chunk = `${logBuffer.join("\n")}\n`;
   logBuffer = [];
   try {
     appendFileSync(logFilePath, chunk, "utf-8");
@@ -102,8 +102,7 @@ function writeLine(prefix: string, args: unknown[], level: LogLevel | boolean = 
   const details = args.map(formatArg).join(" ");
   const message = details ? `${time} ${prefix}: ${details}` : `${time} ${prefix}`;
 
-  const effectiveLevel: LogLevel =
-    typeof level === "boolean" ? (level ? "error" : "info") : level;
+  const effectiveLevel: LogLevel = typeof level === "boolean" ? (level ? "error" : "info") : level;
 
   if (effectiveLevel === "error") {
     console.error(message);
@@ -129,5 +128,3 @@ export const logger = {
   flush: () => flushLogs(),
   silence: (silent = true) => setLoggerSilenced(silent),
 };
-
-

@@ -1,12 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  type ReactNode,
-} from "react";
-import type { StyleDesc, MotionTransition } from "@gpuix/react";
+import type { MotionStyle, MotionTransition, StyleDesc } from "@gpuix/react";
+import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { logger } from "@/lib/logger";
 
@@ -81,9 +74,7 @@ export function Views({
   };
 
   return (
-    <ViewContext.Provider
-      value={{ activeView, setView, defaultTransition, duration }}
-    >
+    <ViewContext.Provider value={{ activeView, setView, defaultTransition, duration }}>
       {children}
     </ViewContext.Provider>
   );
@@ -98,14 +89,7 @@ export interface ViewProps {
   children: ReactNode;
 }
 
-export function View({
-  id,
-  transition,
-  duration,
-  offset = 20,
-  style = {},
-  children,
-}: ViewProps) {
+export function View({ id, transition, duration, offset = 20, style = {}, children }: ViewProps) {
   const ctx = useViews();
 
   if (ctx.activeView !== id) {
@@ -136,8 +120,8 @@ export function View({
     ease: "easeOut",
   };
 
-  let initial: any = { opacity: 0 };
-  let animate: any = { opacity: 1 };
+  let initial: MotionStyle = { opacity: 0 };
+  let animate: MotionStyle = { opacity: 1 };
 
   switch (selectedTransition) {
     case "slide-down":
@@ -156,7 +140,6 @@ export function View({
       initial = { opacity: 0, left: -offset };
       animate = { opacity: 1, left: 0 };
       break;
-    case "fade":
     default:
       initial = { opacity: 0 };
       animate = { opacity: 1 };
@@ -184,9 +167,7 @@ export function View({
 
 export interface ViewTriggerProps {
   target: string;
-  children:
-    | ReactNode
-    | ((props: { isActive: boolean; select: () => void }) => ReactNode);
+  children: ReactNode | ((props: { isActive: boolean; select: () => void }) => ReactNode);
   onClick?: () => void;
 }
 

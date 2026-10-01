@@ -1,10 +1,9 @@
-import { Row, Column, Separator, ScrollArea } from "@/ui";
-import { UpdateList } from "@/components/UpdateList";
-import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
-import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
+import { DonateButton } from "@/components/DonateButton";
 import { GameStatusHeader } from "@/components/main";
-import { useTranslation } from "@/lib/lang";
+import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
+import { UpdateList } from "@/components/UpdateList";
 import type { LauncherConfig } from "@/lib/config/types";
+import { Column, Row, ScrollArea, Separator } from "@/ui";
 
 interface MainViewProps {
   config: LauncherConfig;
@@ -12,8 +11,6 @@ interface MainViewProps {
 }
 
 export function MainView({ config, onChangeConfig }: MainViewProps) {
-  const { t } = useTranslation();
-
   return (
     <ScrollArea
       direction="vertical"
@@ -33,11 +30,8 @@ export function MainView({ config, onChangeConfig }: MainViewProps) {
         <GameStatusHeader config={config} onChangeConfig={onChangeConfig} />
 
         <Row justify="start" gap={10} align="center" style={{ width: "100%" }}>
-          <OpenGameFolderButton
-            gameDir={config.gameDir}
-            label={t("main.openGameFolder")}
-          />
           <OpenDgVoodooButton gameDir={config.gameDir} />
+          <DonateButton />
         </Row>
 
         <Separator orientation="horizontal" />

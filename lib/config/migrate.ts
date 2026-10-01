@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger";
-import type { LauncherConfig, GameBuildProfile } from "./types";
+import type { GameBuildProfile, LauncherConfig } from "./types";
 
 export const CURRENT_CONFIG_VERSION = 5;
 export const DEFAULT_GAME_ARG = '-datapath "Data\\" -redistpath "Redist\\"';
@@ -17,26 +17,22 @@ export function createDefaultProfiles(
   ];
 }
 
-export function migrateConfig(raw: Record<string, any>): {
+export function migrateConfig(raw: Record<string, unknown>): {
   config: LauncherConfig;
   wasMigrated: boolean;
 } {
   const version = typeof raw.version === "number" ? raw.version : 1;
   let wasMigrated = false;
 
-  const legacyArg =
-    typeof raw.gameArg === "string" ? raw.gameArg : DEFAULT_GAME_ARG;
+  const legacyArg = typeof raw.gameArg === "string" ? raw.gameArg : DEFAULT_GAME_ARG;
 
   let profiles: GameBuildProfile[] = [];
   if (Array.isArray(raw.gameProfiles) && raw.gameProfiles.length > 0) {
-    profiles = raw.gameProfiles.slice(0, 5).map((p, idx) => ({
+    profiles = (raw.gameProfiles as Record<string, unknown>[]).slice(0, 5).map((p, idx) => ({
       id: typeof p.id === "string" ? p.id : `slot-${idx + 1}`,
       name: typeof p.name === "string" ? p.name : `Slot ${idx + 1}`,
       path: typeof p.path === "string" ? p.path : "",
-      gameArg:
-        typeof p.gameArg === "string" && p.gameArg.trim()
-          ? p.gameArg
-          : legacyArg,
+      gameArg: typeof p.gameArg === "string" && p.gameArg.trim() ? p.gameArg : legacyArg,
     }));
   }
 
@@ -63,9 +59,7 @@ export function migrateConfig(raw: Record<string, any>): {
   }
 
   let activeProfileId =
-    typeof raw.activeProfileId === "string" && raw.activeProfileId
-      ? raw.activeProfileId
-      : "slot-1";
+    typeof raw.activeProfileId === "string" && raw.activeProfileId ? raw.activeProfileId : "slot-1";
 
   if (!profiles.some((p) => p.id === activeProfileId)) {
     activeProfileId = profiles[0].id;
@@ -84,16 +78,11 @@ export function migrateConfig(raw: Record<string, any>): {
     version: CURRENT_CONFIG_VERSION,
     gameDir: effectiveGameDir,
     gameArg: effectiveGameArg,
-    launcherLang:
-      typeof raw.launcherLang === "string" ? raw.launcherLang : "en",
+    launcherLang: typeof raw.launcherLang === "string" ? raw.launcherLang : "en",
     launcherPlaytimeMinutes:
-      typeof raw.launcherPlaytimeMinutes === "number"
-        ? raw.launcherPlaytimeMinutes
-        : 0,
+      typeof raw.launcherPlaytimeMinutes === "number" ? raw.launcherPlaytimeMinutes : 0,
     totalPlaytimeMinutes:
-      typeof raw.totalPlaytimeMinutes === "number"
-        ? raw.totalPlaytimeMinutes
-        : 0,
+      typeof raw.totalPlaytimeMinutes === "number" ? raw.totalPlaytimeMinutes : 0,
     lastLaunchDate:
       typeof raw.lastLaunchDate === "string" || raw.lastLaunchDate === null
         ? raw.lastLaunchDate
@@ -102,16 +91,11 @@ export function migrateConfig(raw: Record<string, any>): {
     activeProfileId,
     discordRpc: typeof raw.discordRpc === "boolean" ? raw.discordRpc : true,
     lowPerformanceMode:
-      typeof raw.lowPerformanceMode === "boolean"
-        ? raw.lowPerformanceMode
-        : false,
+      typeof raw.lowPerformanceMode === "boolean" ? raw.lowPerformanceMode : false,
   };
 
   if (wasMigrated) {
-    logger.info(
-      "config",
-      `migrated schema from v${version} to v${CURRENT_CONFIG_VERSION}`,
-    );
+    logger.info("config", `migrated schema from v${version} to v${CURRENT_CONFIG_VERSION}`);
   }
 
   return { config, wasMigrated };

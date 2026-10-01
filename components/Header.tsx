@@ -1,30 +1,19 @@
-import { discordRpc } from "@/lib/discord-rpc";
-import { useState, useEffect } from "react";
 import { join } from "node:path";
-import {
-  Header as UiHeader,
-  Row,
-  Column,
-  Button,
-  P,
-  Muted,
-  Tooltip,
-  useToast,
-  theme,
-} from "@/ui";
-import { Play, Users, Clock, Settings, Calendar, Timer } from "@/icon";
-import { launchExe } from "@/lib/process/launch";
-import { recordGameSession } from "@/lib/config/session";
-import { isWindows } from "@/lib/utils/os";
-import { useGameStatus } from "@/lib/utils/game-status";
-import { launcherTracker } from "@/lib/process/launcher-tracker";
+import { useState } from "react";
+import { Calendar, Clock, Play, Settings, Timer, Users } from "@/icon";
 import { useOnlineTracker } from "@/lib/api/online";
-import { useInstallation } from "@/lib/manager/install";
-import { DownloadGameButton } from "./DownloadGameButton";
+import { recordGameSession } from "@/lib/config/session";
 import type { LauncherConfig } from "@/lib/config/types";
+import { discordRpc } from "@/lib/discord-rpc";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
-
+import { useInstallation } from "@/lib/manager/install";
+import { launchExe } from "@/lib/process/launch";
+import { launcherTracker } from "@/lib/process/launcher-tracker";
+import { useGameStatus } from "@/lib/utils/game-status";
+import { isWindows } from "@/lib/utils/os";
+import { Button, Column, Muted, P, Row, Tooltip, theme, Header as UiHeader, useToast } from "@/ui";
+import { DownloadGameButton } from "./DownloadGameButton";
 
 interface HeaderProps {
   config: LauncherConfig;
@@ -33,12 +22,7 @@ interface HeaderProps {
   onOpenInstall?: () => void;
 }
 
-export function Header({
-  config,
-  onConfigChange,
-  onOpenSettings,
-  onOpenInstall,
-}: HeaderProps) {
+export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }: HeaderProps) {
   const { t, lang } = useTranslation();
   const installation = useInstallation();
 
@@ -47,8 +31,7 @@ export function Header({
     try {
       const d = new Date(rawDate);
       if (Number.isNaN(d.getTime())) return t("main.neverPlayed");
-      const locale =
-        lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
+      const locale = lang === "ru" ? "ru-RU" : lang === "ua" ? "uk-UA" : "en-US";
       const formatted = d.toLocaleDateString(locale, {
         day: "numeric",
         month: "short",
@@ -67,13 +50,11 @@ export function Header({
   const isPathConfigured = Boolean(config.gameDir?.trim());
   const { gameExists, isValidating } = useGameStatus(config.gameDir);
 
-
   const formatLauncherPlaytime = (mins: number) => {
     if (!mins || mins <= 0) return "0 min";
     if (mins < 60) return `${mins} min`;
     return `${Math.floor(mins / 60)} hrs ${mins % 60} min`;
   };
-
 
   const formatPlaytime = (totalMinutes: number): string => {
     if (!totalMinutes || totalMinutes <= 0) return "0 min";
@@ -125,14 +106,13 @@ export function Header({
           discordRpc.setGameRunning(false);
           launcherTracker.saveToDisk().catch(() => {});
 
-
           try {
             const nextConfig = await recordGameSession(
               daemonResult.elapsedMinutes,
               launchStartTime,
             );
             onConfigChange?.(nextConfig);
-          } catch (err) {
+          } catch (_err) {
             toast({
               title: t("toasts.sessionSaveErrorTitle"),
               description: t("toasts.sessionSaveErrorDesc"),
@@ -210,10 +190,7 @@ export function Header({
               <P
                 style={{
                   fontWeight: "bold",
-                  color:
-                    onlineCount !== null
-                      ? theme.colors.fg
-                      : theme.colors.mutedFg,
+                  color: onlineCount !== null ? theme.colors.fg : theme.colors.mutedFg,
                 }}
               >
                 {onlineCount !== null ? onlineCount : "Unavailable"}
@@ -246,9 +223,7 @@ export function Header({
                     >
                       {t("header.launcherTime").replace(
                         "{time}",
-                        formatLauncherPlaytime(
-                          config.launcherPlaytimeMinutes || 0,
-                        ),
+                        formatLauncherPlaytime(config.launcherPlaytimeMinutes || 0),
                       )}
                     </text>
                   </Row>
@@ -275,10 +250,7 @@ export function Header({
             onClick={onOpenInstall}
           />
         ) : !isPathConfigured || (!isValidating && !gameExists) ? (
-          <DownloadGameButton
-            onClick={onOpenInstall}
-            disabled={isValidating || isRunning}
-          />
+          <DownloadGameButton onClick={onOpenInstall} disabled={isValidating || isRunning} />
         ) : (
           <Button
             size="lg"
@@ -293,15 +265,11 @@ export function Header({
             <Row gap={10} align="center">
               <Play
                 size={18}
-                color={
-                  isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg
-                }
+                color={isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg}
               />
               <P
                 style={{
-                  color: isActionReady
-                    ? theme.colors.primaryFg
-                    : theme.colors.mutedFg,
+                  color: isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg,
                   fontWeight: "bold",
                 }}
               >

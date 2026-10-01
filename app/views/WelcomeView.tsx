@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { Views, View, Column, H1, H2, Muted, theme } from "@/ui";
-import { Sparkles, Wrench } from "@/icon";
-import { detectSystemLanguage } from "@/lib/lang/detect";
-import { useTranslation } from "@/lib/lang";
+import { useEffect, useRef, useState } from "react";
 import { WelcomeChoices } from "@/components/welcome";
+import { Sparkles, Wrench } from "@/icon";
+import { useTranslation } from "@/lib/lang";
+import { detectSystemLanguage } from "@/lib/lang/detect";
+import { Column, H1, H2, Muted, theme, View, Views } from "@/ui";
 
 interface WelcomeViewProps {
   onAutoDetectLanguage?: (lang: "en" | "ru" | "ua") => void;
@@ -17,9 +17,7 @@ export function WelcomeView({
   onNavigateInstall,
 }: WelcomeViewProps) {
   const { t } = useTranslation();
-  const [slide, setSlide] = useState<"greeting" | "preparing" | "choice">(
-    "greeting",
-  );
+  const [slide, setSlide] = useState<"greeting" | "preparing" | "choice">("greeting");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
@@ -39,10 +37,13 @@ export function WelcomeView({
     );
 
     return () => {
-      timers.current.forEach((t) => clearTimeout(t));
+      timers.current.forEach((t) => {
+        clearTimeout(t);
+      });
+
       timers.current = [];
     };
-  }, []);
+  }, [onAutoDetectLanguage]);
 
   return (
     <div
@@ -55,7 +56,7 @@ export function WelcomeView({
         backgroundColor: theme.colors.bg,
       }}
     >
-      <Views value={slide} onValueChange={(val) => setSlide(val as any)}>
+      <Views value={slide} onValueChange={(val) => setSlide(val as typeof slide)}>
         <View
           id="greeting"
           transition="slide-up"
@@ -69,9 +70,7 @@ export function WelcomeView({
         >
           <Column align="center" justify="center" gap={12}>
             <Sparkles size={32} color={theme.colors.fg} />
-            <H1 style={{ fontSize: 36, textAlign: "center" }}>
-              {t("welcome.hello")}
-            </H1>
+            <H1 style={{ fontSize: 36, textAlign: "center" }}>{t("welcome.hello")}</H1>
             <Muted style={{ fontSize: 14 }}>{t("welcome.author")}</Muted>
           </Column>
         </View>
@@ -89,9 +88,7 @@ export function WelcomeView({
         >
           <Column align="center" justify="center" gap={12}>
             <Wrench size={32} color={theme.colors.fg} />
-            <H2 style={{ fontSize: 28, textAlign: "center" }}>
-              {t("welcome.settingUp")}
-            </H2>
+            <H2 style={{ fontSize: 28, textAlign: "center" }}>{t("welcome.settingUp")}</H2>
             <Muted style={{ fontSize: 14 }}>{t("welcome.preparing")}</Muted>
           </Column>
         </View>

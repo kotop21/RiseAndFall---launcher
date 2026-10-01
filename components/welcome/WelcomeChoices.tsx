@@ -1,18 +1,15 @@
 import { useState } from "react";
-import { Column, Row, H2, P, Muted, Button, useFileDialog, useToast, theme } from "@/ui";
-import { FolderCheck, Download } from "@/icon";
-import { hasRiseAndFallExe } from "@/lib/utils/game-files";
+import { Download, FolderCheck } from "@/icon";
 import { useTranslation } from "@/lib/lang";
+import { hasRiseAndFallExe } from "@/lib/utils/game-files";
+import { Button, Column, H2, Muted, P, Row, theme, useFileDialog, useToast } from "@/ui";
 
 interface WelcomeChoicesProps {
   onSelectExistingGame: (gameDir: string) => Promise<void> | void;
   onNavigateInstall: () => void;
 }
 
-export function WelcomeChoices({
-  onSelectExistingGame,
-  onNavigateInstall,
-}: WelcomeChoicesProps) {
+export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: WelcomeChoicesProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { pickFolder } = useFileDialog();
@@ -32,9 +29,7 @@ export function WelcomeChoices({
 
       const path = typeof selected === "object" ? selected.path : selected;
       const isValid =
-        typeof selected === "object"
-          ? selected.isValid
-          : await hasRiseAndFallExe(path);
+        typeof selected === "object" ? selected.isValid : await hasRiseAndFallExe(path);
 
       if (!isValid) {
         toast({
@@ -58,19 +53,10 @@ export function WelcomeChoices({
   };
 
   return (
-    <Column
-      align="center"
-      justify="center"
-      gap={18}
-      style={{ maxWidth: 440, width: "100%" }}
-    >
+    <Column align="center" justify="center" gap={18} style={{ maxWidth: 440, width: "100%" }}>
       <Column align="center" gap={4}>
-        <H2 style={{ fontSize: 24, textAlign: "center" }}>
-          {t("welcome.gettingStarted")}
-        </H2>
-        <Muted style={{ textAlign: "center" }}>
-          {t("welcome.chooseMethod")}
-        </Muted>
+        <H2 style={{ fontSize: 24, textAlign: "center" }}>{t("welcome.gettingStarted")}</H2>
+        <Muted style={{ textAlign: "center" }}>{t("welcome.chooseMethod")}</Muted>
       </Column>
 
       <Column gap={12} style={{ width: "100%" }}>
@@ -93,13 +79,9 @@ export function WelcomeChoices({
             <Column gap={4}>
               <Row gap={8} align="center">
                 <FolderCheck size={16} color={theme.colors.fg} />
-                <P style={{ fontWeight: "bold" }}>
-                  {t("welcome.existingGame")}
-                </P>
+                <P style={{ fontWeight: "bold" }}>{t("welcome.existingGame")}</P>
               </Row>
-              <Muted style={{ fontSize: 12 }}>
-                {t("welcome.existingDesc")}
-              </Muted>
+              <Muted style={{ fontSize: 12 }}>{t("welcome.existingDesc")}</Muted>
             </Column>
           </div>
 
@@ -136,22 +118,13 @@ export function WelcomeChoices({
             <Column gap={4}>
               <Row gap={8} align="center">
                 <Download size={16} color={theme.colors.fg} />
-                <P style={{ fontWeight: "bold" }}>
-                  {t("welcome.freshInstall")}
-                </P>
+                <P style={{ fontWeight: "bold" }}>{t("welcome.freshInstall")}</P>
               </Row>
-              <Muted style={{ fontSize: 12 }}>
-                {t("welcome.freshDesc")}
-              </Muted>
+              <Muted style={{ fontSize: 12 }}>{t("welcome.freshDesc")}</Muted>
             </Column>
           </div>
 
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onNavigateInstall}
-            style={{ flexShrink: 0 }}
-          >
+          <Button variant="default" size="sm" onClick={onNavigateInstall} style={{ flexShrink: 0 }}>
             <Row gap={6} align="center" justify="center">
               <Download size={14} color={theme.colors.primaryFg} />
               {t("welcome.install")}

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
   createLauncherError,
-  normalizeError,
   formatErrorToast,
   LauncherAppError,
+  normalizeError,
 } from "@/lib/errors";
 
 describe("Errors: Factory & Class", () => {
@@ -17,11 +17,7 @@ describe("Errors: Factory & Class", () => {
 
   it("allows custom description override and cause preservation", () => {
     const cause = new Error("Root OS reason");
-    const err = createLauncherError(
-      "FS_ACCESS_DENIED",
-      "Custom denied message",
-      cause,
-    );
+    const err = createLauncherError("FS_ACCESS_DENIED", "Custom denied message", cause);
     expect(err.code).toBe("FS_ACCESS_DENIED");
     expect(err.description).toBe("Custom denied message");
     expect(err.cause).toBe(cause);

@@ -1,5 +1,5 @@
-import { useState, useRef, type ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import { type ReactNode, useRef, useState } from "react";
 import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { theme } from "../theme";
 
@@ -51,10 +51,14 @@ export function Popover({
 
   const getMargin = (): StyleDesc => {
     switch (side) {
-      case "bottom": return { marginTop: offset };
-      case "top": return { marginBottom: offset };
-      case "right": return { marginLeft: offset };
-      case "left": return { marginRight: offset };
+      case "bottom":
+        return { marginTop: offset };
+      case "top":
+        return { marginBottom: offset };
+      case "right":
+        return { marginLeft: offset };
+      case "left":
+        return { marginRight: offset };
     }
   };
 
@@ -71,11 +75,7 @@ export function Popover({
             ...getMargin(),
           }}
         >
-          <div
-            tabIndex={0}
-            autoFocus
-            onMouseDownOutside={close}
-          >
+          <div onMouseDownOutside={close}>
             <motion.div
               animate={{
                 opacity: 1,

@@ -1,6 +1,6 @@
-import type { ReleaseItem, ReleaseAsset } from "./types";
-import { MOCK_RELEASES } from "./mock";
 import { logger } from "@/lib/logger";
+import { MOCK_RELEASES } from "./mock";
+import type { ReleaseAsset, ReleaseItem } from "./types";
 
 const RELEASES_API_URL = "https://api.github.com/repos/kotop21/RiseAndFall---launcher/releases";
 
@@ -25,7 +25,11 @@ interface GitHubReleaseRaw {
 let cachedReleases: ReleaseItem[] | null = null;
 let inFlightRequest: Promise<ReleaseItem[]> | null = null;
 
-function formatReleaseTitle(rawTitle: string | null | undefined, body: string | null | undefined, version: string): string | null {
+function formatReleaseTitle(
+  rawTitle: string | null | undefined,
+  body: string | null | undefined,
+  version: string,
+): string | null {
   const cleanTitle = rawTitle?.trim();
   if (cleanTitle && cleanTitle !== version) {
     return cleanTitle;
@@ -90,7 +94,8 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
 
         const zipAsset = assets.find((a) => a.name.toLowerCase().endsWith(".zip"));
         const exeAsset = assets.find((a) => a.name.toLowerCase().endsWith(".exe"));
-        const downloadUrl = zipAsset?.downloadUrl || exeAsset?.downloadUrl || item.zipball_url || null;
+        const downloadUrl =
+          zipAsset?.downloadUrl || exeAsset?.downloadUrl || item.zipball_url || null;
 
         return {
           version: item.tag_name,

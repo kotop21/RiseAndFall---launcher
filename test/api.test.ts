@@ -1,14 +1,15 @@
 import { describe, expect, it } from "bun:test";
+import { exists, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readFile, rm, exists } from "node:fs/promises";
 import { API_ROUTES } from "@/lib/api/client";
 import {
-  fetchManifest,
   downloadFromMirrors,
+  fetchManifest,
   formatSpeed,
   type ManifestResponse,
 } from "@/lib/api/download";
+import type { LauncherAppError } from "@/lib/errors";
 
 describe("API: Routes Builder", () => {
   it("builds correct manifest route", () => {
@@ -84,9 +85,9 @@ describe("API: Manifest Fetching", () => {
       let threw = false;
       try {
         await fetchManifest();
-      } catch (err: any) {
+      } catch (err) {
         threw = true;
-        expect(err.code).toBe("MANIFEST_FAILED");
+        expect((err as LauncherAppError).code).toBe("MANIFEST_FAILED");
       }
       expect(threw).toBe(true);
     } finally {
@@ -111,9 +112,9 @@ describe("API: Manifest Fetching", () => {
       let threw = false;
       try {
         await fetchManifest();
-      } catch (err: any) {
+      } catch (err) {
         threw = true;
-        expect(err.code).toBe("MANIFEST_FAILED");
+        expect((err as LauncherAppError).code).toBe("MANIFEST_FAILED");
       }
       expect(threw).toBe(true);
     } finally {
@@ -130,9 +131,9 @@ describe("API: Manifest Fetching", () => {
     let threw = false;
     try {
       await fetchManifest(controller.signal);
-    } catch (err: any) {
+    } catch (err) {
       threw = true;
-      expect(err.code).toBe("INSTALL_CANCELLED");
+      expect((err as LauncherAppError).code).toBe("INSTALL_CANCELLED");
     }
     expect(threw).toBe(true);
   });
@@ -235,15 +236,12 @@ describe("API: Mirror Downloads & Fallback", () => {
       let threw = false;
       try {
         await downloadFromMirrors(
-          [
-            `http://localhost:${server.port}/bad1.bin`,
-            `http://localhost:${server.port}/bad2.bin`,
-          ],
+          [`http://localhost:${server.port}/bad1.bin`, `http://localhost:${server.port}/bad2.bin`],
           targetFile,
         );
-      } catch (err: any) {
+      } catch (err) {
         threw = true;
-        expect(err.code).toBe("MIRRORS_UNAVAILABLE");
+        expect((err as LauncherAppError).code).toBe("MIRRORS_UNAVAILABLE");
       }
       expect(threw).toBe(true);
       expect(await exists(targetFile)).toBe(false);
@@ -258,9 +256,9 @@ describe("API: Mirror Downloads & Fallback", () => {
     let threw = false;
     try {
       await downloadFromMirrors([], targetFile);
-    } catch (err: any) {
+    } catch (err) {
       threw = true;
-      expect(err.code).toBe("MIRRORS_UNAVAILABLE");
+      expect((err as LauncherAppError).code).toBe("MIRRORS_UNAVAILABLE");
     }
     expect(threw).toBe(true);
   });
@@ -273,14 +271,10 @@ describe("API: Mirror Downloads & Fallback", () => {
 
     let threw = false;
     try {
-      await downloadFromMirrors(
-        ["https://example.com/dummy.zip"],
-        targetFile,
-        controller.signal,
-      );
-    } catch (err: any) {
+      await downloadFromMirrors(["https://example.com/dummy.zip"], targetFile, controller.signal);
+    } catch (err) {
       threw = true;
-      expect(err.code).toBe("INSTALL_CANCELLED");
+      expect((err as LauncherAppError).code).toBe("INSTALL_CANCELLED");
     }
     expect(threw).toBe(true);
     expect(await exists(targetFile)).toBe(false);
@@ -310,15 +304,11 @@ describe("API: Download Speed & Formatting", () => {
     let reportedSpeed: number | undefined;
 
     try {
-      await downloadFromMirrors(
-        [`http://localhost:${server.port}/speed.bin`],
-        targetFile,
-        {
-          onProgress: (p) => {
-            reportedSpeed = p.bytesPerSecond;
-          },
+      await downloadFromMirrors([`http://localhost:${server.port}/speed.bin`], targetFile, {
+        onProgress: (p) => {
+          reportedSpeed = p.bytesPerSecond;
         },
-      );
+      });
 
       expect(reportedSpeed).toBeDefined();
       expect(typeof reportedSpeed).toBe("number");

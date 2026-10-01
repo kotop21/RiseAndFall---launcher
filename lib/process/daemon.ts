@@ -1,6 +1,6 @@
 import type { ChildProcess } from "node:child_process";
-import { isProcessAlive } from "./killer";
 import { logger } from "@/lib/logger";
+import { isProcessAlive } from "./killer";
 
 export interface ProcessDaemonResult {
   elapsedSeconds: number;
@@ -42,7 +42,6 @@ export async function watchProcessDaemon(
         done();
       });
 
-      // Периодическая легковесная неблокирующая проверка (0% CPU, 0 MB ОЗУ)
       if (pid && pid > 0) {
         pollInterval = setInterval(() => {
           if (proc.exitCode !== null || proc.killed || !isProcessAlive(pid)) {
@@ -55,21 +54,22 @@ export async function watchProcessDaemon(
     logger.error("daemon", `Unexpected error waiting for process PID ${pid}:`, err);
   } finally {
     cleanup();
-    const elapsedSeconds = Math.max(1, Math.floor(Math.max(0, Date.now() - startTime) / 1000));
-    const result: ProcessDaemonResult = {
-      elapsedSeconds,
-      elapsedMinutes: Math.max(1, Math.floor(elapsedSeconds / 60)),
-      terminatedDueToHang: false,
-    };
-
-    if (onFinish) {
-      try {
-        await onFinish(result);
-      } catch (err) {
-        logger.error("daemon", "Error in onFinish callback:", err);
-      }
-    }
-
-    return result;
   }
+
+  const elapsedSeconds = Math.max(1, Math.floor(Math.max(0, Date.now() - startTime) / 1000));
+  const result: ProcessDaemonResult = {
+    elapsedSeconds,
+    elapsedMinutes: Math.max(1, Math.floor(elapsedSeconds / 60)),
+    terminatedDueToHang: false,
+  };
+
+  if (onFinish) {
+    try {
+      await onFinish(result);
+    } catch (err) {
+      logger.error("daemon", "Error in onFinish callback:", err);
+    }
+  }
+
+  return result;
 }

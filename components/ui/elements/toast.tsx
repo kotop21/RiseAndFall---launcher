@@ -1,12 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useRef,
-  type ReactNode,
-} from "react";
 import type { StyleDesc } from "@gpuix/react";
+import { createContext, type ReactNode, useCallback, useContext, useRef, useState } from "react";
 import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { theme } from "../theme";
 
@@ -56,15 +49,10 @@ export interface ToastProviderProps {
   defaultPosition?: ToastPosition;
 }
 
-export function ToastProvider({
-  children,
-  defaultPosition = "top-right",
-}: ToastProviderProps) {
+export function ToastProvider({ children, defaultPosition = "top-right" }: ToastProviderProps) {
   const [currentToast, setCurrentToast] = useState<ToastItem | null>(null);
   const [position, setPosition] = useState<ToastPosition>(defaultPosition);
-  const [animStage, setAnimStage] = useState<"initial" | "entered" | "exiting">(
-    "initial",
-  );
+  const [animStage, setAnimStage] = useState<"initial" | "entered" | "exiting">("initial");
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -86,6 +74,9 @@ export function ToastProvider({
     }, 220);
   }, []);
 
+  const currentToastRef = useRef<ToastItem | null>(null);
+  currentToastRef.current = currentToast;
+
   const toast = useCallback(
     ({ title, description, type = "info", duration = 3500 }: ToastOptions) => {
       if (timerRef.current) {
@@ -104,7 +95,7 @@ export function ToastProvider({
       const id = Math.random().toString(36).substring(2, 9);
       const newItem: ToastItem = { id, title, description, type, duration };
 
-      if (currentToast) {
+      if (currentToastRef.current) {
         setAnimStage("exiting");
         exitTimerRef.current = setTimeout(() => {
           setCurrentToast(newItem);
@@ -135,7 +126,7 @@ export function ToastProvider({
         }
       }
     },
-    [dismissToast, currentToast],
+    [dismissToast],
   );
 
   const isTop = position.startsWith("top");
@@ -152,7 +143,6 @@ export function ToastProvider({
         return theme.colors.destructive;
       case "warn":
         return theme.colors.warning;
-      case "info":
       default:
         return theme.colors.primary;
     }
@@ -172,9 +162,7 @@ export function ToastProvider({
       };
 
   return (
-    <ToastContext.Provider
-      value={{ toast, removeToast: dismissToast, setPosition }}
-    >
+    <ToastContext.Provider value={{ toast, removeToast: dismissToast, setPosition }}>
       <div
         style={{
           position: "relative",
@@ -207,7 +195,8 @@ export function ToastProvider({
               }}
               style={{
                 position: "absolute",
-                width: 320,
+                minWidth: 320,
+                maxWidth: 560,
                 backgroundColor: theme.colors.card,
                 borderWidth: 1,
                 borderColor: theme.colors.border,
@@ -230,6 +219,7 @@ export function ToastProvider({
               <div
                 style={{
                   flexGrow: 1,
+                  minWidth: 0,
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
@@ -244,6 +234,7 @@ export function ToastProvider({
                     flexDirection: "column",
                     gap: 3,
                     flexGrow: 1,
+                    minWidth: 0,
                   }}
                 >
                   <text
@@ -277,6 +268,7 @@ export function ToastProvider({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
                   <text

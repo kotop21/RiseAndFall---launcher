@@ -1,7 +1,7 @@
-import { useCallback, type ReactNode } from "react";
 import { spawn } from "node:child_process";
 import { access } from "node:fs/promises";
 import { join } from "node:path";
+import { type ReactNode, useCallback } from "react";
 import { logger } from "@/lib/logger";
 
 export interface FileDialogOptions {
@@ -11,8 +11,7 @@ export interface FileDialogOptions {
   multiple?: boolean;
 }
 
-export interface FolderDialogOptions
-  extends Omit<FileDialogOptions, "extensions"> {
+export interface FolderDialogOptions extends Omit<FileDialogOptions, "extensions"> {
   requiredFile?: string;
 }
 
@@ -32,9 +31,7 @@ async function checkFileExists(path: string): Promise<boolean> {
 
 function getPowershellPath(): string {
   const sysRoot =
-    process.platform === "win32"
-      ? process.env.SystemRoot || process.env.WINDIR
-      : undefined;
+    process.platform === "win32" ? process.env.SystemRoot || process.env.WINDIR : undefined;
   if (sysRoot) {
     return join(sysRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
   }
@@ -90,31 +87,20 @@ async function runProcess(cmd: string[]): Promise<string[] | null> {
   });
 }
 
-export async function openFileDialog(
-  options: FileDialogOptions = {},
-): Promise<string[] | null> {
-  const {
-    title = "Choose File",
-    defaultPath,
-    extensions = [],
-    multiple = false,
-  } = options;
+export async function openFileDialog(options: FileDialogOptions = {}): Promise<string[] | null> {
+  const { title = "Choose File", defaultPath, extensions = [], multiple = false } = options;
   const platform = process.platform;
 
   if (platform === "darwin") {
     const sanitizedPath = defaultPath?.trim();
-    const hasValidPath = Boolean(
-      sanitizedPath && sanitizedPath.startsWith("/"),
-    );
+    const hasValidPath = Boolean(sanitizedPath?.startsWith("/"));
 
     let script = `set theFiles to choose file with prompt "${title.replace(/"/g, '\\"')}"`;
     if (hasValidPath) {
-      script += ` default location POSIX file "${sanitizedPath!.replace(/"/g, '\\"')}"`;
+      script += ` default location POSIX file "${sanitizedPath?.replace(/"/g, '\\"')}"`;
     }
     if (extensions.length > 0) {
-      const typesStr = extensions
-        .map((ext) => `"${ext.replace(/^\./, "")}"`)
-        .join(", ");
+      const typesStr = extensions.map((ext) => `"${ext.replace(/^\./, "")}"`).join(", ");
       script += ` of type {${typesStr}}`;
     }
     if (multiple) {
@@ -134,9 +120,7 @@ export async function openFileDialog(
     const multiselect = multiple ? "$d.Multiselect = $true;" : "";
     const cleanDefault = defaultPath?.trim();
     const normalizedDefault =
-      cleanDefault && /^[a-zA-Z]:$/.test(cleanDefault)
-        ? `${cleanDefault}\\`
-        : cleanDefault;
+      cleanDefault && /^[a-zA-Z]:$/.test(cleanDefault) ? `${cleanDefault}\\` : cleanDefault;
 
     const initDir = normalizedDefault
       ? `$init = '${normalizedDefault.replace(/'/g, "''")}'; while ($init -and -not (Test-Path -LiteralPath $init)) { $p = Split-Path -Parent $init; if (-not $p -or $p -eq $init) { break; }; $init = $p; }; if ($init -and (Test-Path -LiteralPath $init)) { $d.InitialDirectory = $init; };`
@@ -178,9 +162,7 @@ export async function openFileDialog(
     if (multiple) cmd.push("--multiple", "--separator=\n");
     if (defaultPath?.trim()) cmd.push(`--filename=${defaultPath.trim()}`);
     if (extensions.length > 0) {
-      const pattern = extensions
-        .map((e) => `*.${e.replace(/^\./, "")}`)
-        .join(" ");
+      const pattern = extensions.map((e) => `*.${e.replace(/^\./, "")}`).join(" ");
       cmd.push(`--file-filter=${pattern}`);
     }
     return runProcess(cmd);
@@ -192,24 +174,17 @@ export async function openFileDialog(
 export async function openFolderDialog(
   options: FolderDialogOptions = {},
 ): Promise<FolderDialogResult | null> {
-  const {
-    title = "Choose Folder",
-    defaultPath,
-    multiple = false,
-    requiredFile,
-  } = options;
+  const { title = "Choose Folder", defaultPath, multiple = false, requiredFile } = options;
   const platform = process.platform;
   let rawPaths: string[] | null = null;
 
   if (platform === "darwin") {
     const sanitizedPath = defaultPath?.trim();
-    const hasValidPath = Boolean(
-      sanitizedPath && sanitizedPath.startsWith("/"),
-    );
+    const hasValidPath = Boolean(sanitizedPath?.startsWith("/"));
 
     let script = `set theFolders to choose folder with prompt "${title.replace(/"/g, '\\"')}"`;
     if (hasValidPath) {
-      script += ` default location POSIX file "${sanitizedPath!.replace(/"/g, '\\"')}"`;
+      script += ` default location POSIX file "${sanitizedPath?.replace(/"/g, '\\"')}"`;
     }
     if (multiple) {
       script += ` with multiple selections allowed`;
@@ -220,9 +195,7 @@ export async function openFolderDialog(
   } else if (platform === "win32") {
     const cleanDefault = defaultPath?.trim();
     const normalizedDefault =
-      cleanDefault && /^[a-zA-Z]:$/.test(cleanDefault)
-        ? `${cleanDefault}\\`
-        : cleanDefault;
+      cleanDefault && /^[a-zA-Z]:$/.test(cleanDefault) ? `${cleanDefault}\\` : cleanDefault;
 
     const initDir = normalizedDefault
       ? `$init = '${normalizedDefault.replace(/'/g, "''")}'; while ($init -and -not (Test-Path -LiteralPath $init)) { $p = Split-Path -Parent $init; if (-not $p -or $p -eq $init) { break; }; $init = $p; }; if ($init -and (Test-Path -LiteralPath $init)) { $d.SelectedPath = $init; };`
@@ -263,12 +236,7 @@ export async function openFolderDialog(
       psCommand,
     ]);
   } else if (platform === "linux") {
-    const cmd = [
-      "zenity",
-      "--file-selection",
-      "--directory",
-      `--title=${title}`,
-    ];
+    const cmd = ["zenity", "--file-selection", "--directory", `--title=${title}`];
     if (multiple) cmd.push("--multiple", "--separator=\n");
     if (defaultPath?.trim()) cmd.push(`--filename=${defaultPath.trim()}`);
     rawPaths = await runProcess(cmd);
@@ -298,13 +266,10 @@ export async function openFolderDialog(
 }
 
 export function useFileDialog() {
-  const pickFile = useCallback(
-    async (options: FileDialogOptions = {}): Promise<string | null> => {
-      const paths = await openFileDialog({ ...options, multiple: false });
-      return paths && paths.length > 0 ? paths[0] : null;
-    },
-    [],
-  );
+  const pickFile = useCallback(async (options: FileDialogOptions = {}): Promise<string | null> => {
+    const paths = await openFileDialog({ ...options, multiple: false });
+    return paths && paths.length > 0 ? paths[0] : null;
+  }, []);
 
   const pickFiles = useCallback(
     async (options: FileDialogOptions = {}): Promise<string[] | null> => {
@@ -354,7 +319,7 @@ export interface FilePickerTriggerProps extends FolderDialogOptions {
   children: (props: { pick: () => void }) => ReactNode;
   mode?: "file" | "folder";
   extensions?: string[];
-  onSelect: (paths: any) => void;
+  onSelect: (paths: unknown) => void;
 }
 
 export function FilePickerTrigger({

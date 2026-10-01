@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 import { theme } from "../theme";
 
 export type HeaderVariant = "up" | "down" | "left" | "right";
@@ -11,12 +11,7 @@ export interface HeaderProps {
   style?: StyleDesc;
 }
 
-export function Header({
-  children,
-  variant = "up",
-  size = 56,
-  style = {},
-}: HeaderProps) {
+export function Header({ children, variant = "up", size = 56, style = {} }: HeaderProps) {
   const isHorizontal = variant === "up" || variant === "down";
 
   const positionStyles: Record<HeaderVariant, StyleDesc> = {

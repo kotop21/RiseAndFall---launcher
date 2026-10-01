@@ -1,7 +1,5 @@
-import {
-  NavigationRoot,
-  SegmentedNav,
-} from "@/components/ui/elements/navigation";
+import type { StyleDesc } from "@gpuix/react";
+import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
 import type { GameBuildProfile } from "@/lib/config/types";
 
 interface ProfileSwitcherProps {
@@ -9,7 +7,7 @@ interface ProfileSwitcherProps {
   activeProfileId: string;
   onSelectProfile: (profileId: string) => void;
   onlyConfigured?: boolean;
-  style?: Record<string, any>;
+  style?: StyleDesc;
 }
 
 export function ProfileSwitcher({
@@ -22,9 +20,7 @@ export function ProfileSwitcher({
   const safeProfiles = profiles?.length ? profiles : [];
 
   if (onlyConfigured) {
-    const configuredProfiles = safeProfiles.filter((p) =>
-      Boolean(p.path?.trim()),
-    );
+    const configuredProfiles = safeProfiles.filter((p) => Boolean(p.path?.trim()));
 
     if (configuredProfiles.length <= 1) {
       return null;
@@ -58,27 +54,19 @@ export function ProfileSwitcher({
     0,
     safeProfiles.findIndex((p) => p.id === activeProfileId),
   );
-  const visibleSlotsCount = Math.min(
-    5,
-    Math.max(1, lastFilledIndex + 2, activeSlotIndex + 1),
-  );
+  const visibleSlotsCount = Math.min(5, Math.max(1, lastFilledIndex + 2, activeSlotIndex + 1));
 
-  const slotNavItems = safeProfiles
-    .slice(0, visibleSlotsCount)
-    .map((profile, idx) => {
-      const hasPath = Boolean(profile.path?.trim());
-      return {
-        id: profile.id,
-        label: `#${idx + 1}${hasPath ? " •" : ""}`,
-      };
-    });
+  const slotNavItems = safeProfiles.slice(0, visibleSlotsCount).map((profile, idx) => {
+    const hasPath = Boolean(profile.path?.trim());
+    return {
+      id: profile.id,
+      label: `#${idx + 1}${hasPath ? " •" : ""}`,
+    };
+  });
 
   return (
     <div style={style}>
-      <NavigationRoot
-        value={activeProfileId || "slot-1"}
-        onValueChange={onSelectProfile}
-      >
+      <NavigationRoot value={activeProfileId || "slot-1"} onValueChange={onSelectProfile}>
         <SegmentedNav items={slotNavItems} itemWidth={46} itemHeight={28} />
       </NavigationRoot>
     </div>

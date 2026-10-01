@@ -1,16 +1,15 @@
+import { spawn } from "node:child_process";
+import { createWriteStream, existsSync, readdirSync, statSync } from "node:fs";
+import { copyFile, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, dirname, basename, relative } from "node:path";
-import { mkdir, writeFile, open, rm, readdir, stat, copyFile } from "node:fs/promises";
-import { existsSync, readdirSync, statSync, createWriteStream } from "node:fs";
+import { basename, dirname, join, relative } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { spawn } from "node:child_process";
 import { extractZip } from "@/lib/explorer/extract";
-import { logger } from "@/lib/logger";
-import { getLauncherVersion } from "@/lib/utils/version";
-import { setBackgroundActivity } from "@/lib/render/frame-loop";
 import type { ReleaseItem } from "@/lib/github/types";
-import type { UpdateOptions, UpdateProgress, UpdateResult } from "./types";
+import { logger } from "@/lib/logger";
+import { setBackgroundActivity } from "@/lib/render/frame-loop";
+import type { UpdateOptions, UpdateResult } from "./types";
 
 export function isDevMode(): boolean {
   if (process.platform !== "win32") {
@@ -36,14 +35,10 @@ export function resolveDownloadUrl(release: ReleaseItem): string | null {
   }
 
   if (release.assets && release.assets.length > 0) {
-    const zipAsset = release.assets.find((a) =>
-      a.name.toLowerCase().endsWith(".zip"),
-    );
+    const zipAsset = release.assets.find((a) => a.name.toLowerCase().endsWith(".zip"));
     if (zipAsset?.downloadUrl) return zipAsset.downloadUrl;
 
-    const exeAsset = release.assets.find((a) =>
-      a.name.toLowerCase().endsWith(".exe"),
-    );
+    const exeAsset = release.assets.find((a) => a.name.toLowerCase().endsWith(".exe"));
     if (exeAsset?.downloadUrl) return exeAsset.downloadUrl;
   }
 
@@ -91,11 +86,7 @@ function findExecutableInDir(dir: string): string | null {
   // 3. Any exe that is not raf-settings, unins*, or vc_redist
   const fallbackExe = entries.find((path) => {
     const name = basename(path).toLowerCase();
-    return (
-      !name.includes("settings") &&
-      !name.startsWith("unins") &&
-      !name.includes("redist")
-    );
+    return !name.includes("settings") && !name.startsWith("unins") && !name.includes("redist");
   });
 
   return fallbackExe || entries[0] || null;
@@ -159,7 +150,9 @@ export async function downloadReleaseArchive(
       },
     });
 
-    const nodeReadable = Readable.fromWeb(res.body as any);
+    const nodeReadable = Readable.fromWeb(
+      res.body as unknown as Parameters<typeof Readable.fromWeb>[0],
+    );
     const fileWriteStream = createWriteStream(targetFilePath, { highWaterMark: 64 * 1024 });
 
     await pipeline(nodeReadable, progressTransform, fileWriteStream, { signal });
@@ -356,14 +349,14 @@ rmdir /s /q "!STAGING_DIR!" > nul 2>&1
     }, 200);
 
     return { success: true, isDev: false };
-  } catch (err: any) {
+  } catch (err) {
     logger.error("updater", "Error applying launcher update:", err);
     try {
       await rm(tempDir, { recursive: true, force: true });
     } catch {}
     return {
       success: false,
-      error: err?.message || "Unknown updater error",
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }

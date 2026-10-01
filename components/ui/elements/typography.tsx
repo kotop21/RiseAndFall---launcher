@@ -1,14 +1,8 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 import { theme } from "../theme";
 
-export function H1({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function H1({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <text
       style={{
@@ -24,13 +18,7 @@ export function H1({
   );
 }
 
-export function H2({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function H2({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <text
       style={{
@@ -46,13 +34,7 @@ export function H2({
   );
 }
 
-export function H3({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function H3({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <text
       style={{
@@ -68,13 +50,7 @@ export function H3({
   );
 }
 
-export function P({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function P({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <text
       style={{
@@ -89,13 +65,7 @@ export function P({
   );
 }
 
-export function Muted({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function Muted({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <text
       style={{
@@ -110,13 +80,7 @@ export function Muted({
   );
 }
 
-export function Label({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function Label({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <text
       style={{

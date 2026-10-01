@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { updateLauncher } from "@/lib/updater";
+import { spawn } from "node:child_process";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { mkdir, writeFile, rm } from "node:fs/promises";
-import { spawn } from "node:child_process";
+import { updateLauncher } from "@/lib/updater";
 
 describe("Updater: Dev Mode Execution Test", () => {
   it("downloads, unpacks and verifies update in staging without altering dev process", async () => {
@@ -18,18 +18,20 @@ describe("Updater: Dev Mode Execution Test", () => {
     await writeFile(dummyNode, "NODE_ADDON_DUMMY_DATA");
 
     const zipPath = join(tmpdir(), `raf-test-release-${Date.now()}.zip`);
-    
+
     // Create zip archive
     await new Promise<void>((resolve, reject) => {
       const proc = spawn("zip", ["-r", "-j", zipPath, testDir]);
-      proc.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`zip failed with code ${code}`))));
+      proc.on("close", (code) =>
+        code === 0 ? resolve() : reject(new Error(`zip failed with code ${code}`)),
+      );
       proc.on("error", reject);
     });
 
     // 2. Start a mock local HTTP server serving this zip file
     const server = Bun.serve({
       port: 0,
-      fetch(req) {
+      fetch(_req) {
         return new Response(Bun.file(zipPath));
       },
     });
@@ -43,7 +45,7 @@ describe("Updater: Dev Mode Execution Test", () => {
 
     let progressCount = 0;
     const result = await updateLauncher(mockRelease, {
-      onProgress: (p) => {
+      onProgress: (_p) => {
         progressCount++;
       },
     });

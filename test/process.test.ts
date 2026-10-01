@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { sanitizeGameArgs, parseArgs, launchExe } from "@/lib/process/launch";
+import { launchExe, parseArgs, sanitizeGameArgs } from "@/lib/process/launch";
 import { launcherTracker } from "@/lib/process/launcher-tracker";
 
 describe("Process: Args Formatting & Parsing", () => {
@@ -10,7 +10,7 @@ describe("Process: Args Formatting & Parsing", () => {
 
   it("parses raw arguments string respecting double quotes", () => {
     expect(parseArgs("")).toEqual([]);
-    expect(parseArgs('  -windowed  -res 1920 1080  ')).toEqual([
+    expect(parseArgs("  -windowed  -res 1920 1080  ")).toEqual([
       "-windowed",
       "-res",
       "1920",

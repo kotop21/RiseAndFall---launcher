@@ -1,5 +1,5 @@
-import { DiscordRpcClient } from "./client";
 import { logger } from "@/lib/logger";
+import { DiscordRpcClient } from "./client";
 
 class DiscordRpcManager {
   private client = new DiscordRpcClient();

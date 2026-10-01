@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { CheckIcon } from "@/icon";
 import { theme } from "../theme";

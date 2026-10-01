@@ -1,5 +1,5 @@
-import { platform } from "node:os";
 import { execSync } from "node:child_process";
+import { platform } from "node:os";
 import { logger } from "@/lib/logger";
 
 export type SupportedLang = "en" | "ru" | "ua";
@@ -53,7 +53,7 @@ export function detectSystemLanguage(): SupportedLang {
           stdio: ["ignore", "pipe", "ignore"],
         }).trim();
         const match = appleLangs.match(/"([^"]+)"/);
-        if (match && match[1]) {
+        if (match?.[1]) {
           detected = normalizeLang(match[1]);
           source = `macOS AppleLanguages (${match[1]})`;
         }

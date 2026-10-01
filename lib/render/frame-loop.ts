@@ -1,4 +1,4 @@
-import { createRenderer, type GpuixRenderer } from "@gpuix/react";
+import { createRenderer, type EventPayload, type GpuixRenderer } from "@gpuix/react";
 import { setLowSpecMode } from "@/components/ui/motion-compat";
 
 interface FrameLoopOptions {
@@ -32,7 +32,7 @@ export function setupAdaptiveRenderer(windowOptions: {
 }) {
   let lastActivityTime = performance.now();
   let isThrottledSleep = false;
-  let timer: any = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
   let stopped = false;
   let runLoop: (() => void) | null = null;
 
@@ -48,7 +48,7 @@ export function setupAdaptiveRenderer(windowOptions: {
 
   wakeAdaptiveRenderer = wakeUp;
 
-  const handleEvent = (_event: any) => {
+  const handleEvent = (_event: EventPayload) => {
     wakeUp();
   };
 
@@ -57,8 +57,8 @@ export function setupAdaptiveRenderer(windowOptions: {
 
   const isLowSpec = Boolean(
     windowOptions.lowSpecMode ||
-    process.env.RAF_LOW_SPEC === "1" ||
-    process.argv.includes("--low-spec")
+      process.env.RAF_LOW_SPEC === "1" ||
+      process.argv.includes("--low-spec"),
   );
 
   if (isLowSpec) {
@@ -117,7 +117,7 @@ export function setupAdaptiveRenderer(windowOptions: {
         isThrottledSleep = false;
       }
 
-      const minYield = (isLowSpec && !isThrottledSleep) ? 8 : 0;
+      const minYield = isLowSpec && !isThrottledSleep ? 8 : 0;
       const wait = Math.max(minYield, targetFrameMs - elapsed);
 
       timer = setTimeout(loop, wait);
@@ -130,4 +130,3 @@ export function setupAdaptiveRenderer(windowOptions: {
 
   return { renderer, startLoop };
 }
-

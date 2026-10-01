@@ -1,41 +1,33 @@
-import { useEffect } from "react";
-import {
-  Column,
-  Row,
-  Label,
-  Button,
-  useFileDialog,
-  useToast,
-  theme,
-} from "@/ui";
-import { Download, Upload } from "@/icon";
-import { OpenGameFolderButton } from "@/components/OpenGameFolderButton";
-import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
+import { useEffect, useRef } from "react";
 import { DownloadGameButton } from "@/components/DownloadGameButton";
-import { exportGameSettings, importGameSettings } from "@/lib/settings-cli";
-import { isWindows } from "@/lib/utils/os";
-import { useGameStatus } from "@/lib/utils/game-status";
-import { formatErrorToast, createLauncherError } from "@/lib/errors";
+import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
+import { Download, Upload } from "@/icon";
+import { createLauncherError, formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
 import { useInstallation } from "@/lib/manager/install";
+import { exportGameSettings, importGameSettings } from "@/lib/settings-cli";
+import { useGameStatus } from "@/lib/utils/game-status";
+import { isWindows } from "@/lib/utils/os";
+import { Button, Column, Label, Row, theme, useFileDialog, useToast } from "@/ui";
 
 interface SettingsActionsProps {
   gameDir?: string;
   onOpenInstall?: () => void;
 }
 
-export function SettingsActions({
-  gameDir = "",
-  onOpenInstall,
-}: SettingsActionsProps) {
+export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActionsProps) {
   const { t } = useTranslation();
   const { pickFolder, pickFile } = useFileDialog();
   const { toast } = useToast();
   const installation = useInstallation();
 
   const { cliExists: isCliAvailable } = useGameStatus(gameDir);
+  const hasWarnedRef = useRef(false);
 
   useEffect(() => {
+    if (hasWarnedRef.current) return;
+    hasWarnedRef.current = true;
+
     if (!isWindows()) {
       toast({
         title: t("toasts.cliOsUnsupportedTitle"),
@@ -52,7 +44,7 @@ export function SettingsActions({
         type: "warn",
       });
     }
-  }, [isCliAvailable]);
+  }, [isCliAvailable, toast, t]);
 
   const handleExportRegistrySettings = async () => {
     try {
@@ -61,10 +53,7 @@ export function SettingsActions({
       });
       if (!selectedFolder) return;
 
-      const targetDir =
-        typeof selectedFolder === "object"
-          ? selectedFolder.path
-          : selectedFolder;
+      const targetDir = typeof selectedFolder === "object" ? selectedFolder.path : selectedFolder;
       if (!targetDir) return;
 
       const res = await exportGameSettings(targetDir);
@@ -75,8 +64,7 @@ export function SettingsActions({
         title: t("toasts.settingsExportSuccessTitle"),
         description: t("toasts.settingsExportSuccessDesc").replace(
           "{path}",
-          (res.outputFilePath || targetDir).split(/[\\/]/).pop() ||
-            "raf-settings.json",
+          (res.outputFilePath || targetDir).split(/[\\/]/).pop() || "raf-settings.json",
         ),
         type: "info",
         duration: 4000,
@@ -114,10 +102,6 @@ export function SettingsActions({
       <Label>{t("settings.actions")}</Label>
 
       <Row gap={10} align="center" style={{ width: "100%" }}>
-        <div style={{ flexGrow: 1, minWidth: 0 }}>
-          <OpenGameFolderButton gameDir={gameDir} style={{ width: "100%" }} />
-        </div>
-
         <div style={{ flexGrow: 1, minWidth: 0 }}>
           <OpenDgVoodooButton gameDir={gameDir} style={{ width: "100%" }} />
         </div>

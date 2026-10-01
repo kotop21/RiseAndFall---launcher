@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { API_ROUTES, type OnlineResponse } from "./client";
+import { useEffect, useState } from "react";
 import { logger } from "@/lib/logger";
+import { API_ROUTES, type OnlineResponse } from "./client";
 
 const HEARTBEAT_INTERVAL_MS = 45 * 1000;
 const RETRY_INTERVAL_MS = 15 * 1000;
@@ -79,11 +79,7 @@ export async function sendHeartbeat(): Promise<boolean> {
       setStoredKey(data.key);
     }
 
-    if (
-      typeof data?.online === "number" &&
-      Number.isFinite(data.online) &&
-      data.online >= 0
-    ) {
+    if (typeof data?.online === "number" && Number.isFinite(data.online) && data.online >= 0) {
       logger.info("online", `ok (players: ${data.online})`);
       notify(data.online);
       return true;
@@ -94,8 +90,7 @@ export async function sendHeartbeat(): Promise<boolean> {
   } catch (err: unknown) {
     clearTimeout(timeoutId);
     const isAbort =
-      (err instanceof Error &&
-        (err.name === "AbortError" || err.message === "AbortError")) ||
+      (err instanceof Error && (err.name === "AbortError" || err.message === "AbortError")) ||
       controller.signal.aborted;
 
     if (isAbort) {

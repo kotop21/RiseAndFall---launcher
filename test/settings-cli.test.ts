@@ -1,9 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-  getSettingsCliPath,
-  hasSettingsCli,
-  executeSettingsCli,
-} from "@/lib/settings-cli/client";
+import { executeSettingsCli, getSettingsCliPath, hasSettingsCli } from "@/lib/settings-cli/client";
 import { exportGameSettings } from "@/lib/settings-cli/export";
 import { importGameSettings } from "@/lib/settings-cli/import";
 

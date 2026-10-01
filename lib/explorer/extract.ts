@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
 import { unlink } from "node:fs/promises";
+import { join } from "node:path";
 import { logger } from "@/lib/logger";
 
 export async function extractSingleZip(
@@ -60,10 +60,7 @@ export async function extractSingleZip(
   });
 }
 
-export async function extractZip(
-  archivePath: string,
-  destinationDir: string,
-): Promise<boolean> {
+export async function extractZip(archivePath: string, destinationDir: string): Promise<boolean> {
   if (!(await extractSingleZip(archivePath, destinationDir))) return false;
 
   try {

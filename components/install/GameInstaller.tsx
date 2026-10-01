@@ -1,33 +1,23 @@
-import { useState, useRef, useEffect } from "react";
-import {
-  Column,
-  Row,
-  Label,
-  Muted,
-  Input,
-  Button,
-  Separator,
-  P,
-  useFileDialog,
-  useToast,
-  theme,
-} from "@/ui";
-import {
-  NavigationRoot,
-  SegmentedNav,
-} from "@/components/ui/elements/navigation";
-import {
-  Folder,
-  Globe,
-  Download,
-  RefreshCw,
-  CheckCircle,
-  AlertTriangle,
-} from "@/icon";
-import { useInstallation } from "@/lib/manager/install";
+import { useEffect, useRef, useState } from "react";
+import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
+import { AlertTriangle, CheckCircle, Download, Folder, Globe, RefreshCw } from "@/icon";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { useInstallation } from "@/lib/manager/install";
 import { isWindows } from "@/lib/utils/os";
+import {
+  Button,
+  Column,
+  Input,
+  Label,
+  Muted,
+  P,
+  Row,
+  Separator,
+  theme,
+  useFileDialog,
+  useToast,
+} from "@/ui";
 
 interface GameInstallerProps {
   defaultInstallPath?: string;
@@ -74,19 +64,21 @@ export function GameInstaller({
   const resetAbortTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const status = installation.status;
-  const installPath = isInstalling || (status === "completed" && installation.targetDir)
-    ? installation.targetDir
-    : localInstallPath;
+  const installPath =
+    isInstalling || (status === "completed" && installation.targetDir)
+      ? installation.targetDir
+      : localInstallPath;
 
-  const selectedLang = isInstalling || (status === "completed" && installation.lang)
-    ? installation.lang
-    : localLang;
+  const selectedLang =
+    isInstalling || (status === "completed" && installation.lang) ? installation.lang : localLang;
 
-  const statusMessage = installation.progress?.message || (
-    status === "downloading"
-      ? (isReinstall ? t("install.statusPreparingReinstall") : t("install.statusStarting"))
-      : ""
-  );
+  const statusMessage =
+    installation.progress?.message ||
+    (status === "downloading"
+      ? isReinstall
+        ? t("install.statusPreparingReinstall")
+        : t("install.statusStarting")
+      : "");
 
   const setInstallPath = (path: string) => {
     if (!isInstalling) setLocalInstallPath(path);
@@ -125,9 +117,7 @@ export function GameInstaller({
       if (!selected) return;
 
       const pickedPath =
-        typeof selected === "object"
-          ? (selected as { path: string }).path
-          : selected;
+        typeof selected === "object" ? (selected as { path: string }).path : selected;
       if (pickedPath) setInstallPath(pickedPath);
     } catch (err) {
       toast(formatErrorToast(err, "FS_ACCESS_DENIED"));
@@ -168,10 +158,7 @@ export function GameInstaller({
       if (!confirmReinstall) {
         setConfirmReinstall(true);
         if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
-        resetConfirmTimer.current = setTimeout(
-          () => setConfirmReinstall(false),
-          4000,
-        );
+        resetConfirmTimer.current = setTimeout(() => setConfirmReinstall(false), 4000);
         return;
       }
       if (resetConfirmTimer.current) clearTimeout(resetConfirmTimer.current);
@@ -208,9 +195,7 @@ export function GameInstaller({
           }}
         >
           <Label>{t("install.targetDir")}</Label>
-          <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>
-            {installPath}
-          </P>
+          <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>{installPath}</P>
           <Row gap={6} align="center">
             <AlertTriangle size={14} color={theme.colors.mutedFg} />
             <Muted>{t("install.targetWarning")}</Muted>
@@ -268,13 +253,9 @@ export function GameInstaller({
           }}
         >
           <Row gap={8} align="center">
-            {status === "completed" && (
-              <CheckCircle size={16} color={theme.colors.success} />
-            )}
+            {status === "completed" && <CheckCircle size={16} color={theme.colors.success} />}
             <P style={{ fontWeight: "bold" }}>
-              {status === "completed"
-                ? t("install.ready")
-                : t("install.processing")}
+              {status === "completed" ? t("install.ready") : t("install.processing")}
             </P>
           </Row>
           <Muted>{statusMessage}</Muted>
@@ -283,17 +264,8 @@ export function GameInstaller({
 
       <Separator orientation="horizontal" />
 
-      <Row
-        gap={10}
-        justify="between"
-        align="center"
-        style={{ width: "100%" }}
-      >
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onCancel}
-        >
+      <Row gap={10} justify="between" align="center" style={{ width: "100%" }}>
+        <Button variant="secondary" size="sm" onClick={onCancel}>
           {t("install.cancel")}
         </Button>
 
@@ -312,20 +284,14 @@ export function GameInstaller({
               {isReinstall ? (
                 <RefreshCw
                   size={14}
-                  color={
-                    confirmReinstall
-                      ? theme.colors.destructiveFg
-                      : theme.colors.primaryFg
-                  }
+                  color={confirmReinstall ? theme.colors.destructiveFg : theme.colors.primaryFg}
                 />
               ) : (
                 <Download size={14} color={theme.colors.primaryFg} />
               )}
               <P
                 style={{
-                  color: confirmReinstall
-                    ? theme.colors.destructiveFg
-                    : theme.colors.primaryFg,
+                  color: confirmReinstall ? theme.colors.destructiveFg : theme.colors.primaryFg,
                   fontWeight: "bold",
                 }}
               >

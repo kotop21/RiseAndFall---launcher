@@ -1,14 +1,9 @@
-import { Column, Row, Label } from "@/ui";
-import {
-  NavigationRoot,
-  SegmentedNav,
-} from "@/components/ui/elements/navigation";
+import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
 import { Globe } from "@/icon";
-import { theme } from "@/ui";
 import type { LauncherConfig } from "@/lib/config/types";
-import { useToast } from "@/ui";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { Column, Label, Row, theme, useToast } from "@/ui";
 
 interface SettingsLanguageProps {
   config: LauncherConfig;
@@ -21,10 +16,7 @@ const LANG_ITEMS = [
   { id: "ru", label: "Русский" },
 ];
 
-export function SettingsLanguage({
-  config,
-  onChangeConfig,
-}: SettingsLanguageProps) {
+export function SettingsLanguage({ config, onChangeConfig }: SettingsLanguageProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -45,10 +37,7 @@ export function SettingsLanguage({
         <Globe size={14} color={theme.colors.mutedFg} />
         <Label>{t("settings.language")}</Label>
       </Row>
-      <NavigationRoot
-        value={config.launcherLang || "en"}
-        onValueChange={handleLanguageChange}
-      >
+      <NavigationRoot value={config.launcherLang || "en"} onValueChange={handleLanguageChange}>
         <SegmentedNav items={LANG_ITEMS} itemWidth={100} itemHeight={32} />
       </NavigationRoot>
     </Column>

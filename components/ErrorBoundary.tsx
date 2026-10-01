@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     logger.error(
       "ErrorBoundary",
-      `React UI Exception: ${errorMsg}${reactDocUrl}\nComponent Stack: ${componentStack}\nError Stack: ${stack}`
+      `React UI Exception: ${errorMsg}${reactDocUrl}\nComponent Stack: ${componentStack}\nError Stack: ${stack}`,
     );
   }
 

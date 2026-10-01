@@ -1,8 +1,8 @@
+import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { spawn } from "node:child_process";
-import { isWindows } from "@/lib/utils/os";
 import { logger } from "@/lib/logger";
+import { isWindows } from "@/lib/utils/os";
 
 const BINARY_NAME = "raf-settings.exe";
 
@@ -61,7 +61,6 @@ export function hasSettingsCli(forceRefresh = false): boolean {
   return cachedCliAvailable;
 }
 
-
 export interface CliExecutionResult {
   success: boolean;
   stdout: string;
@@ -72,9 +71,7 @@ export interface CliExecutionResult {
 /**
  * Запуск утилиты raf-settings с передачей аргументов
  */
-export async function executeSettingsCli(
-  args: string[],
-): Promise<CliExecutionResult> {
+export async function executeSettingsCli(args: string[]): Promise<CliExecutionResult> {
   const cliPath = getSettingsCliPath();
 
   if (!isWindows()) {

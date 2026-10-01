@@ -1,7 +1,8 @@
+import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { useState } from "react";
-export interface EventPayload { [key: string]: any; }
-import type { StyleDesc } from "@gpuix/react";
 import { theme } from "../theme";
+
+export type { EventPayload };
 
 export interface InputProps {
   value: string;

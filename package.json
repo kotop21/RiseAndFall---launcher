@@ -7,11 +7,16 @@
   "scripts": {
     "dev": "bun index.tsx",
     "typecheck": "tsc --noEmit",
+    "check": "biome check .",
+    "fix": "biome check --write --unsafe .",
+    "lint": "bun run typecheck && bun run check",
     "test": "bun test",
-    "prebuild": "bun run typecheck && bun run test",
+    "prebuild": "bun run lint && bun run test",
+    "precommit": "bun run lint",
     "build": "python3 build.py"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@gpuix/native-win32-x64-msvc": "^0.7.0",
     "@types/bun": "latest",
     "@types/react": "^19.0.0",

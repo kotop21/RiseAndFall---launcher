@@ -28,7 +28,9 @@ export const WrenchIcon = Wrench;
 export const RefreshCw: FC<PresetIconProps> = (props) => <Icon name="RefreshCw" {...props} />;
 export const RefreshCwIcon = RefreshCw;
 
-export const SlidersHorizontal: FC<PresetIconProps> = (props) => <Icon name="SlidersHorizontal" {...props} />;
+export const SlidersHorizontal: FC<PresetIconProps> = (props) => (
+  <Icon name="SlidersHorizontal" {...props} />
+);
 export const SlidersHorizontalIcon = SlidersHorizontal;
 
 export const Tag: FC<PresetIconProps> = (props) => <Icon name="Tag" {...props} />;
@@ -67,7 +69,9 @@ export const Trash2Icon = Trash2;
 export const Globe: FC<PresetIconProps> = (props) => <Icon name="Globe" {...props} />;
 export const GlobeIcon = Globe;
 
-export const AlertTriangle: FC<PresetIconProps> = (props) => <Icon name="AlertTriangle" {...props} />;
+export const AlertTriangle: FC<PresetIconProps> = (props) => (
+  <Icon name="AlertTriangle" {...props} />
+);
 export const AlertTriangleIcon = AlertTriangle;
 
 export const ArrowLeft: FC<PresetIconProps> = (props) => <Icon name="ArrowLeft" {...props} />;
@@ -75,3 +79,6 @@ export const ArrowLeftIcon = ArrowLeft;
 
 export const RotateCcw: FC<PresetIconProps> = (props) => <Icon name="RotateCcw" {...props} />;
 export const RotateCcwIcon = RotateCcw;
+
+export const Heart: FC<PresetIconProps> = (props) => <Icon name="Heart" {...props} />;
+export const HeartIcon = Heart;

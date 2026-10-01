@@ -1,6 +1,6 @@
-import { readdir, rm, rename, mkdir } from "node:fs/promises";
-import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
+import { mkdir, readdir, rename, rm } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { logger } from "@/lib/logger";
 
 export async function cleanGameDirectory(targetDir: string): Promise<boolean> {
@@ -63,4 +63,3 @@ export async function cleanGameDirectory(targetDir: string): Promise<boolean> {
     return false;
   }
 }
-

@@ -1,14 +1,8 @@
-import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode } from "react";
 import { theme } from "../theme";
 
-export function Card({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function Card({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <div
       style={{
@@ -28,17 +22,9 @@ export function Card({
   );
 }
 
-export function CardHeader({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function CardHeader({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, ...style }}>
-      {children}
-    </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, ...style }}>{children}</div>
   );
 }
 
@@ -71,29 +57,13 @@ export function CardDescription({ children }: { children: ReactNode }) {
   );
 }
 
-export function CardContent({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function CardContent({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
-    <div
-      style={{ display: "flex", flexDirection: "column", gap: 16, ...style }}
-    >
-      {children}
-    </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, ...style }}>{children}</div>
   );
 }
 
-export function CardFooter({
-  children,
-  style = {},
-}: {
-  children: ReactNode;
-  style?: StyleDesc;
-}) {
+export function CardFooter({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
   return (
     <div
       style={{
