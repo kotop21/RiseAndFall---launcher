@@ -9,20 +9,24 @@ interface WelcomeViewProps {
   onAutoDetectLanguage?: (lang: "en" | "ru" | "ua") => void;
   onSelectExistingGame: (gameDir: string) => Promise<void> | void;
   onNavigateInstall: () => void;
+  skipAutoDetect?: boolean;
 }
 
 export function WelcomeView({
   onAutoDetectLanguage,
   onSelectExistingGame,
   onNavigateInstall,
+  skipAutoDetect = false,
 }: WelcomeViewProps) {
   const { t } = useTranslation();
   const [slide, setSlide] = useState<"greeting" | "preparing" | "choice">("greeting");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    const detected = detectSystemLanguage();
-    onAutoDetectLanguage?.(detected);
+    if (!skipAutoDetect) {
+      const detected = detectSystemLanguage();
+      onAutoDetectLanguage?.(detected);
+    }
 
     timers.current.push(
       setTimeout(() => {
@@ -43,7 +47,7 @@ export function WelcomeView({
 
       timers.current = [];
     };
-  }, [onAutoDetectLanguage]);
+  }, [onAutoDetectLanguage, skipAutoDetect]);
 
   return (
     <div

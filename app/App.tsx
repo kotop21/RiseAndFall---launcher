@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { saveConfig } from "@/lib/config/save";
 import type { LauncherConfig } from "@/lib/config/types";
+import { getDevArgs } from "@/lib/dev/cli";
 import { LanguageProvider } from "@/lib/lang";
 import { installationManager } from "@/lib/manager/install";
 import { Flex, ToastProvider, theme, View, Views } from "@/ui";
@@ -16,9 +17,23 @@ interface AppProps {
 }
 
 export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
-  const [config, setConfig] = useState<LauncherConfig>(initialConfig);
+  const devArgs = getDevArgs();
+  const [config, setConfig] = useState<LauncherConfig>(() => {
+    if (devArgs.isDev && devArgs.lang) {
+      return { ...initialConfig, launcherLang: devArgs.lang };
+    }
+    return initialConfig;
+  });
+
+  const getInitialView = (): "welcome" | "main" | "settings" | "install" => {
+    if (devArgs.isDev && devArgs.view) {
+      return devArgs.view;
+    }
+    return isFirstLaunch ? "welcome" : "main";
+  };
+
   const [activeView, setActiveView] = useState<"welcome" | "main" | "settings" | "install">(
-    isFirstLaunch ? "welcome" : "main",
+    getInitialView,
   );
   const [installSource, setInstallSource] = useState<"main" | "settings">("main");
 
@@ -31,6 +46,9 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
   };
 
   const handleAutoDetectLanguage = (detectedLang: "en" | "ru" | "ua") => {
+    if (devArgs.isDev && devArgs.disableAutoDetectLanguage) {
+      return;
+    }
     const nextCfg: LauncherConfig = { ...config, launcherLang: detectedLang };
     handleUpdateConfig(nextCfg);
   };
@@ -90,6 +108,7 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
           >
             <View id="welcome" transition="fade" style={{ width: "100%", height: "100%" }}>
               <WelcomeView
+                skipAutoDetect={devArgs.isDev && devArgs.disableAutoDetectLanguage}
                 onAutoDetectLanguage={handleAutoDetectLanguage}
                 onSelectExistingGame={handleSelectExistingFromWelcome}
                 onNavigateInstall={() => {

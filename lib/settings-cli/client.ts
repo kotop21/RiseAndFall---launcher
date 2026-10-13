@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { getDevArgs } from "@/lib/dev/cli";
 import { logger } from "@/lib/logger";
 import { isWindows } from "@/lib/utils/os";
 
@@ -50,6 +51,10 @@ export function getSettingsCliPath(): string {
 let cachedCliAvailable: boolean | null = null;
 
 export function hasSettingsCli(forceRefresh = false): boolean {
+  const devArgs = getDevArgs();
+  if (devArgs.isDev && devArgs.mockRelease) {
+    return true;
+  }
   if (!isWindows()) {
     return false;
   }

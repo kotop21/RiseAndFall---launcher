@@ -1,6 +1,7 @@
 import "./scripts/runtime-napi";
 import { render } from "@gpuix/react";
 import { initConfig } from "@/lib/config";
+import { getDevArgs } from "@/lib/dev/cli";
 import { discordRpc } from "@/lib/discord-rpc";
 import { initLogger, logger } from "@/lib/logger";
 import { installationManager } from "@/lib/manager/install";
@@ -13,17 +14,18 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 initLogger(getLauncherVersion());
 
 async function main() {
+  const devArgs = getDevArgs();
   const { config, isFirstLaunch } = await initConfig();
   discordRpc.init(config.discordRpc);
   launcherTracker.init(config.launcherPlaytimeMinutes || 0);
 
   const windowOptions = {
     title: `Raf-Launcher v${getLauncherVersion()}`,
-    width: 700,
-    height: 520,
-    minWidth: 700,
-    minHeight: 520,
-    lowSpecMode: Boolean(config.lowPerformanceMode),
+    width: 720,
+    height: 590,
+    minWidth: 720,
+    minHeight: 590,
+    lowSpecMode: Boolean(config.lowPerformanceMode || (devArgs.isDev && devArgs.lowSpec)),
   };
 
   const { renderer, startLoop } = setupAdaptiveRenderer(windowOptions);

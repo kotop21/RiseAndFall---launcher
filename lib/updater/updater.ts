@@ -5,29 +5,14 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { isDevMode } from "@/lib/dev/cli";
 import { extractZip } from "@/lib/explorer/extract";
 import type { ReleaseItem } from "@/lib/github/types";
 import { logger } from "@/lib/logger";
 import { setBackgroundActivity } from "@/lib/render/frame-loop";
 import type { UpdateOptions, UpdateResult } from "./types";
 
-export function isDevMode(): boolean {
-  if (process.platform !== "win32") {
-    return true;
-  }
-  const exec = process.execPath.toLowerCase();
-  if (exec.includes("bun") || exec.includes("node")) {
-    return true;
-  }
-  if (!exec.endsWith(".exe")) {
-    return true;
-  }
-  const mainArg = process.argv[1] || "";
-  if (mainArg.endsWith(".tsx") || mainArg.endsWith(".ts")) {
-    return true;
-  }
-  return false;
-}
+export { isDevMode };
 
 export function resolveDownloadUrl(release: ReleaseItem): string | null {
   if (release.downloadUrl) {

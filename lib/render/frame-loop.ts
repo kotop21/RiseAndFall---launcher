@@ -1,5 +1,6 @@
 import { createRenderer, type EventPayload, type GpuixRenderer } from "@gpuix/react";
 import { setLowSpecMode } from "@/components/ui/motion-compat";
+import { getDevArgs } from "@/lib/dev/cli";
 
 interface FrameLoopOptions {
   onTerminated?: () => void;
@@ -55,10 +56,11 @@ export function setupAdaptiveRenderer(windowOptions: {
   const renderer = createRenderer(handleEvent) as GpuixRenderer;
   renderer.init(windowOptions);
 
+  const devArgs = getDevArgs();
   const isLowSpec = Boolean(
     windowOptions.lowSpecMode ||
       process.env.RAF_LOW_SPEC === "1" ||
-      process.argv.includes("--low-spec"),
+      (devArgs.isDev && devArgs.lowSpec),
   );
 
   if (isLowSpec) {

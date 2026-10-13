@@ -1,5 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { getDevArgs } from "@/lib/dev/cli";
 import { getConfigPath } from "./config/dir";
 
 let logFilePath: string | null = null;
@@ -36,23 +37,28 @@ export function flushLogs(): void {
 export function initLogger(launcherVersion: string): void {
   if (isSilenced) return;
 
+  const devArgs = getDevArgs();
+  const shouldWriteLogFile = !devArgs.isDev || devArgs.logFile;
+
   try {
-    const configDir = dirname(getConfigPath());
-    const logsDir = join(configDir, "logs");
-    mkdirSync(logsDir, { recursive: true });
+    if (shouldWriteLogFile) {
+      const configDir = dirname(getConfigPath());
+      const logsDir = join(configDir, "logs");
+      mkdirSync(logsDir, { recursive: true });
 
-    const now = new Date();
-    const y = now.getFullYear();
-    const mo = formatDigits(now.getMonth() + 1);
-    const d = formatDigits(now.getDate());
-    const h = formatDigits(now.getHours());
-    const mi = formatDigits(now.getMinutes());
-    const s = formatDigits(now.getSeconds());
+      const now = new Date();
+      const y = now.getFullYear();
+      const mo = formatDigits(now.getMonth() + 1);
+      const d = formatDigits(now.getDate());
+      const h = formatDigits(now.getHours());
+      const mi = formatDigits(now.getMinutes());
+      const s = formatDigits(now.getSeconds());
 
-    logFilePath = join(logsDir, `launcher_${y}-${mo}-${d}_${h}-${mi}-${s}.log`);
+      logFilePath = join(logsDir, `launcher_${y}-${mo}-${d}_${h}-${mi}-${s}.log`);
 
-    flushTimer = setInterval(flushLogs, 5000);
-    if (flushTimer.unref) flushTimer.unref();
+      flushTimer = setInterval(flushLogs, 5000);
+      if (flushTimer.unref) flushTimer.unref();
+    }
 
     const onProcessExit = () => {
       flushLogs();

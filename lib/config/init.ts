@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { pack, unpack } from "msgpackr";
+import { getDevArgs } from "@/lib/dev/cli";
 import { logger } from "@/lib/logger";
 import { getConfigPath } from "./dir";
 import {
@@ -51,6 +52,14 @@ export async function initConfig(): Promise<{
 }> {
   const filePath = getConfigPath();
   const forceWelcome = isForceWelcome();
+  const devArgs = getDevArgs();
+
+  const applyDevConfigOverrides = (targetConfig: LauncherConfig): LauncherConfig => {
+    if (devArgs.isDev && devArgs.lang) {
+      return { ...targetConfig, launcherLang: devArgs.lang };
+    }
+    return targetConfig;
+  };
 
   try {
     await mkdir(dirname(filePath), { recursive: true });
@@ -67,7 +76,7 @@ export async function initConfig(): Promise<{
     } catch (err) {
       logger.error("config", `Failed writing default config to ${filePath}:`, err);
     }
-    return { config: DEFAULT_CONFIG, isFirstLaunch: true };
+    return { config: applyDevConfigOverrides(DEFAULT_CONFIG), isFirstLaunch: true };
   }
 
   try {
@@ -84,7 +93,7 @@ export async function initConfig(): Promise<{
       }
     }
 
-    return { config, isFirstLaunch: forceWelcome };
+    return { config: applyDevConfigOverrides(config), isFirstLaunch: forceWelcome };
   } catch (err) {
     logger.error(
       "config",
@@ -96,6 +105,6 @@ export async function initConfig(): Promise<{
     } catch (writeErr) {
       logger.error("config", `Failed recreating fallback config at ${filePath}:`, writeErr);
     }
-    return { config: DEFAULT_CONFIG, isFirstLaunch: true };
+    return { config: applyDevConfigOverrides(DEFAULT_CONFIG), isFirstLaunch: true };
   }
 }
