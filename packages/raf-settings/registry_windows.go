@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"golang.org/x/sys/windows/registry"
 )
@@ -80,6 +79,10 @@ func RunExport(targetDir string) error {
 			targetRegPath = RootRegistryPath + `\` + relSub
 		}
 
+		if IsIgnoredSection(secKey) {
+			continue
+		}
+
 		k, err := registry.OpenKey(registry.CURRENT_USER, targetRegPath, registry.QUERY_VALUE)
 		if err != nil {
 			continue
@@ -93,8 +96,7 @@ func RunExport(targetDir string) error {
 
 		sectionMap := make(map[string]any)
 		for _, name := range valNames {
-			trimmedName := strings.TrimSpace(name)
-			if IgnoredKeys[trimmedName] || IgnoredKeys[name] {
+			if IsIgnoredKey(name) {
 				totalIgnored++
 				continue
 			}
@@ -121,7 +123,9 @@ func RunExport(targetDir string) error {
 		}
 		k.Close()
 
-		data.Settings[secKey] = sectionMap
+		if len(sectionMap) > 0 || secKey == "root" {
+			data.Settings[secKey] = sectionMap
+		}
 	}
 
 	if totalExported == 0 {
@@ -167,6 +171,11 @@ func RunImport(filePath string) error {
 	skippedSecurity := 0
 
 	for section, values := range payload.Settings {
+		if IsIgnoredSection(section) {
+			skippedSecurity += len(values)
+			continue
+		}
+
 		targetPath := RootRegistryPath
 		if section != "root" {
 			targetPath = RootRegistryPath + `\` + section
@@ -178,8 +187,7 @@ func RunImport(filePath string) error {
 		}
 
 		for valName, rawVal := range values {
-			cleanName := strings.TrimSpace(valName)
-			if IgnoredKeys[cleanName] || IgnoredKeys[valName] {
+			if IsIgnoredKey(valName) {
 				skippedSecurity++
 				continue
 			}

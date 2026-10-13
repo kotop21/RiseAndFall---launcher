@@ -65,7 +65,7 @@ raf-settings.exe import <json_file_path>
 
 The following keys are strictly excluded from both export and import:
 
-* **Secrets & Accounts:** `GameSpy CD Key`, `GameSpy Password`, `GameSpy Remember Password`, `GameSpy Account Name`, `Player Name`, `Host Game Name`, `MatchMaking.com Game Name`, `GameSpy Last Game Created`, `GameSpy Last Max Players`, `GameSpy Allow Buddy Chat`, `GameSpy Automatch *`.
+* **Secrets & Accounts:** All `GameSpy` keys and subkeys (dynamically and case-insensitively ignored: passwords, CD keys, accounts, automatch, etc.), `Player Name`, `Host Game Name`, `MatchMaking.com Game Name`.
 * **Hardware & System:** `Graphics Device ID`, `Graphics Vendor ID`, `Graphics Autodetect Version`, `Network Adapter`, `System RAM Size`, `Rasterizer Name`.
 * **Local Paths:** `Install Directory`, `Rise Install`.
 * **Session Cache & Saves:** `Last Auto Save`, `Last Game File`, `Last Quick Save`, `Last Scenario File`, `Last Open Post Game Stats Page`.

@@ -14,46 +14,54 @@ const (
 )
 
 var IgnoredKeys = map[string]bool{
-	// Секреты, мультиплеер и учетные записи
-	"GameSpy CD Key":                 true,
-	"GameSpy Password":               true,
-	"GameSpy Remember Password":      true,
-	"GameSpy Account Name":           true,
-	"Player Name":                    true,
-	"Host Game Name":                 true,
-	"MatchMaking.com Game Name":       true,
-	"GameSpy Last Game Created":       true,
-	"GameSpy Last Max Players":        true,
-	"GameSpy Allow Buddy Chat":        true,
-	"GameSpy Automatch Epoch Pref":    true,
-	"GameSpy Automatch Game Variant":  true,
-	"GameSpy Automatch Map Pref":      true,
-	"GameSpy Automatch Middle Age Civ": true,
-	"GameSpy Automatch Number Of Players": true,
-	"GameSpy Automatch World War Civ": true,
+	// Секреты, мультиплеер и учетные записи (не-GameSpy)
+	"Player Name":               true,
+	"Host Game Name":            true,
+	"MatchMaking.com Game Name": true,
 
 	// Аппаратные ID и конфигурация железа
-	"Graphics Device ID":              true,
-	"Graphics Vendor ID":              true,
-	"Graphics Autodetect Version":     true,
-	"Network Adapter":                 true,
-	"System RAM Size":                 true,
-	"Rasterizer Name":                 true,
+	"Graphics Device ID":          true,
+	"Graphics Vendor ID":          true,
+	"Graphics Autodetect Version": true,
+	"Network Adapter":             true,
+	"System RAM Size":             true,
+	"Rasterizer Name":             true,
 
 	// Локальные пути файловой системы
-	"Install Directory":               true,
-	"Rise Install":                    true,
+	"Install Directory": true,
+	"Rise Install":      true,
 
 	// Состояния игры, сейвы и сессии
-	"Last Auto Save":                  true,
-	"Last Game File":                  true,
-	"Last Quick Save":                 true,
-	"Last Scenario File":              true,
-	"Last Open Post Game Stats Page":  true,
+	"Last Auto Save":                 true,
+	"Last Game File":                 true,
+	"Last Quick Save":                true,
+	"Last Scenario File":             true,
+	"Last Open Post Game Stats Page": true,
 
 	// Системные флаги реестра
-	"Rise and Fall":                   true,
-	"Version Number":                  true,
+	"Rise and Fall":  true,
+	"Version Number": true,
+}
+
+// IsIgnoredSection checks if an entire registry section/subkey should be skipped.
+func IsIgnoredSection(section string) bool {
+	lower := strings.ToLower(strings.TrimSpace(section))
+	return strings.Contains(lower, "gamespy")
+}
+
+// IsIgnoredKey checks if a registry parameter should be excluded from export/import.
+// It completely and case-insensitively ignores any parameter containing "gamespy",
+// as well as matching against the static map of sensitive/hardware keys.
+func IsIgnoredKey(key string) bool {
+	trimmed := strings.TrimSpace(key)
+	if trimmed == "" {
+		return true
+	}
+	lower := strings.ToLower(trimmed)
+	if strings.Contains(lower, "gamespy") {
+		return true
+	}
+	return IgnoredKeys[trimmed] || IgnoredKeys[key]
 }
 
 type SettingsPayload struct {
@@ -104,13 +112,16 @@ func ValidateSettings(payload *SettingsPayload) error {
 		if strings.Contains(section, "..") || strings.ContainsAny(section, `/*?<>|`) {
 			return fmt.Errorf("malformed section key: %q", section)
 		}
+		if IsIgnoredSection(section) {
+			continue
+		}
 
 		for key, val := range values {
 			cleanKey := strings.TrimSpace(key)
 			if cleanKey == "" {
 				return fmt.Errorf("empty parameter name detected in section [%s]", section)
 			}
-			if IgnoredKeys[cleanKey] {
+			if IsIgnoredKey(cleanKey) {
 				continue
 			}
 
