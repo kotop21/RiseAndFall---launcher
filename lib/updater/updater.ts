@@ -28,7 +28,8 @@ export function resolveDownloadUrl(release: ReleaseItem): string | null {
   }
 
   const ver = release.version.trim();
-  return `https://github.com/kotop21/RiseAndFall---launcher/releases/download/${ver}/RiseAndFall-launcher_${ver}.zip`;
+  const vTag = ver.startsWith("v") ? ver : `v${ver}`;
+  return `https://github.com/kotop21/RiseAndFall---launcher/releases/download/${ver}/RiseAndFall-Launcher_Portable_${vTag}.zip`;
 }
 
 function findExecutableInDir(dir: string): string | null {

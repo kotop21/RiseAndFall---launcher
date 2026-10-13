@@ -117,13 +117,44 @@ jobs:
           cp node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node dist/
 
           RELEASE_VERSION=$(node -p "require('./package.json').version")
-          powershell -Command "Compress-Archive -Path dist/raf-launcher.exe, dist/gpuix-native.win32-x64-msvc.node, dist/bin -DestinationPath dist/RiseAndFall-launcher_v${RELEASE_VERSION}.zip -Force"
+          powershell -Command "Compress-Archive -Path dist/raf-launcher.exe, dist/gpuix-native.win32-x64-msvc.node, dist/bin -DestinationPath dist/RiseAndFall-Launcher_Portable_v${RELEASE_VERSION}.zip -Force"
+
+      - name: Build Windows Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $isccPath = (Get-Command "ISCC.exe" -ErrorAction SilentlyContinue)?.Source
+          if (-not $isccPath) {
+            if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+              $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+            } elseif (Test-Path "C:\Program Files\Inno Setup 6\ISCC.exe") {
+              $isccPath = "C:\Program Files\Inno Setup 6\ISCC.exe"
+            } else {
+              Write-Host "Inno Setup not found. Installing via Chocolatey..."
+              choco install innosetup --no-progress -y
+              if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+                $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+              } elseif (Test-Path "C:\Program Files\Inno Setup 6\ISCC.exe") {
+                $isccPath = "C:\Program Files\Inno Setup 6\ISCC.exe"
+              }
+            }
+          }
+
+          if (-not $isccPath -or -not (Test-Path $isccPath)) {
+            Write-Error "Failed to locate ISCC.exe"
+            exit 1
+          }
+
+          Write-Host "Using ISCC at: $isccPath"
+          & $isccPath "/DMyAppVersion=$version" installer.iss
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: raf-launcher-windows-release-zip
-          path: dist/RiseAndFall-launcher_*.zip
+          name: raf-launcher-windows-release
+          path: |
+            dist/RiseAndFall-Launcher_Setup_*.exe
+            dist/RiseAndFall-Launcher_Portable_*.zip
 
       - name: Create Draft GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -132,4 +163,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           draft: true
-          files: dist/RiseAndFall-launcher_*.zip
+          preserve_order: true
+          files: |
+            dist/RiseAndFall-Launcher_Setup_*.exe
+            dist/RiseAndFall-Launcher_Portable_*.zip
+
