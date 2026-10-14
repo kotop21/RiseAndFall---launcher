@@ -19,7 +19,8 @@
     "dgVoodooMissing": "dgVoodoo Missing",
     "latestUpdate": "Latest",
     "lastLaunch": "Last played: {date}",
-    "neverPlayed": "Never played"
+    "neverPlayed": "Never played",
+    "noUpdatesData": "No update data available"
   },
   "header": {
     "currentOnline": "Current Online:",
@@ -66,6 +67,8 @@
     "subReinstall": "Cleans existing game files except Data/Saved Games and downloads fresh copy",
     "targetDir": "Target Installation Directory",
     "targetWarning": "All game files will be refreshed. Saves in Data/Saved Games are preserved.",
+    "targetWarningWithManifest": "Cleaned by manifest. Saves in Data/Saved Games are preserved.",
+    "targetWarningNoManifest": "Manifest not found. Full folder cleanup (saves preserved).",
     "installDir": "Installation Directory",
     "langPack": "Game Language Pack",
     "ready": "Ready",
@@ -76,6 +79,7 @@
     "btnInstall": "Download & Install",
     "btnReinstall": "Reinstall Game",
     "btnReinstallConfirm": "Confirm Reinstall (Click Again)",
+    "btnReinstallConfirmNoManifest": "Clean and reinstall",
     "statusStarting": "Starting installation...",
     "statusPreparingReinstall": "Preparing reinstall...",
     "fetchingManifest": "Fetching installation manifest...",
@@ -94,6 +98,7 @@
     "revert": "Revert",
     "update": "Update",
     "updating": "Updating...",
+    "alreadyInstalled": "Already installed",
     "donate": "Donate",
     "donateTooltip": "Runs on personal hardware & time. Thanks for supporting!"
   },

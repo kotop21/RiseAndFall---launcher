@@ -19,7 +19,8 @@
     "dgVoodooMissing": "dgVoodoo Відсутній",
     "latestUpdate": "Останнє",
     "lastLaunch": "Останній запуск: {date}",
-    "neverPlayed": "Ще не запускалась"
+    "neverPlayed": "Ще не запускалась",
+    "noUpdatesData": "Немає даних про оновлення"
   },
   "header": {
     "currentOnline": "Онлайн:",
@@ -66,6 +67,8 @@
     "subReinstall": "Очищає файли гри (крім Data/Saved Games) та завантажує заново",
     "targetDir": "Цільова тека встановлення",
     "targetWarning": "Усі файли буде оновлено. Збереження в Data/Saved Games залишаються.",
+    "targetWarningWithManifest": "Очищення за маніфестом. Збереження у Data/Saved Games залишаються.",
+    "targetWarningNoManifest": "Маніфест не знайдено. Повне очищення папки (збереження залишаються).",
     "installDir": "Тека встановлення",
     "langPack": "Мовний пакет гри",
     "ready": "Готово",
@@ -76,6 +79,7 @@
     "btnInstall": "Завантажити та встановити",
     "btnReinstall": "Перевстановити гру",
     "btnReinstallConfirm": "Підтвердити перевстановлення",
+    "btnReinstallConfirmNoManifest": "Очистити та перевстановити",
     "statusStarting": "Початок встановлення...",
     "statusPreparingReinstall": "Підготовка до перевстановлення...",
     "fetchingManifest": "Отримання маніфесту встановлення...",
@@ -94,6 +98,7 @@
     "revert": "Скинути",
     "update": "Оновити",
     "updating": "Оновлення...",
+    "alreadyInstalled": "Вже встановлено",
     "donate": "Донат",
     "donateTooltip": "Тримається на власному залізі та часі. Дякую за підтримку!"
   },

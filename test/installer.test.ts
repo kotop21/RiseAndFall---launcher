@@ -33,6 +33,9 @@ describe("Installer: Validation & Error Handling", () => {
     const targetDir = join(tmpdir(), `raf-install-abort-${Date.now()}`);
     await mkdir(targetDir, { recursive: true });
 
+    const preExisting = join(targetDir, "important_user_doc.txt");
+    await writeFile(preExisting, "IMPORTANT_DATA");
+
     const controller = new AbortController();
     controller.abort();
 
@@ -44,6 +47,10 @@ describe("Installer: Validation & Error Handling", () => {
 
     expect(res.success).toBe(false);
     expect(res.error?.code).toBe("INSTALL_CANCELLED");
+
+    // Ensure safe abort does not wipe existing directory contents
+    expect(await exists(preExisting)).toBe(true);
+    expect(await readFile(preExisting, "utf-8")).toBe("IMPORTANT_DATA");
 
     await rm(targetDir, { recursive: true, force: true });
   });
@@ -158,6 +165,17 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
       // Verify saved game file was preserved!
       expect(await exists(saveFilePath)).toBe(true);
       expect(await readFile(saveFilePath, "utf-8")).toBe("MY_CAMPAIGN_SAVE");
+
+      // Verify manifest created in .launcher/install_manifest.json
+      const manifestPath = join(targetDir, ".launcher", "install_manifest.json");
+      expect(await exists(manifestPath)).toBe(true);
+      const manifestData = JSON.parse(await readFile(manifestPath, "utf-8"));
+      expect(manifestData.packages).toEqual(["game", "lang_en", "mod_bfm"]);
+      expect(manifestData.files).toContain("RiseAndFall.exe");
+      expect(manifestData.files).toContain("version.txt");
+      expect(manifestData.files).toContain("lang.txt");
+      expect(manifestData.files).toContain("mod.txt");
+      expect(manifestData.files.some((f: string) => f.includes("Saved Games"))).toBe(false);
 
       // Verify dynamic names in progress messages
       const fullLog = progressMessages.join(" ");

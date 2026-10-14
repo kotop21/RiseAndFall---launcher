@@ -21,9 +21,11 @@ import { extractZip } from "@/lib/explorer/extract";
 import { getCurrentLanguage, getTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
 import { setBackgroundActivity } from "@/lib/render/frame-loop";
+import { recordInstalledFiles, scanFileStats } from "./install-manifest";
 import { ensureInstallDir } from "./install-path";
 
 export * from "./install-manager";
+export * from "./install-manifest";
 export * from "./install-path";
 export { formatSpeed };
 
@@ -141,6 +143,8 @@ async function doInstallGamePackage({
     }
   }
 
+  const initialUserFiles = await scanFileStats(cleanDir);
+
   logger.info("install", "Fetching installation manifest...");
   onProgress?.({
     status: "downloading",
@@ -187,9 +191,6 @@ async function doInstallGamePackage({
 
   for (let i = 0; i < packages.length; i++) {
     if (signal?.aborted) {
-      try {
-        await cleanGameDirectory(cleanDir);
-      } catch {}
       return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
     }
 
@@ -234,9 +235,6 @@ async function doInstallGamePackage({
       } catch {}
 
       if (signal?.aborted) {
-        try {
-          await cleanGameDirectory(cleanDir);
-        } catch {}
         return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
       }
 
@@ -253,7 +251,6 @@ async function doInstallGamePackage({
     if (signal?.aborted) {
       try {
         await unlink(tempArchivePath);
-        await cleanGameDirectory(cleanDir);
       } catch {}
       return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
     }
@@ -269,6 +266,7 @@ async function doInstallGamePackage({
         throw createLauncherError("EXTRACTION_FAILED");
       }
       logger.info("install", `Package extracted successfully: ${pkg.name} (${pkg.id})`);
+      await recordInstalledFiles(cleanDir, pkg.id, initialUserFiles);
     } catch (err: unknown) {
       try {
         await unlink(tempArchivePath);
@@ -278,9 +276,6 @@ async function doInstallGamePackage({
       logger.error("install", `Error while extracting package ${pkg.id}:`, normalized);
 
       if (normalized.code === "INSTALL_CANCELLED" || signal?.aborted) {
-        try {
-          await cleanGameDirectory(cleanDir);
-        } catch {}
         return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
       }
 
