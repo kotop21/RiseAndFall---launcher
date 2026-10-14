@@ -10,6 +10,13 @@ export async function cleanGameDirectory(targetDir: string): Promise<boolean> {
     return false;
   }
 
+  // Защита: ни в коем случае не очищать корень файловой системы или корень диска Windows
+  const rootOnly = cleanRoot.replace(/[\\/]+$/, "");
+  if (rootOnly === "" || /^[a-zA-Z]:$/.test(rootOnly)) {
+    logger.error("clean", `Refusing to clean root directory: ${cleanRoot}`);
+    return false;
+  }
+
   const savedGamesPath = resolve(join(cleanRoot, "Data", "Saved Games"));
   const hasSavedGames = existsSync(savedGamesPath);
   const tempSavedPath = join(cleanRoot, `.temp_saved_${Date.now()}`);

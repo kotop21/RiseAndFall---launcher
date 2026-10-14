@@ -3,7 +3,7 @@ import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigatio
 import { AlertTriangle, CheckCircle, Download, Folder, Globe, RefreshCw } from "@/icon";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
-import { useInstallation } from "@/lib/manager/install";
+import { ensureInstallDir, GAME_INSTALL_DIR_NAME, useInstallation } from "@/lib/manager/install";
 import { isWindows } from "@/lib/utils/os";
 import {
   Button,
@@ -46,10 +46,10 @@ export function GameInstaller({
   const isReinstall = isInstalling ? installation.isReinstall : isReinstallProp;
 
   const getInitialPath = () => {
-    if (installation.targetDir) return installation.targetDir;
-    if (defaultInstallPath) return defaultInstallPath;
+    if (installation.targetDir) return ensureInstallDir(installation.targetDir);
+    if (defaultInstallPath) return ensureInstallDir(defaultInstallPath);
     if (!isReinstall) {
-      return isWindows() ? "C:\\Games\\Rise and Fall" : "Rise and Fall";
+      return isWindows() ? `C:\\Games\\${GAME_INSTALL_DIR_NAME}` : GAME_INSTALL_DIR_NAME;
     }
     return "";
   };
@@ -118,7 +118,7 @@ export function GameInstaller({
 
       const pickedPath =
         typeof selected === "object" ? (selected as { path: string }).path : selected;
-      if (pickedPath) setInstallPath(pickedPath);
+      if (pickedPath) setInstallPath(ensureInstallDir(pickedPath));
     } catch (err) {
       toast(formatErrorToast(err, "FS_ACCESS_DENIED"));
     } finally {
@@ -127,8 +127,8 @@ export function GameInstaller({
   };
 
   const triggerInstallation = async () => {
-    const target = installPath.trim();
-    if (!target) {
+    const rawTarget = installPath.trim();
+    if (!rawTarget) {
       toast({
         title: t("toasts.installPathRequiredTitle"),
         description: t("toasts.installPathRequiredDesc"),
@@ -137,6 +137,8 @@ export function GameInstaller({
       return;
     }
 
+    const target = ensureInstallDir(rawTarget);
+    setInstallPath(target);
     setConfirmAbort(false);
 
     const res = await installation.startInstall({
@@ -209,7 +211,9 @@ export function GameInstaller({
               <Input
                 value={installPath}
                 onChange={setInstallPath}
-                placeholder="C:\\Games\\Rise and Fall"
+                placeholder={
+                  isWindows() ? `C:\\Games\\${GAME_INSTALL_DIR_NAME}` : GAME_INSTALL_DIR_NAME
+                }
                 disabled={isInstalling}
               />
             </div>

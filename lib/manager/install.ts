@@ -21,8 +21,10 @@ import { extractZip } from "@/lib/explorer/extract";
 import { getCurrentLanguage, getTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
 import { setBackgroundActivity } from "@/lib/render/frame-loop";
+import { ensureInstallDir } from "./install-path";
 
 export * from "./install-manager";
+export * from "./install-path";
 export { formatSpeed };
 
 export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" | "error";
@@ -80,8 +82,8 @@ async function doInstallGamePackage({
   error?: LauncherAppError;
 }> {
   const currentLang = getCurrentLanguage();
-  const cleanDir = targetDir.trim();
-  if (!cleanDir) {
+  const rawDir = targetDir.trim();
+  if (!rawDir) {
     logger.error("install", "Target directory is empty");
     return {
       success: false,
@@ -89,12 +91,36 @@ async function doInstallGamePackage({
     };
   }
 
+  const cleanDir = ensureInstallDir(rawDir);
+
   if (!(await ensureDirectory(cleanDir))) {
     logger.error("install", `Target directory is invalid or inaccessible: ${cleanDir}`);
     return {
       success: false,
       error: createLauncherError("TARGET_DIR_INVALID"),
     };
+  }
+
+  try {
+    let currentCfg: LauncherConfig = { ...DEFAULT_CONFIG };
+    const cfgPath = getConfigPath();
+    if (existsSync(cfgPath)) {
+      const raw = await readFile(cfgPath);
+      const data = (unpack(raw) || {}) as Record<string, unknown>;
+      currentCfg = migrateConfig(data).config;
+    }
+    const activeId = currentCfg.activeProfileId || "slot-1";
+    const updatedProfiles = (currentCfg.gameProfiles || DEFAULT_CONFIG.gameProfiles).map((p) =>
+      p.id === activeId ? { ...p, path: cleanDir } : p,
+    );
+    await saveConfig({
+      ...currentCfg,
+      gameDir: cleanDir,
+      gameProfiles: updatedProfiles,
+      launcherLang: currentLang,
+    });
+  } catch (cfgErr) {
+    logger.warn("install", "Failed persisting targetDir to config before install:", cfgErr);
   }
 
   if (cleanBeforeInstall) {

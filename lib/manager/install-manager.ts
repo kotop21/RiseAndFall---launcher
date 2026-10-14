@@ -4,6 +4,7 @@ import { createLauncherError, type LauncherAppError, normalizeError } from "@/li
 import { logger } from "@/lib/logger";
 import { invalidateGameStatusCache } from "@/lib/utils/game-status";
 import { type InstallProgress, type InstallStatus, installGamePackage } from "./install";
+import { ensureInstallDir } from "./install-path";
 
 export interface InstallationState {
   status: InstallStatus;
@@ -94,7 +95,8 @@ export class InstallationManager {
       });
     }
 
-    const { targetDir, lang, isReinstall = false, onInstalled } = params;
+    const { lang, isReinstall = false, onInstalled } = params;
+    const targetDir = ensureInstallDir(params.targetDir);
     const controller = new AbortController();
     this.currentAbortController = controller;
 

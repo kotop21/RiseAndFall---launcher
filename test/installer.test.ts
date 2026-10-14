@@ -121,7 +121,8 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
     const prevApi = process.env.API_URL;
     process.env.API_URL = `http://localhost:${server.port}`;
 
-    const targetDir = join(tmpdir(), `raf-game-installed-${Date.now()}`);
+    const baseDir = join(tmpdir(), `raf-game-installed-${Date.now()}`);
+    const targetDir = join(baseDir, "RiseAndFall-launcher");
     await mkdir(targetDir, { recursive: true });
 
     // Create a saved game to verify reinstall preservation
@@ -176,7 +177,7 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
       else delete process.env.API_URL;
 
       await rm(tempDir, { recursive: true, force: true });
-      await rm(targetDir, { recursive: true, force: true });
+      await rm(baseDir, { recursive: true, force: true });
     }
   });
 
@@ -225,7 +226,8 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
     const prevApi = process.env.API_URL;
     process.env.API_URL = `http://localhost:${server.port}`;
 
-    const targetDir = join(tmpdir(), `raf-fallback-target-${Date.now()}`);
+    const baseDir = join(tmpdir(), `raf-fallback-target-${Date.now()}`);
+    const targetDir = join(baseDir, "RiseAndFall-launcher");
     await mkdir(targetDir, { recursive: true });
 
     try {
@@ -244,7 +246,7 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
       else delete process.env.API_URL;
 
       await rm(tempDir, { recursive: true, force: true });
-      await rm(targetDir, { recursive: true, force: true });
+      await rm(baseDir, { recursive: true, force: true });
     }
   });
 
@@ -393,7 +395,8 @@ describe("Installation Manager: Background Singleton & State Management", () => 
   it("invokes onInstalled callbacks upon successful installation", async () => {
     const manager = new InstallationManager();
     const tempDir = join(tmpdir(), `raf-manager-success-temp-${Date.now()}`);
-    const targetDir = join(tmpdir(), `raf-manager-success-target-${Date.now()}`);
+    const baseDir = join(tmpdir(), `raf-manager-success-target-${Date.now()}`);
+    const targetDir = join(baseDir, "RiseAndFall-launcher");
     await mkdir(tempDir, { recursive: true });
     await mkdir(targetDir, { recursive: true });
 
@@ -447,7 +450,62 @@ describe("Installation Manager: Background Singleton & State Management", () => 
       if (prevApi) process.env.API_URL = prevApi;
       else delete process.env.API_URL;
       await rm(tempDir, { recursive: true, force: true });
-      await rm(targetDir, { recursive: true, force: true });
+      await rm(baseDir, { recursive: true, force: true });
+    }
+  });
+
+  it("automatically appends RiseAndFall-launcher when targetDir does not have it", async () => {
+    const manager = new InstallationManager();
+    const tempDir = join(tmpdir(), `raf-autoappend-temp-${Date.now()}`);
+    const rawTargetDir = join(tmpdir(), `raf-autoappend-raw-${Date.now()}`);
+    await mkdir(tempDir, { recursive: true });
+    await mkdir(rawTargetDir, { recursive: true });
+
+    const gameStaging = join(tempDir, "game_staging");
+    await mkdir(gameStaging, { recursive: true });
+    await writeFile(join(gameStaging, "RiseAndFall.exe"), "GAME_EXE");
+    const gameZip = join(tempDir, "game.zip");
+    await createZip(gameStaging, gameZip);
+
+    const server = Bun.serve({
+      port: 0,
+      fetch(req): Response {
+        const url = new URL(req.url);
+        if (url.pathname === "/api/manifest") {
+          return Response.json({
+            mode: "auto",
+            version: "1.0.0",
+            packages: [
+              {
+                id: "game",
+                name: "Base Game",
+                mirrors: [`${url.origin}/game.zip`],
+              },
+            ],
+          });
+        }
+        if (url.pathname === "/game.zip") {
+          return new Response(Bun.file(gameZip));
+        }
+        return new Response("Not found", { status: 404 });
+      },
+    });
+
+    const prevApi = process.env.API_URL;
+    process.env.API_URL = `http://localhost:${server.port}`;
+
+    try {
+      const res = await manager.startInstall({ targetDir: rawTargetDir, lang: "en" });
+      expect(res.success).toBe(true);
+      const expectedPath = join(rawTargetDir, "RiseAndFall-launcher");
+      expect(manager.getState().targetDir).toBe(expectedPath);
+      expect(await exists(join(expectedPath, "RiseAndFall.exe"))).toBe(true);
+    } finally {
+      server.stop(true);
+      if (prevApi) process.env.API_URL = prevApi;
+      else delete process.env.API_URL;
+      await rm(tempDir, { recursive: true, force: true });
+      await rm(rawTargetDir, { recursive: true, force: true });
     }
   });
 });
