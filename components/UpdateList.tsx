@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { ExternalLink } from "@/icon";
+import { ExternalLink, Globe } from "@/icon";
 import { openBrowser } from "@/lib/browser/open";
 import { formatErrorToast } from "@/lib/errors";
 import { fetchReleases, getCachedReleases } from "@/lib/github/releases";
 import type { ReleaseItem } from "@/lib/github/types";
 import { useTranslation } from "@/lib/lang";
-import { isDifferentVersion, updateLauncher } from "@/lib/updater";
+import { cleanVersion, compareVersions, isDifferentVersion, updateLauncher } from "@/lib/updater";
 import { getLauncherVersion } from "@/lib/utils/version";
 import { Badge, Button, Card, Column, Muted, P, Row, Skeleton, theme, useToast } from "@/ui";
 
@@ -19,6 +19,7 @@ export function UpdateList() {
   const [isLoading, setIsLoading] = useState(!cached);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgressText, setUpdateProgressText] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -28,6 +29,7 @@ export function UpdateList() {
         if (isMounted) {
           setReleases(data);
           setIsLoading(false);
+          setHasError(false);
 
           if (!hasNotifiedUpdate && data.length > 0) {
             const latest = data[0];
@@ -47,6 +49,7 @@ export function UpdateList() {
       .catch((err) => {
         if (isMounted) {
           setIsLoading(false);
+          setHasError(true);
           toast(formatErrorToast(err, "GITHUB_API_FAILED"));
         }
       });
@@ -196,6 +199,38 @@ export function UpdateList() {
     );
   }
 
+  if (!isLoading && (hasError || releases.length === 0)) {
+    return (
+      <Column
+        gap={8}
+        style={{
+          width: "100%",
+          paddingTop: 0,
+          paddingBottom: 15,
+          paddingLeft: 15,
+          paddingRight: 15,
+        }}
+      >
+        <Card
+          style={{
+            padding: 16,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Row gap={8} align="center">
+            <Globe size={16} color={theme.colors.mutedFg} />
+            <Muted>{t("main.noUpdatesData")}</Muted>
+          </Row>
+        </Card>
+      </Column>
+    );
+  }
+
+  const currentVer = getLauncherVersion();
+
   return (
     <Column
       gap={8}
@@ -209,6 +244,9 @@ export function UpdateList() {
     >
       {releases.map((release, index) => {
         const isLatest = index === 0;
+        const isAlreadyInstalled =
+          cleanVersion(release.version) === cleanVersion(currentVer) ||
+          compareVersions(release.version, currentVer) <= 0;
 
         return (
           <Card
@@ -231,21 +269,26 @@ export function UpdateList() {
               </Row>
 
               <Row gap={8} align="center">
-                {isLatest && (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    disabled={isUpdating}
-                    onClick={() => handleUpdate(release)}
-                    style={{
-                      height: 26,
-                      paddingLeft: 10,
-                      paddingRight: 10,
-                    }}
-                  >
-                    {isUpdating ? updateProgressText || t("buttons.updating") : t("buttons.update")}
-                  </Button>
-                )}
+                {isLatest &&
+                  (isAlreadyInstalled ? (
+                    <Muted>{t("buttons.alreadyInstalled")}</Muted>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      disabled={isUpdating}
+                      onClick={() => handleUpdate(release)}
+                      style={{
+                        height: 26,
+                        paddingLeft: 10,
+                        paddingRight: 10,
+                      }}
+                    >
+                      {isUpdating
+                        ? updateProgressText || t("buttons.updating")
+                        : t("buttons.update")}
+                    </Button>
+                  ))}
                 <Button
                   variant="ghost"
                   size="sm"

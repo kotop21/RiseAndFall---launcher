@@ -1,3 +1,4 @@
+import { getDevArgs } from "@/lib/dev";
 import { logger } from "@/lib/logger";
 import { MOCK_RELEASES } from "./mock";
 import type { ReleaseAsset, ReleaseItem } from "./types";
@@ -55,6 +56,12 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
   if (!forceRefresh && cachedReleases) return cachedReleases;
   if (!forceRefresh && inFlightRequest) return inFlightRequest;
 
+  const devArgs = getDevArgs();
+  if (devArgs.isDev && devArgs.mockRelease) {
+    cachedReleases = MOCK_RELEASES.slice(0, 5);
+    return cachedReleases;
+  }
+
   inFlightRequest = (async () => {
     try {
       const res = await fetch(`${RELEASES_API_URL}?per_page=5`, {
@@ -66,15 +73,13 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
 
       if (!res.ok) {
         logger.error("github", `Releases fetch returned HTTP ${res.status}`);
-        cachedReleases = MOCK_RELEASES.slice(0, 5);
-        return cachedReleases;
+        return [];
       }
 
       const data = (await res.json()) as GitHubReleaseRaw[];
       if (!Array.isArray(data)) {
         logger.error("github", "Releases response is not an array");
-        cachedReleases = MOCK_RELEASES.slice(0, 5);
-        return cachedReleases;
+        return [];
       }
 
       const sorted = [...data].sort(
@@ -109,8 +114,7 @@ export async function fetchReleases(forceRefresh = false): Promise<ReleaseItem[]
       return cachedReleases;
     } catch (err) {
       logger.error("github", "Network or parsing error fetching releases:", err);
-      cachedReleases = MOCK_RELEASES.slice(0, 5);
-      return cachedReleases;
+      return [];
     } finally {
       inFlightRequest = null;
     }

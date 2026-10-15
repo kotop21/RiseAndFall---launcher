@@ -3,7 +3,12 @@ import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigatio
 import { AlertTriangle, CheckCircle, Download, Folder, Globe, RefreshCw } from "@/icon";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
-import { useInstallation } from "@/lib/manager/install";
+import {
+  ensureInstallDir,
+  GAME_INSTALL_DIR_NAME,
+  hasInstallManifestSync,
+  useInstallation,
+} from "@/lib/manager/install";
 import { isWindows } from "@/lib/utils/os";
 import {
   Button,
@@ -46,10 +51,10 @@ export function GameInstaller({
   const isReinstall = isInstalling ? installation.isReinstall : isReinstallProp;
 
   const getInitialPath = () => {
-    if (installation.targetDir) return installation.targetDir;
-    if (defaultInstallPath) return defaultInstallPath;
+    if (installation.targetDir) return ensureInstallDir(installation.targetDir);
+    if (defaultInstallPath) return ensureInstallDir(defaultInstallPath);
     if (!isReinstall) {
-      return isWindows() ? "C:\\Games\\Rise and Fall" : "Rise and Fall";
+      return isWindows() ? `C:\\Games\\${GAME_INSTALL_DIR_NAME}` : GAME_INSTALL_DIR_NAME;
     }
     return "";
   };
@@ -68,6 +73,9 @@ export function GameInstaller({
     isInstalling || (status === "completed" && installation.targetDir)
       ? installation.targetDir
       : localInstallPath;
+
+  const hasManifest =
+    isReinstall && installPath.trim() ? hasInstallManifestSync(installPath) : false;
 
   const selectedLang =
     isInstalling || (status === "completed" && installation.lang) ? installation.lang : localLang;
@@ -118,7 +126,7 @@ export function GameInstaller({
 
       const pickedPath =
         typeof selected === "object" ? (selected as { path: string }).path : selected;
-      if (pickedPath) setInstallPath(pickedPath);
+      if (pickedPath) setInstallPath(ensureInstallDir(pickedPath));
     } catch (err) {
       toast(formatErrorToast(err, "FS_ACCESS_DENIED"));
     } finally {
@@ -127,8 +135,8 @@ export function GameInstaller({
   };
 
   const triggerInstallation = async () => {
-    const target = installPath.trim();
-    if (!target) {
+    const rawTarget = installPath.trim();
+    if (!rawTarget) {
       toast({
         title: t("toasts.installPathRequiredTitle"),
         description: t("toasts.installPathRequiredDesc"),
@@ -137,6 +145,8 @@ export function GameInstaller({
       return;
     }
 
+    const target = ensureInstallDir(rawTarget);
+    setInstallPath(target);
     setConfirmAbort(false);
 
     const res = await installation.startInstall({
@@ -197,8 +207,16 @@ export function GameInstaller({
           <Label>{t("install.targetDir")}</Label>
           <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>{installPath}</P>
           <Row gap={6} align="center">
-            <AlertTriangle size={14} color={theme.colors.mutedFg} />
-            <Muted>{t("install.targetWarning")}</Muted>
+            {hasManifest ? (
+              <CheckCircle size={14} color={theme.colors.success} />
+            ) : (
+              <AlertTriangle size={14} color={theme.colors.mutedFg} />
+            )}
+            <Muted>
+              {hasManifest
+                ? t("install.targetWarningWithManifest")
+                : t("install.targetWarningNoManifest")}
+            </Muted>
           </Row>
         </Column>
       ) : (
@@ -209,7 +227,9 @@ export function GameInstaller({
               <Input
                 value={installPath}
                 onChange={setInstallPath}
-                placeholder="C:\\Games\\Rise and Fall"
+                placeholder={
+                  isWindows() ? `C:\\Games\\${GAME_INSTALL_DIR_NAME}` : GAME_INSTALL_DIR_NAME
+                }
                 disabled={isInstalling}
               />
             </div>
@@ -297,7 +317,9 @@ export function GameInstaller({
               >
                 {isReinstall
                   ? confirmReinstall
-                    ? t("install.btnReinstallConfirm")
+                    ? hasManifest
+                      ? t("install.btnReinstallConfirm")
+                      : t("install.btnReinstallConfirmNoManifest")
                     : t("install.btnReinstall")
                   : status === "completed"
                     ? t("install.btnReinstall")

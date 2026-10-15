@@ -19,7 +19,8 @@
     "dgVoodooMissing": "dgVoodoo Отсутствует",
     "latestUpdate": "Последнее",
     "lastLaunch": "Последний запуск: {date}",
-    "neverPlayed": "Еще не запускалась"
+    "neverPlayed": "Еще не запускалась",
+    "noUpdatesData": "Нет данных об обновлениях"
   },
   "header": {
     "currentOnline": "Онлайн:",
@@ -66,6 +67,8 @@
     "subReinstall": "Очищает файлы игры (кроме Data/Saved Games) и загружает заново",
     "targetDir": "Целевая папка установки",
     "targetWarning": "Все файлы будут обновлены. Сохранения в Data/Saved Games сохраняются.",
+    "targetWarningWithManifest": "Очистка по манифесту. Сохранения в Data/Saved Games останутся.",
+    "targetWarningNoManifest": "Манифест не найден. Полная очистка папки (сохранения остаются).",
     "installDir": "Папка установки",
     "langPack": "Языковой пакет игры",
     "ready": "Готово",
@@ -76,6 +79,7 @@
     "btnInstall": "Скачать и установить",
     "btnReinstall": "Переустановить игру",
     "btnReinstallConfirm": "Подтвердить переустановку",
+    "btnReinstallConfirmNoManifest": "Очистить и переустановить",
     "statusStarting": "Начало установки...",
     "statusPreparingReinstall": "Подготовка к переустановке...",
     "fetchingManifest": "Получение манифеста установки...",
@@ -94,6 +98,7 @@
     "revert": "Сбросить",
     "update": "Обновить",
     "updating": "Обновление...",
+    "alreadyInstalled": "Уже установлено",
     "donate": "Донат",
     "donateTooltip": "Держится на личном железе и времени. Спасибо за поддержку!"
   },

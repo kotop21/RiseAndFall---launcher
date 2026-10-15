@@ -90,6 +90,13 @@ describe("Explorer: Directory Cleaning & Save Game Protection", () => {
     expect(await cleanGameDirectory("")).toBe(false);
     expect(await cleanGameDirectory("/path/that/does/not/exist/404")).toBe(false);
   });
+
+  it("refuses to clean root directory or drive root for safety", async () => {
+    expect(await cleanGameDirectory("/")).toBe(false);
+    expect(await cleanGameDirectory("C:")).toBe(false);
+    expect(await cleanGameDirectory("C:\\")).toBe(false);
+    expect(await cleanGameDirectory("D:/")).toBe(false);
+  });
 });
 
 describe("Explorer: Archive Extraction", () => {

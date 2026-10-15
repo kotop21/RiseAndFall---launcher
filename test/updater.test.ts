@@ -92,6 +92,8 @@ describe("Updater: i18n Translations Consistency", () => {
   it("has all required buttons and toasts in ru.json", () => {
     expect(ru.buttons.update).toBe("Обновить");
     expect(ru.buttons.updating).toBe("Обновление...");
+    expect(ru.buttons.alreadyInstalled).toBe("Уже установлено");
+    expect(ru.main.noUpdatesData).toBeDefined();
     expect(ru.toasts.updateAvailableTitle).toBeDefined();
     expect(ru.toasts.updateAvailableDesc).toBeDefined();
     expect(ru.toasts.updateDownloadingTitle).toBeDefined();
@@ -103,6 +105,8 @@ describe("Updater: i18n Translations Consistency", () => {
   it("has all required buttons and toasts in en.json", () => {
     expect(en.buttons.update).toBe("Update");
     expect(en.buttons.updating).toBe("Updating...");
+    expect(en.buttons.alreadyInstalled).toBe("Already installed");
+    expect(en.main.noUpdatesData).toBeDefined();
     expect(en.toasts.updateAvailableTitle).toBeDefined();
     expect(en.toasts.updateAvailableDesc).toBeDefined();
     expect(en.toasts.updateDownloadingTitle).toBeDefined();
@@ -114,6 +118,8 @@ describe("Updater: i18n Translations Consistency", () => {
   it("has all required buttons and toasts in ua.json", () => {
     expect(ua.buttons.update).toBe("Оновити");
     expect(ua.buttons.updating).toBe("Оновлення...");
+    expect(ua.buttons.alreadyInstalled).toBe("Вже встановлено");
+    expect(ua.main.noUpdatesData).toBeDefined();
     expect(ua.toasts.updateAvailableTitle).toBeDefined();
     expect(ua.toasts.updateAvailableDesc).toBeDefined();
     expect(ua.toasts.updateDownloadingTitle).toBeDefined();
