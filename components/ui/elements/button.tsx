@@ -1,5 +1,6 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
+import { isLowSpecMode } from "../motion-compat";
 import { theme } from "../theme";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
@@ -12,6 +13,7 @@ export interface ButtonProps {
   disabled?: boolean;
   onClick?: () => void;
   style?: StyleDesc;
+  pressAnimation?: boolean;
 }
 
 export function Button({
@@ -21,6 +23,7 @@ export function Button({
   disabled = false,
   onClick,
   style = {},
+  pressAnimation = true,
 }: ButtonProps) {
   const sizes: Record<ButtonSize, { h: number; px: number; fontSize: number; isIcon?: boolean }> = {
     sm: { h: 32, px: 12, fontSize: 12 },
@@ -63,12 +66,22 @@ export function Button({
 
   const s = sizes[size];
   const v = variants[variant];
+  const shouldAnimate = pressAnimation && !isLowSpecMode();
+  const baseTop = typeof style.top === "number" ? style.top : 0;
+
+  const activeStyle: Omit<StyleDesc, "hover" | "active"> = {
+    opacity: 0.9,
+    ...(shouldAnimate ? { top: baseTop + 1 } : {}),
+    ...(style.active || {}),
+  };
 
   return (
     <div
       tabIndex={disabled ? -1 : 0}
       onClick={disabled ? undefined : onClick}
       style={{
+        position: style.position ?? "relative",
+        top: baseTop,
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
@@ -84,9 +97,9 @@ export function Button({
         borderColor: v.border ?? "transparent",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
-        hover: disabled ? undefined : { backgroundColor: v.hoverBg },
-        active: disabled ? undefined : { opacity: 0.9 },
+        hover: disabled ? undefined : { backgroundColor: v.hoverBg, ...(style.hover || {}) },
         ...style,
+        active: disabled ? undefined : activeStyle,
       }}
     >
       <text

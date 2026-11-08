@@ -2,6 +2,7 @@ import type { StyleDesc } from "@gpuix/react";
 import { Download, RefreshCw } from "@/icon";
 import { useTranslation } from "@/lib/lang";
 import { P, Row, theme } from "@/ui";
+import { isLowSpecMode } from "./ui/motion-compat";
 
 interface DownloadGameButtonProps {
   variant?: "download" | "reinstall";
@@ -10,6 +11,7 @@ interface DownloadGameButtonProps {
   disabled?: boolean;
   isInstalling?: boolean;
   style?: StyleDesc;
+  pressAnimation?: boolean;
 }
 
 export function DownloadGameButton({
@@ -18,7 +20,8 @@ export function DownloadGameButton({
   onClick,
   disabled = false,
   isInstalling = false,
-  style,
+  style = {},
+  pressAnimation = true,
 }: DownloadGameButtonProps) {
   const { t } = useTranslation();
   const isReinstall = variant === "reinstall";
@@ -34,11 +37,22 @@ export function DownloadGameButton({
   const h = size === "sm" ? 36 : 46;
   const px = size === "sm" ? 16 : 24;
 
+  const shouldAnimate = pressAnimation && !isLowSpecMode();
+  const baseTop = typeof style.top === "number" ? style.top : 0;
+
+  const activeStyle: Omit<StyleDesc, "hover" | "active"> = {
+    opacity: 0.9,
+    ...(shouldAnimate ? { top: baseTop + 1 } : {}),
+    ...(style.active || {}),
+  };
+
   return (
     <div
       tabIndex={disabled ? -1 : 0}
       onClick={disabled ? undefined : onClick}
       style={{
+        position: style.position ?? "relative",
+        top: baseTop,
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
@@ -51,9 +65,11 @@ export function DownloadGameButton({
         backgroundColor: disabled ? theme.colors.muted : theme.colors.primary,
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
-        hover: disabled ? undefined : { backgroundColor: theme.colors.primaryHover },
-        active: disabled ? undefined : { opacity: 0.9 },
+        hover: disabled
+          ? undefined
+          : { backgroundColor: theme.colors.primaryHover, ...(style.hover || {}) },
         ...style,
+        active: disabled ? undefined : activeStyle,
       }}
     >
       <Row gap={isReinstall ? 8 : 10} align="center" justify="center">
