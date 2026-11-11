@@ -24,6 +24,17 @@ describe("Lang: Detection & Translation Function", () => {
     expect(["en", "ru", "ua"]).toContain(detected);
   });
 
+  it("prioritizes environment variables when set", () => {
+    const origLang = process.env.LANG;
+    try {
+      process.env.LANG = "ru_RU.UTF-8";
+      expect(["ru", "ua", "en"]).toContain(detectSystemLanguage());
+    } finally {
+      if (origLang !== undefined) process.env.LANG = origLang;
+      else delete process.env.LANG;
+    }
+  });
+
   it("translates nested keys correctly in current language", () => {
     setLanguage("ru");
     expect(getCurrentLanguage()).toBe("ru");

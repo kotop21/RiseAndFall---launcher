@@ -34,46 +34,19 @@ export function detectSystemLanguage(): SupportedLang {
   let detected: SupportedLang | null = null;
   let source = "";
 
-  if (os === "darwin") {
-    try {
-      const appleLocale = execSync("defaults read -g AppleLocale", {
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "ignore"],
-      }).trim();
-      if (appleLocale) {
-        detected = normalizeLang(appleLocale);
-        source = `macOS AppleLocale (${appleLocale})`;
+  // 1. Быстрый и неблокирующий стандартный Intl API (работает на Windows, macOS и Linux без подпроцессов)
+  try {
+    const intlLocale = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (intlLocale) {
+      const parsed = normalizeLang(intlLocale);
+      if (parsed !== "en") {
+        detected = parsed;
+        source = `Intl.DateTimeFormat (${intlLocale})`;
       }
-    } catch {}
-
-    if (!detected) {
-      try {
-        const appleLangs = execSync("defaults read -g AppleLanguages", {
-          encoding: "utf-8",
-          stdio: ["ignore", "pipe", "ignore"],
-        }).trim();
-        const match = appleLangs.match(/"([^"]+)"/);
-        if (match?.[1]) {
-          detected = normalizeLang(match[1]);
-          source = `macOS AppleLanguages (${match[1]})`;
-        }
-      } catch {}
     }
-  }
+  } catch {}
 
-  if (!detected && os === "win32") {
-    try {
-      const out = execSync(
-        'powershell -NoProfile -Command "[System.Globalization.CultureInfo]::InstalledUICulture.Name"',
-        { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] },
-      ).trim();
-      if (out) {
-        detected = normalizeLang(out);
-        source = `Windows InstalledUICulture (${out})`;
-      }
-    } catch {}
-  }
-
+  // 2. Переменные окружения системы
   if (!detected) {
     const envLocale =
       process.env.LC_ALL ||
@@ -82,11 +55,33 @@ export function detectSystemLanguage(): SupportedLang {
       process.env.LANGUAGE ||
       "";
     if (envLocale) {
-      detected = normalizeLang(envLocale);
-      source = `Environment variable (${envLocale})`;
+      const parsed = normalizeLang(envLocale);
+      if (parsed !== "en") {
+        detected = parsed;
+        source = `Environment variable (${envLocale})`;
+      }
     }
   }
 
+  // 3. Fallback для macOS
+  if (!detected && os === "darwin") {
+    try {
+      const appleLocale = execSync("defaults read -g AppleLocale", {
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 1000,
+      }).trim();
+      if (appleLocale) {
+        const parsed = normalizeLang(appleLocale);
+        if (parsed !== "en") {
+          detected = parsed;
+          source = `macOS AppleLocale (${appleLocale})`;
+        }
+      }
+    } catch {}
+  }
+
+  // 4. Если ничего не определилось выше, проверяем дефолтный Intl или отдаем fallback
   if (!detected) {
     try {
       const intlLocale = Intl.DateTimeFormat().resolvedOptions().locale;
