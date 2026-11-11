@@ -4,13 +4,13 @@ These command-line arguments are active **only in development mode** (when runni
 
 ## Overview
 
-| Argument | Aliases | Description |
-| :--- | :--- | :--- |
-| `--lang <en\|ua\|ru>` | `--language`, `-l` | Force launcher interface language (`en`, `ua`, `ru`) and **automatically disable language auto-detection** (`detectSystemLanguage`). |
-| `--view <name>` | `-v` | Directly open a specific view on launch (`welcome`, `main`, `settings`, `install`). |
-| `--release` | `-r`, `--windows`, `-w`, `--mock-release` | Emulate a full Windows release environment: `isWindows()` returns `true` and `isCliAvailable` returns `true` (enabling dgVoodoo buttons, registry export/import actions, and Windows toast workflows on macOS/Linux). |
-| `--low-spec` | `--low-performance` | Run the adaptive render loop in battery-saving low performance mode (capped framerate). |
-| `--log-file` | `--file-logs`, `--enable-log-file` | Enable writing log files to disk (`logs/launcher_*.log`). *(In dev mode, disk logging is disabled by default to prevent file clutter, while console output remains active).* |
+| Argument              | Aliases                                   | Description                                                                                                                                                                                                           |
+| :-------------------- | :---------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--lang <en\|ua\|ru>` | `--language`, `-l`                        | Force launcher interface language (`en`, `ua`, `ru`) and **automatically disable language auto-detection** (`detectSystemLanguage`).                                                                                  |
+| `--view <name>`       | `-v`                                      | Directly open a specific view on launch (`welcome`, `main`, `settings`, `install`).                                                                                                                                   |
+| `--release`           | `-r`, `--windows`, `-w`, `--mock-release` | Emulate a full Windows release environment: `isWindows()` returns `true` and `isCliAvailable` returns `true` (enabling dgVoodoo buttons, registry export/import actions, and Windows toast workflows on macOS/Linux). |
+| `--low-spec`          | `--low-performance`                       | Run the adaptive render loop in battery-saving low performance mode (capped framerate).                                                                                                                               |
+| `--log-file`          | `--file-logs`, `--enable-log-file`        | Enable writing log files to disk (`logs/launcher_*.log`). _(In dev mode, disk logging is disabled by default to prevent file clutter, while console output remains active)._                                          |
 
 ## Usage Examples
 
