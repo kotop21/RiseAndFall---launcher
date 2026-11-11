@@ -1,8 +1,18 @@
-import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, readdir, readFile, rmdir, stat, unlink, writeFile } from "node:fs/promises";
+import { readdir, rmdir, stat, unlink } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import { logger } from "@/lib/logger";
+import {
+  getLauncherDir,
+  getLauncherFilePath,
+  hasLauncherFile,
+  hasLauncherFileSync,
+  LAUNCHER_DIR_NAME,
+  pruneLauncherDirIfEmpty,
+  readLauncherJson,
+  removeLauncherFile,
+  writeLauncherJson,
+} from "./launcher-storage";
 
 export interface InstallManifest {
   version: string;
@@ -16,45 +26,32 @@ export interface FileStatInfo {
   mtimeMs: number;
 }
 
-export const MANIFEST_DIR_NAME = ".launcher";
+export const MANIFEST_DIR_NAME = LAUNCHER_DIR_NAME;
 export const MANIFEST_FILE_NAME = "install_manifest.json";
 
 export function getManifestDir(gameDir: string): string {
-  return join(gameDir, MANIFEST_DIR_NAME);
+  return getLauncherDir(gameDir);
 }
 
 export function getManifestPath(gameDir: string): string {
-  return join(gameDir, MANIFEST_DIR_NAME, MANIFEST_FILE_NAME);
+  return getLauncherFilePath(gameDir, MANIFEST_FILE_NAME);
 }
 
 export function hasInstallManifestSync(gameDir: string): boolean {
-  const trimmed = gameDir.trim();
-  if (!trimmed) return false;
-  try {
-    return existsSync(getManifestPath(trimmed));
-  } catch {
-    return false;
-  }
+  return hasLauncherFileSync(gameDir, MANIFEST_FILE_NAME);
 }
 
 export async function hasInstallManifest(gameDir: string): Promise<boolean> {
-  const trimmed = gameDir.trim();
-  if (!trimmed) return false;
-  try {
-    return existsSync(getManifestPath(trimmed));
-  } catch {
-    return false;
-  }
+  return hasLauncherFile(gameDir, MANIFEST_FILE_NAME);
 }
 
 export async function loadInstallManifest(gameDir: string): Promise<InstallManifest | null> {
-  const filePath = getManifestPath(gameDir);
   try {
-    if (!existsSync(filePath)) return null;
-    const raw = await readFile(filePath, "utf-8");
-    const parsed = JSON.parse(raw) as Partial<InstallManifest>;
+    const parsed = await readLauncherJson<Partial<InstallManifest>>(gameDir, MANIFEST_FILE_NAME);
     if (!parsed || !Array.isArray(parsed.files)) {
-      logger.warn("manifest", `Corrupted manifest file at: ${filePath}`);
+      if (parsed) {
+        logger.warn("manifest", `Corrupted manifest file in: ${gameDir}`);
+      }
       return null;
     }
     return {
@@ -64,7 +61,7 @@ export async function loadInstallManifest(gameDir: string): Promise<InstallManif
       files: parsed.files.map((f) => String(f).replace(/\\/g, "/")),
     };
   } catch (err) {
-    logger.error("manifest", `Failed reading manifest at: ${filePath}`, err);
+    logger.error("manifest", `Failed loading manifest in: ${gameDir}`, err);
     return null;
   }
 }
@@ -73,31 +70,15 @@ export async function saveInstallManifest(
   gameDir: string,
   manifest: InstallManifest,
 ): Promise<boolean> {
-  const dir = getManifestDir(gameDir);
-  const filePath = getManifestPath(gameDir);
-  try {
-    if (!existsSync(dir)) {
-      await mkdir(dir, { recursive: true });
-      if (process.platform === "win32") {
-        try {
-          spawn("attrib", ["+h", dir], { stdio: "ignore" }).on("error", () => {});
-        } catch {}
-      }
-    }
-    const cleanFiles = Array.from(new Set(manifest.files.map((f) => f.replace(/\\/g, "/")))).sort();
-    const cleanPackages = Array.from(new Set(manifest.packages));
-    const data: InstallManifest = {
-      version: manifest.version || "2.0.0",
-      updatedAt: Date.now(),
-      packages: cleanPackages,
-      files: cleanFiles,
-    };
-    await writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
-    return true;
-  } catch (err) {
-    logger.error("manifest", `Failed writing manifest at: ${filePath}`, err);
-    return false;
-  }
+  const cleanFiles = Array.from(new Set(manifest.files.map((f) => f.replace(/\\/g, "/")))).sort();
+  const cleanPackages = Array.from(new Set(manifest.packages));
+  const data: InstallManifest = {
+    version: manifest.version || "2.0.0",
+    updatedAt: Date.now(),
+    packages: cleanPackages,
+    files: cleanFiles,
+  };
+  return writeLauncherJson(gameDir, MANIFEST_FILE_NAME, data);
 }
 
 export function isExcludedManifestPath(relPath: string): boolean {
@@ -255,22 +236,8 @@ export async function removeInstalledFiles(gameDir: string): Promise<boolean> {
   }
 
   // Remove manifest file and .launcher folder if empty
-  const manifestPath = getManifestPath(cleanRoot);
-  try {
-    if (existsSync(manifestPath)) {
-      await unlink(manifestPath);
-    }
-  } catch {}
-
-  const manifestDir = getManifestDir(cleanRoot);
-  try {
-    if (existsSync(manifestDir)) {
-      const remainingLauncher = await readdir(manifestDir);
-      if (remainingLauncher.length === 0) {
-        await rmdir(manifestDir);
-      }
-    }
-  } catch {}
+  await removeLauncherFile(cleanRoot, MANIFEST_FILE_NAME);
+  await pruneLauncherDirIfEmpty(cleanRoot);
 
   logger.info("manifest", `Successfully cleaned manifest-tracked files in: ${cleanRoot}`);
   return true;

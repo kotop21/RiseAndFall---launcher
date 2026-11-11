@@ -91,8 +91,9 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
         const url = new URL(req.url);
         if (url.pathname === "/api/manifest") {
           return Response.json({
-            mode: "auto",
-            version: "1.0.0",
+            version: "2.0.0",
+            install_en: ["game", "lang_en", "mod_bfm"],
+            install_ru: ["game", "lang_ru", "mod_bfm"],
             packages: [
               {
                 id: "game",
@@ -108,6 +109,9 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
                 id: "mod_bfm",
                 name: "BFM",
                 mirrors: [`${url.origin}/mod_bfm.zip`],
+                check_file: "Data/db/dbobjects.dat",
+                hash: "dummyhash",
+                size: 282542,
               },
             ],
           });
@@ -218,8 +222,8 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
         const url = new URL(req.url);
         if (url.pathname === "/api/manifest") {
           return Response.json({
-            mode: "auto",
-            version: "1.0.0",
+            version: "2.0.0",
+            install_en: ["game"],
             packages: [
               {
                 id: "game",
@@ -275,8 +279,8 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
         const url = new URL(req.url);
         if (url.pathname === "/api/manifest") {
           return Response.json({
-            mode: "auto",
-            version: "1.0.0",
+            version: "2.0.0",
+            install_en: ["game"],
             packages: [
               {
                 id: "game",
@@ -430,8 +434,8 @@ describe("Installation Manager: Background Singleton & State Management", () => 
         const url = new URL(req.url);
         if (url.pathname === "/api/manifest") {
           return Response.json({
-            mode: "auto",
-            version: "1.0.0",
+            version: "2.0.0",
+            install_en: ["game"],
             packages: [
               {
                 id: "game",
@@ -491,8 +495,8 @@ describe("Installation Manager: Background Singleton & State Management", () => 
         const url = new URL(req.url);
         if (url.pathname === "/api/manifest") {
           return Response.json({
-            mode: "auto",
-            version: "1.0.0",
+            version: "2.0.0",
+            install_en: ["game"],
             packages: [
               {
                 id: "game",
@@ -513,7 +517,10 @@ describe("Installation Manager: Background Singleton & State Management", () => 
     process.env.API_URL = `http://localhost:${server.port}`;
 
     try {
-      const res = await manager.startInstall({ targetDir: rawTargetDir, lang: "en" });
+      const res = await manager.startInstall({
+        targetDir: rawTargetDir,
+        lang: "en",
+      });
       expect(res.success).toBe(true);
       const expectedPath = join(rawTargetDir, "RiseAndFall-launcher");
       expect(manager.getState().targetDir).toBe(expectedPath);
@@ -524,6 +531,160 @@ describe("Installation Manager: Background Singleton & State Management", () => 
       else delete process.env.API_URL;
       await rm(tempDir, { recursive: true, force: true });
       await rm(rawTargetDir, { recursive: true, force: true });
+    }
+  });
+
+  it("fetches manifest once and returns cached copy on subsequent calls", async () => {
+    const manager = new InstallationManager();
+    let manifestRequests = 0;
+
+    const server = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        const url = new URL(req.url);
+        if (url.pathname === "/api/manifest") {
+          manifestRequests++;
+          return Response.json({
+            mode: "auto",
+            version: "2.0.0",
+            packages: [
+              {
+                id: "install_en",
+                name: "English Pack",
+                mirrors: ["http://test/en.zip"],
+              },
+            ],
+          });
+        }
+        return new Response("Not found", { status: 404 });
+      },
+    });
+
+    const prevApi = process.env.API_URL;
+    process.env.API_URL = `http://localhost:${server.port}`;
+
+    try {
+      expect(manager.getCachedManifest()).toBeNull();
+
+      // First call fetches from API
+      const m1 = await manager.getOrFetchManifest();
+      expect(manifestRequests).toBe(1);
+      expect(m1.packages.length).toBe(1);
+      expect(manager.getCachedManifest()).toEqual(m1);
+
+      // Second call returns cached manifest without extra HTTP request
+      const m2 = await manager.getOrFetchManifest();
+      expect(manifestRequests).toBe(1);
+      expect(m2).toBe(m1);
+
+      // Clear cache when not installing
+      const cleared = manager.clearCachedManifest();
+      expect(cleared).toBe(true);
+      expect(manager.getCachedManifest()).toBeNull();
+
+      // Next call after clearing makes a new request
+      const m3 = await manager.getOrFetchManifest();
+      expect(manifestRequests).toBe(2);
+      expect(m3.packages.length).toBe(1);
+    } finally {
+      server.stop(true);
+      if (prevApi) process.env.API_URL = prevApi;
+      else delete process.env.API_URL;
+    }
+  });
+
+  it("deduplicates concurrent in-flight manifest requests", async () => {
+    const manager = new InstallationManager();
+    let manifestRequests = 0;
+
+    const server = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        const url = new URL(req.url);
+        if (url.pathname === "/api/manifest") {
+          manifestRequests++;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          return Response.json({ mode: "auto", version: "2.0.0", packages: [] });
+        }
+        return new Response("Not found", { status: 404 });
+      },
+    });
+
+    const prevApi = process.env.API_URL;
+    process.env.API_URL = `http://localhost:${server.port}`;
+
+    try {
+      const [m1, m2, m3] = await Promise.all([
+        manager.getOrFetchManifest(),
+        manager.getOrFetchManifest(),
+        manager.getOrFetchManifest(),
+      ]);
+      expect(manifestRequests).toBe(1);
+      expect(m1).toBe(m2);
+      expect(m2).toBe(m3);
+    } finally {
+      server.stop(true);
+      if (prevApi) process.env.API_URL = prevApi;
+      else delete process.env.API_URL;
+    }
+  });
+
+  it("preserves cached manifest when clearCachedManifest is called during active installation", async () => {
+    const manager = new InstallationManager();
+    let manifestRequests = 0;
+
+    const server = Bun.serve({
+      port: 0,
+      async fetch(req) {
+        const url = new URL(req.url);
+        if (url.pathname === "/api/manifest") {
+          manifestRequests++;
+          return Response.json({
+            mode: "auto",
+            version: "2.0.0",
+            packages: [
+              {
+                id: "game",
+                name: "Base Game",
+                mirrors: ["http://localhost:1/nonexistent.zip"],
+              },
+            ],
+          });
+        }
+        return new Response("Not found", { status: 404 });
+      },
+    });
+
+    const prevApi = process.env.API_URL;
+    process.env.API_URL = `http://localhost:${server.port}`;
+    const targetDir = join(tmpdir(), `raf-manifest-cache-test-${Date.now()}`);
+    await mkdir(targetDir, { recursive: true });
+
+    try {
+      await manager.getOrFetchManifest();
+      expect(manifestRequests).toBe(1);
+      expect(manager.getCachedManifest()).not.toBeNull();
+
+      // Start install (will attempt download)
+      const installPromise = manager.startInstall({ targetDir, lang: "en" });
+      expect(manager.getState().isInstalling).toBe(true);
+
+      // Attempting to clear while installing returns false and preserves cache
+      const cleared = manager.clearCachedManifest();
+      expect(cleared).toBe(false);
+      expect(manager.getCachedManifest()).not.toBeNull();
+
+      // Aborting installation clears cache
+      manager.abort();
+      expect(manager.getState().isInstalling).toBe(false);
+      expect(manager.getCachedManifest()).toBeNull();
+
+      await installPromise;
+    } finally {
+      server.stop(true);
+      if (prevApi) process.env.API_URL = prevApi;
+      else delete process.env.API_URL;
+      await rm(targetDir, { recursive: true, force: true });
     }
   });
 });

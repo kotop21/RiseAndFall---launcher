@@ -26,8 +26,8 @@ describe("API: Routes Builder", () => {
 describe("API: Manifest Fetching", () => {
   it("fetches valid manifest from mock server", async () => {
     const mockManifest: ManifestResponse = {
-      mode: "auto",
-      version: "1.0.0",
+      version: "2.0.0",
+      install_ru: ["game", "lang_ru"],
       packages: [
         {
           id: "game",
@@ -58,11 +58,12 @@ describe("API: Manifest Fetching", () => {
 
     try {
       const manifest = await fetchManifest();
-      expect(manifest.version).toBe("1.0.0");
+      expect(manifest.version).toBe("2.0.0");
       expect(manifest.packages.length).toBe(2);
-      expect(manifest.packages[0].id).toBe("game");
-      expect(manifest.packages[0].name).toBe("Rise and Fall: Civilizations at War (Base Game)");
-      expect(manifest.packages[0].mirrors).toEqual(["https://example.com/RiseAndFall.zip"]);
+      const pkg0 = manifest.packages[0];
+      expect(pkg0?.id).toBe("game");
+      expect(pkg0?.name).toBe("Rise and Fall: Civilizations at War (Base Game)");
+      expect(pkg0?.mirrors).toEqual(["https://example.com/RiseAndFall.zip"]);
     } finally {
       server.stop(true);
       if (prevApi) process.env.API_URL = prevApi;
