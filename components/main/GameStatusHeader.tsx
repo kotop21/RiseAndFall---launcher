@@ -2,6 +2,7 @@ import { ProfileSwitcher } from "@/components/ProfileSwitcher";
 import { Calendar, Layers, Tag } from "@/icon";
 import type { LauncherConfig } from "@/lib/config/types";
 import { useTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
 import { useGameStatus } from "@/lib/utils/game-status";
 import { getLauncherVersion } from "@/lib/utils/version";
 import { Badge, Column, H1, Muted, Row, theme } from "@/ui";
@@ -29,6 +30,8 @@ export function GameStatusHeader({ config, onChangeConfig }: GameStatusHeaderPro
 
   const handleSelectSlot = async (slotId: string) => {
     if (slotId === config.activeProfileId) return;
+    const prevSlotId = config.activeProfileId || "slot-1";
+    logger.info("profile", `switch (${prevSlotId} -> ${slotId})`);
     const target = config.gameProfiles?.find((p) => p.id === slotId);
     const nextConfig: LauncherConfig = {
       ...config,
@@ -56,15 +59,34 @@ export function GameStatusHeader({ config, onChangeConfig }: GameStatusHeaderPro
     }
   };
 
+  const safeProfiles = config.gameProfiles?.length ? config.gameProfiles : [];
+  const configuredProfiles = safeProfiles.filter((p) => Boolean(p.path?.trim()));
+  const isSwitcherVisible = configuredProfiles.length > 1;
+  const activeSlotIndex = safeProfiles.findIndex((p) => p.id === config.activeProfileId);
+  const activeSlotNumber = activeSlotIndex >= 0 ? activeSlotIndex + 1 : 1;
+  const fullTitle = isSwitcherVisible
+    ? `${t("main.title")} - #${activeSlotNumber}`
+    : t("main.title");
+
   return (
     <Column gap={10} style={{ width: "100%" }}>
-      <Row justify="between" align="center" style={{ width: "100%" }}>
-        <H1 style={{ color: theme.colors.fg }}>{t("main.title")}</H1>
+      <Row justify="between" align="center" style={{ width: "100%", flexWrap: "nowrap", gap: 12 }}>
+        <H1
+          style={{
+            color: theme.colors.fg,
+            fontSize: isSwitcherVisible ? 21 : 24,
+            whiteSpace: "nowrap",
+            lineClamp: 1,
+          }}
+        >
+          {fullTitle}
+        </H1>
         <ProfileSwitcher
           profiles={config.gameProfiles || []}
           activeProfileId={config.activeProfileId || "slot-1"}
           onSelectProfile={handleSelectSlot}
           onlyConfigured
+          style={{ flexShrink: 0 }}
         />
       </Row>
 

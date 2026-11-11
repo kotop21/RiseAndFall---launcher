@@ -26,7 +26,6 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!cleanDir) {
       toast({
-        title: t("toasts.dgvPathRequiredTitle"),
         description: t("toasts.dgvPathRequiredDesc"),
         type: "warn",
       });
@@ -35,8 +34,7 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!fileExists) {
       toast({
-        title: t("toasts.dgvMissingTitle"),
-        description: t("toasts.dgvMissingDesc"),
+        description: t("errors.DGV_EXE_NOT_FOUND.description"),
         type: "error",
       });
       return;
@@ -44,7 +42,6 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!isWin) {
       toast({
-        title: t("toasts.dgvOsUnsupportedTitle"),
         description: t("toasts.dgvOsUnsupportedDesc"),
         type: "error",
       });

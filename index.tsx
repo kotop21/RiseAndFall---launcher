@@ -21,10 +21,10 @@ async function main() {
 
   const windowOptions = {
     title: `Raf-Launcher v${getLauncherVersion()}`,
-    width: 720,
-    height: 590,
-    minWidth: 720,
-    minHeight: 590,
+    width: 750,
+    height: 620,
+    minWidth: 750,
+    minHeight: 620,
     lowSpecMode: Boolean(config.lowPerformanceMode || (devArgs.isDev && devArgs.lowSpec)),
   };
 

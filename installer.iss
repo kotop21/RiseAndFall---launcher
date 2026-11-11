@@ -2,7 +2,7 @@
 #define MyAppExeName "raf-launcher.exe"
 
 #ifndef MyAppVersion
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "2.0.2"
 #endif
 
 [Setup]

@@ -41,7 +41,7 @@ export function DownloadGameButton({
   const baseTop = typeof style.top === "number" ? style.top : 0;
 
   const activeStyle: Omit<StyleDesc, "hover" | "active"> = {
-    opacity: 0.9,
+    backgroundColor: theme.colors.primaryHover,
     ...(shouldAnimate ? { top: baseTop + 1 } : {}),
     ...(style.active || {}),
   };
@@ -67,7 +67,10 @@ export function DownloadGameButton({
         opacity: disabled ? 0.5 : 1,
         hover: disabled
           ? undefined
-          : { backgroundColor: theme.colors.primaryHover, ...(style.hover || {}) },
+          : {
+              backgroundColor: theme.colors.primaryHover,
+              ...(style.hover || {}),
+            },
         ...style,
         active: disabled ? undefined : activeStyle,
       }}

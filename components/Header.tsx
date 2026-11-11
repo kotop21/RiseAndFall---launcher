@@ -1,12 +1,13 @@
 import { join } from "node:path";
 import { useState } from "react";
-import { Calendar, Clock, Play, Settings, Timer, Users } from "@/icon";
+import { Calendar, Clock, Layers, Play, Settings, Timer, Users } from "@/icon";
 import { useOnlineTracker } from "@/lib/api/online";
 import { recordGameSession } from "@/lib/config/session";
 import type { LauncherConfig } from "@/lib/config/types";
 import { discordRpc } from "@/lib/discord-rpc";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
 import { useInstallation } from "@/lib/manager/install";
 import { launchExe } from "@/lib/process/launch";
 import { launcherTracker } from "@/lib/process/launcher-tracker";
@@ -14,6 +15,7 @@ import { useGameStatus } from "@/lib/utils/game-status";
 import { isWindows } from "@/lib/utils/os";
 import { Button, Column, Muted, P, Row, Tooltip, theme, Header as UiHeader, useToast } from "@/ui";
 import { DownloadGameButton } from "./DownloadGameButton";
+import { ModsDialog } from "./ModsDialog";
 
 interface HeaderProps {
   config: LauncherConfig;
@@ -25,6 +27,7 @@ interface HeaderProps {
 export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }: HeaderProps) {
   const { t, lang } = useTranslation();
   const installation = useInstallation();
+  const [isModsDialogOpen, setIsModsDialogOpen] = useState(false);
 
   const formatLastLaunch = (rawDate: string | null) => {
     if (!rawDate) return t("main.neverPlayed");
@@ -49,6 +52,8 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
   const isWin = isWindows();
   const isPathConfigured = Boolean(config.gameDir?.trim());
   const { gameExists, isValidating } = useGameStatus(config.gameDir);
+  const isGameMissing = !isPathConfigured || (!isValidating && !gameExists);
+  const isModsDisabled = isGameMissing || installation.isInstalling || isRunning;
 
   const formatLauncherPlaytime = (mins: number) => {
     if (!mins || mins <= 0) return "0 min";
@@ -65,8 +70,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
   const handleStartGame = async () => {
     if (!gameExists) {
       toast({
-        title: t("header.gameMissing"),
-        description: t("header.gameMissingDesc"),
+        description: t("toasts.gameMissingDesc"),
         type: "error",
       });
       return;
@@ -74,7 +78,6 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
 
     if (!isWin) {
       toast({
-        title: t("header.windowsOnly"),
         description: t("header.osUnsupportedDesc"),
         type: "error",
       });
@@ -82,12 +85,13 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
     }
 
     if (isRunning) return;
+    const activeSlot = config.activeProfileId || "slot-1";
+    logger.info("game", `start requested (${activeSlot})`);
     setIsRunning(true);
     discordRpc.setGameRunning(true);
     launcherTracker.saveToDisk().catch(() => {});
 
     toast({
-      title: t("header.startingGame"),
       description: t("header.startingDesc"),
       type: "info",
       duration: 2000,
@@ -102,6 +106,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
         rawArgs: config.gameArg,
         trackSession: true,
         onSessionEnd: async (daemonResult) => {
+          logger.info("game", `session ended (${daemonResult.elapsedMinutes}m)`);
           setIsRunning(false);
           discordRpc.setGameRunning(false);
           launcherTracker.saveToDisk().catch(() => {});
@@ -114,7 +119,6 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
             onConfigChange?.(nextConfig);
           } catch (_err) {
             toast({
-              title: t("toasts.sessionSaveErrorTitle"),
               description: t("toasts.sessionSaveErrorDesc"),
               type: "warn",
               duration: 3500,
@@ -168,20 +172,39 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
         }}
       >
         <Row gap={16} align="center">
-          <Button
-            variant="secondary"
-            size="lg"
-            disabled={isRunning}
-            onClick={onOpenSettings}
-            style={{
-              height: 46,
-              width: 46,
-              paddingLeft: 0,
-              paddingRight: 0,
-            }}
-          >
-            <Settings size={18} color={theme.colors.fg} />
-          </Button>
+          <Row gap={8} align="center">
+            <Button
+              variant="secondary"
+              size="lg"
+              disabled={isRunning}
+              onClick={onOpenSettings}
+              style={{
+                height: 46,
+                width: 46,
+                paddingLeft: 0,
+                paddingRight: 0,
+              }}
+            >
+              <Settings size={18} color={theme.colors.fg} />
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="lg"
+              disabled={isModsDisabled}
+              onClick={() => {
+                if (!isModsDisabled) setIsModsDialogOpen(true);
+              }}
+              style={{
+                height: 46,
+                width: 46,
+                paddingLeft: 0,
+                paddingRight: 0,
+              }}
+            >
+              <Layers size={18} color={isModsDisabled ? theme.colors.mutedFg : theme.colors.fg} />
+            </Button>
+          </Row>
 
           <Column gap={4} align="start">
             <Row gap={8} align="center">
@@ -249,7 +272,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
             isInstalling={true}
             onClick={onOpenInstall}
           />
-        ) : !isPathConfigured || (!isValidating && !gameExists) ? (
+        ) : isGameMissing ? (
           <DownloadGameButton onClick={onOpenInstall} disabled={isValidating || isRunning} />
         ) : (
           <Button
@@ -279,6 +302,12 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
           </Button>
         )}
       </Row>
+
+      <ModsDialog
+        open={isModsDialogOpen}
+        onOpenChange={setIsModsDialogOpen}
+        gameDir={config.gameDir}
+      />
     </UiHeader>
   );
 }
