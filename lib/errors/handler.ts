@@ -82,8 +82,7 @@ export function normalizeError(
 export function formatErrorToast(err: unknown, fallbackCode?: LauncherErrorCode) {
   const normalized = normalizeError(err, fallbackCode);
   return {
-    title: normalized.title,
-    description: normalized.description,
+    description: normalized.description || normalized.title,
     type: "error" as const,
   };
 }

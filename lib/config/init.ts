@@ -76,7 +76,10 @@ export async function initConfig(): Promise<{
     } catch (err) {
       logger.error("config", `Failed writing default config to ${filePath}:`, err);
     }
-    return { config: applyDevConfigOverrides(DEFAULT_CONFIG), isFirstLaunch: true };
+    return {
+      config: applyDevConfigOverrides(DEFAULT_CONFIG),
+      isFirstLaunch: true,
+    };
   }
 
   try {
@@ -93,7 +96,10 @@ export async function initConfig(): Promise<{
       }
     }
 
-    return { config: applyDevConfigOverrides(config), isFirstLaunch: forceWelcome };
+    return {
+      config: applyDevConfigOverrides(config),
+      isFirstLaunch: forceWelcome,
+    };
   } catch (err) {
     logger.error(
       "config",
@@ -105,6 +111,9 @@ export async function initConfig(): Promise<{
     } catch (writeErr) {
       logger.error("config", `Failed recreating fallback config at ${filePath}:`, writeErr);
     }
-    return { config: applyDevConfigOverrides(DEFAULT_CONFIG), isFirstLaunch: true };
+    return {
+      config: applyDevConfigOverrides(DEFAULT_CONFIG),
+      isFirstLaunch: true,
+    };
   }
 }

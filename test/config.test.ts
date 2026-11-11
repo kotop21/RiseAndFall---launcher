@@ -19,12 +19,12 @@ describe("Config: Path & Defaults", () => {
   it("creates 5 default profile slots", () => {
     const profiles = createDefaultProfiles("C:\\Games\\Raf", "-test");
     expect(profiles.length).toBe(5);
-    expect(profiles[0].id).toBe("slot-1");
-    expect(profiles[0].path).toBe("C:\\Games\\Raf");
-    expect(profiles[0].gameArg).toBe("-test");
-    expect(profiles[1].id).toBe("slot-2");
-    expect(profiles[1].path).toBe("");
-    expect(profiles[1].gameArg).toBe(DEFAULT_GAME_ARG);
+    expect(profiles[0]?.id).toBe("slot-1");
+    expect(profiles[0]?.path).toBe("C:\\Games\\Raf");
+    expect(profiles[0]?.gameArg).toBe("-test");
+    expect(profiles[1]?.id).toBe("slot-2");
+    expect(profiles[1]?.path).toBe("");
+    expect(profiles[1]?.gameArg).toBe(DEFAULT_GAME_ARG);
   });
 
   it("checks force welcome flag parsing", () => {
@@ -71,8 +71,8 @@ describe("Config: Schema Migration & Edge Cases", () => {
     expect(config.gameArg).toBe("-windowed -dev");
     expect(config.launcherLang).toBe("ru");
     expect(config.gameProfiles.length).toBe(5);
-    expect(config.gameProfiles[0].path).toBe("D:\\Games\\RiseAndFall");
-    expect(config.gameProfiles[0].gameArg).toBe("-windowed -dev");
+    expect(config.gameProfiles[0]?.path).toBe("D:\\Games\\RiseAndFall");
+    expect(config.gameProfiles[0]?.gameArg).toBe("-windowed -dev");
   });
 
   it("ensures incomplete profiles array is padded up to 5 slots", () => {
@@ -88,9 +88,9 @@ describe("Config: Schema Migration & Edge Cases", () => {
     const { config, wasMigrated } = migrateConfig(raw);
     expect(wasMigrated).toBe(true);
     expect(config.gameProfiles.length).toBe(5);
-    expect(config.gameProfiles[0].name).toBe("Custom 1");
-    expect(config.gameProfiles[1].name).toBe("Custom 2");
-    expect(config.gameProfiles[2].id).toBe("slot-3");
+    expect(config.gameProfiles[0]?.name).toBe("Custom 1");
+    expect(config.gameProfiles[1]?.name).toBe("Custom 2");
+    expect(config.gameProfiles[2]?.id).toBe("slot-3");
     expect(config.activeProfileId).toBe("slot-2");
   });
 

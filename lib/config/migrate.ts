@@ -53,8 +53,9 @@ export function migrateConfig(raw: Record<string, unknown>): {
     wasMigrated = true;
   }
 
-  if (typeof raw.gameDir === "string" && raw.gameDir && !profiles[0].path) {
-    profiles[0].path = raw.gameDir;
+  const firstProfile = profiles[0];
+  if (firstProfile && typeof raw.gameDir === "string" && raw.gameDir && !firstProfile.path) {
+    firstProfile.path = raw.gameDir;
     wasMigrated = true;
   }
 
@@ -62,7 +63,7 @@ export function migrateConfig(raw: Record<string, unknown>): {
     typeof raw.activeProfileId === "string" && raw.activeProfileId ? raw.activeProfileId : "slot-1";
 
   if (!profiles.some((p) => p.id === activeProfileId)) {
-    activeProfileId = profiles[0].id;
+    activeProfileId = firstProfile ? firstProfile.id : "slot-1";
     wasMigrated = true;
   }
 

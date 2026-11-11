@@ -72,7 +72,6 @@ describe("Errors: Toast Formatter", () => {
   it("formats error toast for UI notifications", () => {
     const toast = formatErrorToast(new Error("Disk full"), "FS_ACCESS_DENIED");
     expect(toast.type).toBe("error");
-    expect(toast.title).toBeDefined();
     expect(toast.description).toBeDefined();
   });
 });
