@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, Globe } from "@/icon";
+import { ExternalLink } from "@/icon";
 import { openBrowser } from "@/lib/browser/open";
 import { formatErrorToast } from "@/lib/errors";
 import { fetchReleases, getCachedReleases } from "@/lib/github/releases";
@@ -31,13 +31,12 @@ export function UpdateList() {
           setIsLoading(false);
           setHasError(false);
 
-          if (!hasNotifiedUpdate && data.length > 0) {
-            const latest = data[0];
+          const latest = data[0];
+          if (!hasNotifiedUpdate && latest) {
             const currentVer = getLauncherVersion();
             if (isDifferentVersion(latest.version, currentVer)) {
               hasNotifiedUpdate = true;
               toast({
-                title: t("toasts.updateAvailableTitle"),
                 description: t("toasts.updateAvailableDesc").replace("{version}", latest.version),
                 type: "info",
                 duration: 4000,
@@ -65,7 +64,6 @@ export function UpdateList() {
     setUpdateProgressText(t("buttons.updating"));
 
     toast({
-      title: t("toasts.updateDownloadingTitle"),
       description: t("toasts.updateDownloadingDesc").replace("{version}", release.version),
       type: "info",
       duration: 3500,
@@ -84,7 +82,6 @@ export function UpdateList() {
 
       if (!result.success) {
         toast({
-          title: t("toasts.updateErrorTitle"),
           description: result.error || t("toasts.updateErrorDesc"),
           type: "error",
         });
@@ -95,7 +92,6 @@ export function UpdateList() {
 
       if (result.isDev) {
         toast({
-          title: t("toasts.updateDevSuccessTitle"),
           description: t("toasts.updateDevSuccessDesc"),
           type: "info",
           duration: 4000,
@@ -104,7 +100,6 @@ export function UpdateList() {
         setUpdateProgressText(null);
       } else {
         toast({
-          title: t("toasts.updateSuccessTitle"),
           description: t("toasts.updateSuccessDesc"),
           type: "info",
           duration: 5000,
@@ -113,7 +108,6 @@ export function UpdateList() {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       toast({
-        title: t("toasts.updateErrorTitle"),
         description: message,
         type: "error",
       });
@@ -126,8 +120,7 @@ export function UpdateList() {
     try {
       if (!(await openBrowser(url))) {
         toast({
-          title: t("toasts.browserErrorTitle"),
-          description: t("toasts.browserErrorDesc"),
+          description: t("errors.BROWSER_FAILED.description"),
           type: "error",
         });
       }
@@ -201,31 +194,18 @@ export function UpdateList() {
 
   if (!isLoading && (hasError || releases.length === 0)) {
     return (
-      <Column
+      <Row
         gap={8}
+        align="center"
+        justify="center"
         style={{
           width: "100%",
-          paddingTop: 0,
-          paddingBottom: 15,
-          paddingLeft: 15,
-          paddingRight: 15,
+          paddingTop: 16,
+          paddingBottom: 16,
         }}
       >
-        <Card
-          style={{
-            padding: 16,
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.border,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Row gap={8} align="center">
-            <Globe size={16} color={theme.colors.mutedFg} />
-            <Muted>{t("main.noUpdatesData")}</Muted>
-          </Row>
-        </Card>
-      </Column>
+        <Muted>{t("main.noUpdatesData")}</Muted>
+      </Row>
     );
   }
 

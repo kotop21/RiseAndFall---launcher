@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { fetchLauncherInfo, getLauncherDownloadUrl } from "@/lib/api";
 import { isDevMode } from "@/lib/dev/cli";
 import { extractZip } from "@/lib/explorer/extract";
 import type { ReleaseItem } from "@/lib/github/types";
@@ -27,9 +28,7 @@ export function resolveDownloadUrl(release: ReleaseItem): string | null {
     if (exeAsset?.downloadUrl) return exeAsset.downloadUrl;
   }
 
-  const ver = release.version.trim();
-  const vTag = ver.startsWith("v") ? ver : `v${ver}`;
-  return `https://github.com/kotop21/RiseAndFall---launcher/releases/download/${ver}/RiseAndFall-Launcher_Portable_${vTag}.zip`;
+  return getLauncherDownloadUrl("portable");
 }
 
 function findExecutableInDir(dir: string): string | null {
@@ -139,9 +138,13 @@ export async function downloadReleaseArchive(
     const nodeReadable = Readable.fromWeb(
       res.body as unknown as Parameters<typeof Readable.fromWeb>[0],
     );
-    const fileWriteStream = createWriteStream(targetFilePath, { highWaterMark: 64 * 1024 });
+    const fileWriteStream = createWriteStream(targetFilePath, {
+      highWaterMark: 64 * 1024,
+    });
 
-    await pipeline(nodeReadable, progressTransform, fileWriteStream, { signal });
+    await pipeline(nodeReadable, progressTransform, fileWriteStream, {
+      signal,
+    });
     logger.info("updater", `Download finished (${bytesDownloaded} bytes)`);
     return true;
   } catch (err) {
@@ -172,7 +175,25 @@ async function doUpdateLauncher(
   const onProgress = options?.onProgress;
   const signal = options?.signal;
 
-  const downloadUrl = resolveDownloadUrl(release);
+  let downloadUrl: string | null = null;
+  try {
+    const info = await fetchLauncherInfo("portable", signal);
+    if (info?.url) {
+      downloadUrl = info.url;
+      logger.info("updater", `Resolved download URL from backend API: ${downloadUrl}`);
+    }
+  } catch (err) {
+    logger.warn(
+      "updater",
+      "Backend /launcher/info request failed, using release download url:",
+      err,
+    );
+  }
+
+  if (!downloadUrl) {
+    downloadUrl = resolveDownloadUrl(release);
+  }
+
   if (!downloadUrl) {
     logger.error("updater", "Could not resolve download URL for release", release.version);
     return { success: false, error: "Download URL not available" };
@@ -222,8 +243,9 @@ async function doUpdateLauncher(
     let payloadDir = stagingDir;
     try {
       const topItems = await readdir(stagingDir);
-      if (topItems.length === 1) {
-        const singleItemPath = join(stagingDir, topItems[0]);
+      const firstItem = topItems[0];
+      if (topItems.length === 1 && firstItem) {
+        const singleItemPath = join(stagingDir, firstItem);
         const s = await stat(singleItemPath);
         if (s.isDirectory()) {
           payloadDir = singleItemPath;

@@ -1,6 +1,7 @@
 export function cleanVersion(v: string | null | undefined): string {
   if (!v) return "0.0.0";
-  return v.trim().replace(/^v/i, "").split("-")[0].trim();
+  const base = v.trim().replace(/^v/i, "").split("-")[0];
+  return base ? base.trim() : "0.0.0";
 }
 
 export function compareVersions(v1: string, v2: string): number {
