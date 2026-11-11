@@ -35,6 +35,7 @@ export function isDevMode(): boolean {
 function extractArgValue(argv: string[], names: string[]): string | undefined {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
+    if (!arg) continue;
     for (const name of names) {
       if (arg === name) {
         const next = argv[i + 1];

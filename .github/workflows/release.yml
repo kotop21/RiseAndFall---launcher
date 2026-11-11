@@ -3,7 +3,7 @@ name: Release Launcher
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -167,4 +167,3 @@ jobs:
           files: |
             dist/RiseAndFall-Launcher_Setup_*.exe
             dist/RiseAndFall-Launcher_Portable_*.zip
-

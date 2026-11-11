@@ -14,7 +14,10 @@ if (typeof process !== "undefined" && process.platform === "win32") {
       const normalized = exePath.replace(/\\/g, "/");
       const lastSlash = normalized.lastIndexOf("/");
       const exeDir = lastSlash !== -1 ? normalized.slice(0, lastSlash) : ".";
-      const candidate = (exeDir + "/gpuix-native.win32-x64-msvc.node").replace(/\//g, "\\");
+      const candidate = (exeDir + "/gpuix-native.win32-x64-msvc.node").replace(
+        /\//g,
+        "\\",
+      );
 
       let exists = false;
       if (denoObj && typeof denoObj.statSync === "function") {
