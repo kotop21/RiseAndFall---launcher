@@ -147,6 +147,7 @@ export class DiscordRpcClient {
   }
 
   public disconnect(): void {
+    const wasConnected = this.isConnected || Boolean(this.socket);
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -158,6 +159,9 @@ export class DiscordRpcClient {
       } catch {}
     }
     this.cleanup();
+    if (wasConnected) {
+      logger.info("discord-rpc", "disconnected");
+    }
   }
 
   private cleanup(): void {

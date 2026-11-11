@@ -39,7 +39,7 @@ export async function exportGameSettings(targetDir: string): Promise<ExportSetti
 
     // Парсим путь из строки вывода: "[OK] Exported X settings to: C:\..."
     const match = result.stdout.match(/to:\s*(.+)$/i);
-    const outputFilePath = match ? match[1].trim() : undefined;
+    const outputFilePath = match?.[1] ? match[1].trim() : undefined;
 
     return {
       success: true,

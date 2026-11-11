@@ -33,8 +33,7 @@ class DiscordRpcManager {
 
   private updatePresence() {
     this.client.setActivity({
-      state: "Raf-Launcher",
-      details: this.isGameRunning ? "In Game: Rise and Fall" : "In Launcher",
+      state: this.isGameRunning ? "In Game: Rise and Fall" : "In Launcher",
       timestamps: {
         start: this.launcherStartTime,
       },

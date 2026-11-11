@@ -4,6 +4,7 @@ import { Check, Folder, Layers, RotateCcw, Trash2 } from "@/icon";
 import type { GameBuildProfile, LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
 import {
   Badge,
   Button,
@@ -85,14 +86,14 @@ export function GameProfiles({
 
       if (!isValid) {
         toast({
-          title: t("toasts.welcomeMissingTitle"),
-          description: t("toasts.welcomeMissingDesc"),
+          description: t("toasts.gameMissingDesc"),
           type: "error",
         });
         return;
       }
 
       if (pickedPath) {
+        logger.info("profile", `game path set (${formState.activeProfileId})`);
         const updatedProfiles = formState.gameProfiles.map((prof) => {
           if (prof.id === formState.activeProfileId) {
             return { ...prof, path: pickedPath };
@@ -210,7 +211,7 @@ export function GameProfiles({
           <Button variant="secondary" disabled={isPickingFolder} onClick={handleSelectGamePath}>
             <Row gap={8} align="center">
               <Folder size={14} color={theme.colors.fg} />
-              {t("settings.browse")}
+              {t("buttons.browse")}
             </Row>
           </Button>
         </Row>

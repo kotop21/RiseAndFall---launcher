@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import { DownloadGameButton } from "@/components/DownloadGameButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
-import { Download, Upload } from "@/icon";
+import { Download, Upload, Wrench } from "@/icon";
 import { createLauncherError, formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
 import { useInstallation } from "@/lib/manager/install";
 import { exportGameSettings, importGameSettings } from "@/lib/settings-cli";
 import { useGameStatus } from "@/lib/utils/game-status";
@@ -30,16 +31,14 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
 
     if (!isWindows()) {
       toast({
-        title: t("toasts.cliOsUnsupportedTitle"),
         description: t("toasts.cliOsUnsupportedDesc"),
-        type: "warn",
+        type: "error",
       });
       return;
     }
 
     if (!isCliAvailable) {
       toast({
-        title: t("toasts.cliMissingTitle"),
         description: t("toasts.cliMissingDesc"),
         type: "warn",
       });
@@ -58,10 +57,11 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
 
       const res = await exportGameSettings(targetDir);
       if (!res.success) {
+        logger.error("settings-cli", `export failed (${res.error || "unknown"})`);
         throw createLauncherError("SETTINGS_CLI_EXPORT_FAILED", res.error);
       }
+      logger.info("settings-cli", "export ok");
       toast({
-        title: t("toasts.settingsExportSuccessTitle"),
         description: t("toasts.settingsExportSuccessDesc").replace(
           "{path}",
           (res.outputFilePath || targetDir).split(/[\\/]/).pop() || "raf-settings.json",
@@ -84,11 +84,12 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
 
       const res = await importGameSettings(selectedFilePath);
       if (!res.success) {
+        logger.error("settings-cli", `import failed (${res.error || "unknown"})`);
         throw createLauncherError("SETTINGS_CLI_IMPORT_FAILED", res.error);
       }
+      logger.info("settings-cli", "import ok");
       toast({
-        title: t("toasts.settingsImportSuccessTitle"),
-        description: t("toasts.settingsImportSuccessDesc"),
+        description: t("toasts.settingsSavedDesc"),
         type: "info",
         duration: 3500,
       });
@@ -99,7 +100,10 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
 
   return (
     <Column gap={10} style={{ width: "100%" }}>
-      <Label>{t("settings.actions")}</Label>
+      <Row gap={8} align="center">
+        <Wrench size={14} color={theme.colors.mutedFg} />
+        <Label>{t("settings.actions")}</Label>
+      </Row>
 
       <Row gap={10} align="center" style={{ width: "100%" }}>
         <div style={{ flexGrow: 1, minWidth: 0 }}>

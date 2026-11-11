@@ -2,7 +2,8 @@ import { setLowSpecMode } from "@/components/ui/motion-compat";
 import type { LauncherConfig } from "@/lib/config/types";
 import { discordRpc } from "@/lib/discord-rpc";
 import { useTranslation } from "@/lib/lang";
-import { Column, Label, P, Row, Switch, theme, useToast } from "@/ui";
+import { logger } from "@/lib/logger";
+import { Column, P, Row, Switch, theme, useToast } from "@/ui";
 
 interface SettingsIntegrationsProps {
   config: LauncherConfig;
@@ -14,13 +15,13 @@ export function SettingsIntegrations({ config, onChangeConfig }: SettingsIntegra
   const { toast } = useToast();
 
   const handleToggleDiscord = (checked: boolean) => {
+    logger.info("discord-rpc", checked ? "enabled" : "disabled");
     discordRpc.setEnabled(checked);
     onChangeConfig({
       ...config,
       discordRpc: checked,
     });
     toast({
-      title: checked ? t("toasts.discordRpcEnabledTitle") : t("toasts.discordRpcDisabledTitle"),
       description: checked ? t("toasts.discordRpcEnabledDesc") : t("toasts.discordRpcDisabledDesc"),
       type: "info",
       duration: 2500,
@@ -28,13 +29,13 @@ export function SettingsIntegrations({ config, onChangeConfig }: SettingsIntegra
   };
 
   const handleToggleLowPerf = (checked: boolean) => {
+    logger.info("settings", `low-performance mode: ${checked ? "on" : "off"}`);
     setLowSpecMode(checked);
     onChangeConfig({
       ...config,
       lowPerformanceMode: checked,
     });
     toast({
-      title: checked ? t("toasts.lowPerfEnabledTitle") : t("toasts.lowPerfDisabledTitle"),
       description: checked ? t("toasts.lowPerfEnabledDesc") : t("toasts.lowPerfDisabledDesc"),
       type: "info",
       duration: 2500,
@@ -43,7 +44,6 @@ export function SettingsIntegrations({ config, onChangeConfig }: SettingsIntegra
 
   return (
     <Column gap={8} style={{ width: "100%" }}>
-      <Label>{t("settings.integrations")}</Label>
       <Row justify="between" align="center" style={{ width: "100%" }}>
         <P style={{ color: theme.colors.fg, fontSize: 14 }}>{t("settings.enableDiscordRpc")}</P>
         <Switch checked={Boolean(config.discordRpc)} onCheckedChange={handleToggleDiscord} />

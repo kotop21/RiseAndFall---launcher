@@ -1,5 +1,5 @@
 import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
-import { Globe } from "@/icon";
+import { SlidersHorizontal } from "@/icon";
 import type { LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
@@ -34,8 +34,8 @@ export function SettingsLanguage({ config, onChangeConfig }: SettingsLanguagePro
   return (
     <Column gap={8} style={{ width: "100%" }}>
       <Row gap={8} align="center">
-        <Globe size={14} color={theme.colors.mutedFg} />
-        <Label>{t("settings.language")}</Label>
+        <SlidersHorizontal size={14} color={theme.colors.mutedFg} />
+        <Label>{t("settings.launcher")}</Label>
       </Row>
       <NavigationRoot value={config.launcherLang || "en"} onValueChange={handleLanguageChange}>
         <SegmentedNav items={LANG_ITEMS} itemWidth={100} itemHeight={32} />
