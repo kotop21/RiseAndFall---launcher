@@ -10,6 +10,26 @@ export {
 } from "./elements/card";
 export { Checkbox, type CheckboxProps } from "./elements/checkbox";
 export {
+  Dialog,
+  DialogBody,
+  type DialogBodyProps,
+  DialogClose,
+  type DialogCloseProps,
+  DialogDescription,
+  type DialogDescriptionProps,
+  DialogFooter,
+  type DialogFooterProps,
+  DialogHeader,
+  type DialogHeaderProps,
+  DialogHost,
+  type DialogProps,
+  DialogProvider,
+  DialogTitle,
+  type DialogTitleProps,
+  dialogStore,
+  useDialog,
+} from "./elements/dialog";
+export {
   type FileDialogOptions,
   FilePickerTrigger,
   type FilePickerTriggerProps,
@@ -51,7 +71,11 @@ export {
   type ToastType,
   useToast,
 } from "./elements/toast";
-export { Tooltip, type TooltipProps, type TooltipSide } from "./elements/tooltip";
+export {
+  Tooltip,
+  type TooltipProps,
+  type TooltipSide,
+} from "./elements/tooltip";
 export { H1, H2, H3, Label, Muted, P } from "./elements/typography";
 export {
   useViews,

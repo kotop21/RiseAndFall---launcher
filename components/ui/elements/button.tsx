@@ -49,13 +49,13 @@ export function Button({
     outline: {
       bg: "transparent",
       text: theme.colors.fg,
-      hoverBg: theme.colors.accent,
+      hoverBg: theme.colors.secondaryHover,
       border: theme.colors.border,
     },
     ghost: {
       bg: "transparent",
       text: theme.colors.fg,
-      hoverBg: theme.colors.accent,
+      hoverBg: theme.colors.secondaryHover,
     },
     destructive: {
       bg: theme.colors.destructive,
@@ -70,7 +70,7 @@ export function Button({
   const baseTop = typeof style.top === "number" ? style.top : 0;
 
   const activeStyle: Omit<StyleDesc, "hover" | "active"> = {
-    opacity: 0.9,
+    backgroundColor: v.hoverBg,
     ...(shouldAnimate ? { top: baseTop + 1 } : {}),
     ...(style.active || {}),
   };

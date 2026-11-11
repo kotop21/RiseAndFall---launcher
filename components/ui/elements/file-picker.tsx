@@ -42,6 +42,10 @@ async function runProcess(cmd: string[]): Promise<string[] | null> {
   return new Promise<string[] | null>((resolve) => {
     try {
       const [executable, ...args] = cmd;
+      if (!executable) {
+        resolve(null);
+        return;
+      }
       const proc = spawn(executable, args, {
         stdio: ["ignore", "pipe", "pipe"],
         windowsHide: true,
@@ -268,7 +272,7 @@ export async function openFolderDialog(
 export function useFileDialog() {
   const pickFile = useCallback(async (options: FileDialogOptions = {}): Promise<string | null> => {
     const paths = await openFileDialog({ ...options, multiple: false });
-    return paths && paths.length > 0 ? paths[0] : null;
+    return paths && paths.length > 0 && paths[0] ? paths[0] : null;
   }, []);
 
   const pickFiles = useCallback(
@@ -286,6 +290,7 @@ export function useFileDialog() {
       if (!res || res.paths.length === 0) return null;
 
       const chosenPath = res.paths[0];
+      if (!chosenPath) return null;
       if (options.requiredFile) {
         return {
           path: chosenPath,

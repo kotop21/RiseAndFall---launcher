@@ -1,9 +1,11 @@
 import type { StyleDesc } from "@gpuix/react";
 import { createContext, type ReactNode, useCallback, useContext, useRef, useState } from "react";
 import { safeMotion as motion } from "@/components/ui/motion-compat";
+import { AlertTriangle, CircleCheck, Info, X, XCircle } from "@/icon";
 import { theme } from "../theme";
+import { Button } from "./button";
 
-export type ToastType = "info" | "error" | "warn";
+export type ToastType = "info" | "error" | "warn" | "success";
 
 export type ToastPosition =
   | "top-center"
@@ -15,17 +17,33 @@ export type ToastPosition =
 
 export interface ToastItem {
   id: string;
-  title: string;
-  description?: string;
+  description: string;
   type?: ToastType;
   duration?: number;
 }
 
 export interface ToastOptions {
-  title: string;
-  description?: string;
+  description: string;
   type?: ToastType;
   duration?: number;
+}
+
+let toastInteracting = false;
+let toastResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function isToastActive(): boolean {
+  return toastInteracting;
+}
+
+export function markToastInteraction() {
+  toastInteracting = true;
+  if (toastResetTimer) {
+    clearTimeout(toastResetTimer);
+  }
+  toastResetTimer = setTimeout(() => {
+    toastInteracting = false;
+    toastResetTimer = null;
+  }, 400);
 }
 
 interface ToastContextType {
@@ -59,6 +77,7 @@ export function ToastProvider({ children, defaultPosition = "top-right" }: Toast
   const animFrameRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dismissToast = useCallback(() => {
+    markToastInteraction();
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -78,7 +97,7 @@ export function ToastProvider({ children, defaultPosition = "top-right" }: Toast
   currentToastRef.current = currentToast;
 
   const toast = useCallback(
-    ({ title, description, type = "info", duration = 3500 }: ToastOptions) => {
+    ({ description, type = "info", duration = 3500 }: ToastOptions) => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -93,7 +112,7 @@ export function ToastProvider({ children, defaultPosition = "top-right" }: Toast
       }
 
       const id = Math.random().toString(36).substring(2, 9);
-      const newItem: ToastItem = { id, title, description, type, duration };
+      const newItem: ToastItem = { id, description, type, duration };
 
       if (currentToastRef.current) {
         setAnimStage("exiting");
@@ -137,18 +156,19 @@ export function ToastProvider({ children, defaultPosition = "top-right" }: Toast
       ? { left: 20, alignItems: "flex-start" }
       : { right: 20, alignItems: "flex-end" };
 
-  const getBarColor = (type: ToastType = "info") => {
+  const getToastIcon = (type: ToastType = "info") => {
     switch (type) {
       case "error":
-        return theme.colors.destructive;
+        return <XCircle size={18} color={theme.colors.destructiveHover} />;
       case "warn":
-        return theme.colors.warning;
+        return <AlertTriangle size={18} color={theme.colors.fg} />;
+      case "success":
+        return <CircleCheck size={18} color={theme.colors.fg} />;
       default:
-        return theme.colors.primary;
+        return <Info size={18} color={theme.colors.fg} />;
     }
   };
 
-  const barColor = getBarColor(currentToast?.type);
   const isEntered = animStage === "entered";
 
   const animStyles = isTop
@@ -193,6 +213,15 @@ export function ToastProvider({ children, defaultPosition = "top-right" }: Toast
                 duration: 0.22,
                 ease: "easeOut",
               }}
+              onMouseEnter={markToastInteraction}
+              onMouseLeave={() => {
+                if (toastResetTimer) clearTimeout(toastResetTimer);
+                toastResetTimer = setTimeout(() => {
+                  toastInteracting = false;
+                  toastResetTimer = null;
+                }, 100);
+              }}
+              onMouseDown={markToastInteraction}
               style={{
                 position: "absolute",
                 minWidth: 320,
@@ -204,18 +233,10 @@ export function ToastProvider({ children, defaultPosition = "top-right" }: Toast
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "row",
-                alignItems: "stretch",
+                alignItems: "center",
                 pointerEvents: "auto",
               }}
             >
-              <div
-                style={{
-                  width: 4,
-                  backgroundColor: barColor,
-                  flexShrink: 0,
-                }}
-              />
-
               <div
                 style={{
                   flexGrow: 1,
@@ -225,63 +246,68 @@ export function ToastProvider({ children, defaultPosition = "top-right" }: Toast
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: 12,
-                  gap: 8,
+                  gap: 12,
                 }}
               >
                 <div
                   style={{
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 3,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
                     flexGrow: 1,
                     minWidth: 0,
                   }}
                 >
-                  <text
+                  <div
                     style={{
-                      fontFamily: theme.fontFamily,
-                      color: theme.colors.fg,
-                      fontSize: 13,
-                      fontWeight: "bold",
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {currentToast.title}
-                  </text>
-                  {currentToast.description ? (
+                    {getToastIcon(currentToast.type)}
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      flexGrow: 1,
+                      minWidth: 0,
+                    }}
+                  >
                     <text
                       style={{
                         fontFamily: theme.fontFamily,
                         color: theme.colors.mutedFg,
-                        fontSize: 12,
+                        fontSize: 13,
+                        lineHeight: 18,
+                        userSelect: "none",
                       }}
                     >
                       {currentToast.description}
                     </text>
-                  ) : null}
+                  </div>
                 </div>
 
-                <div
-                  onClick={dismissToast}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    markToastInteraction();
+                    dismissToast();
+                  }}
                   style={{
-                    cursor: "pointer",
-                    padding: 4,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    width: 28,
+                    height: 28,
+                    borderRadius: theme.radius.sm,
                     flexShrink: 0,
                   }}
                 >
-                  <text
-                    style={{
-                      fontFamily: theme.fontFamily,
-                      color: theme.colors.mutedFg,
-                      fontSize: 14,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    ✕
-                  </text>
-                </div>
+                  <X size={15} color={theme.colors.mutedFg} />
+                </Button>
               </div>
             </motion.div>
           </div>

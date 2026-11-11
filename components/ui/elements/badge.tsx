@@ -15,9 +15,16 @@ export function Badge({ children, variant = "default", maxChars = 24, style = {}
   const variants: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
     default: { bg: theme.colors.primary, text: theme.colors.primaryFg },
     secondary: { bg: theme.colors.secondary, text: theme.colors.secondaryFg },
-    outline: { bg: "transparent", text: theme.colors.fg, border: theme.colors.border },
-    destructive: { bg: theme.colors.destructive, text: theme.colors.destructiveFg },
-    success: { bg: theme.colors.success, text: "#ffffff" },
+    outline: {
+      bg: "transparent",
+      text: theme.colors.fg,
+      border: theme.colors.border,
+    },
+    destructive: {
+      bg: theme.colors.destructive,
+      text: theme.colors.destructiveFg,
+    },
+    success: { bg: theme.colors.success, text: theme.colors.successFg },
   };
 
   const v = variants[variant];

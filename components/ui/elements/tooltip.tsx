@@ -39,23 +39,59 @@ export function Tooltip({
   const getAnchoredProps = () => {
     switch (side) {
       case "top":
-        return { side: "top" as const, align: "center" as const, margin: { marginBottom: offset } };
+        return {
+          side: "top" as const,
+          align: "center" as const,
+          margin: { marginBottom: offset },
+        };
       case "bottom":
-        return { side: "bottom" as const, align: "center" as const, margin: { marginTop: offset } };
+        return {
+          side: "bottom" as const,
+          align: "center" as const,
+          margin: { marginTop: offset },
+        };
       case "left":
-        return { side: "left" as const, align: "center" as const, margin: { marginRight: offset } };
+        return {
+          side: "left" as const,
+          align: "center" as const,
+          margin: { marginRight: offset },
+        };
       case "right":
-        return { side: "right" as const, align: "center" as const, margin: { marginLeft: offset } };
+        return {
+          side: "right" as const,
+          align: "center" as const,
+          margin: { marginLeft: offset },
+        };
       case "top-start":
-        return { side: "top" as const, align: "start" as const, margin: { marginBottom: offset } };
+        return {
+          side: "top" as const,
+          align: "start" as const,
+          margin: { marginBottom: offset },
+        };
       case "top-end":
-        return { side: "top" as const, align: "end" as const, margin: { marginBottom: offset } };
+        return {
+          side: "top" as const,
+          align: "end" as const,
+          margin: { marginBottom: offset },
+        };
       case "bottom-start":
-        return { side: "bottom" as const, align: "start" as const, margin: { marginTop: offset } };
+        return {
+          side: "bottom" as const,
+          align: "start" as const,
+          margin: { marginTop: offset },
+        };
       case "bottom-end":
-        return { side: "bottom" as const, align: "end" as const, margin: { marginTop: offset } };
+        return {
+          side: "bottom" as const,
+          align: "end" as const,
+          margin: { marginTop: offset },
+        };
       default:
-        return { side: "top" as const, align: "center" as const, margin: { marginBottom: offset } };
+        return {
+          side: "top" as const,
+          align: "center" as const,
+          margin: { marginBottom: offset },
+        };
     }
   };
 
