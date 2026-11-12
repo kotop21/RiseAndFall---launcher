@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { saveConfig } from "@/lib/config/save";
 import type { LauncherConfig } from "@/lib/config/types";
 import { getDevArgs } from "@/lib/dev/cli";
+import { FeatureBadgeProvider } from "@/lib/features";
 import { LanguageProvider } from "@/lib/lang";
 import { logger } from "@/lib/logger";
 import { installationManager } from "@/lib/manager/install";
@@ -106,75 +107,98 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
     setActiveView(installSource === "settings" ? "settings" : "main");
   };
 
+  const handleSeenBadgesChange = useCallback((nextSeen: string[]) => {
+    setConfig((prev) => {
+      const nextConfig = { ...prev, seenBadges: nextSeen };
+      saveConfig(nextConfig).catch((err) => {
+        logger.error("config", "Failed saving seen badges to config:", err);
+      });
+      return nextConfig;
+    });
+  }, []);
+
   return (
     <LanguageProvider lang={config.launcherLang}>
       <ToastProvider defaultPosition="top-right">
         <DialogProvider>
-          <Flex
-            direction="column"
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: theme.colors.bg,
-              paddingBottom: isMain ? 72 : 0,
-            }}
+          <FeatureBadgeProvider
+            seenBadges={config.seenBadges || []}
+            onSeenChange={handleSeenBadgesChange}
           >
-            <Views
-              value={activeView}
-              onValueChange={(id) =>
-                setActiveView(id as "welcome" | "main" | "settings" | "install")
-              }
+            <Flex
+              direction="column"
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: theme.colors.bg,
+                paddingBottom: isMain ? 72 : 0,
+              }}
             >
-              <View id="welcome" transition="fade" style={{ width: "100%", height: "100%" }}>
-                <WelcomeView
-                  skipAutoDetect={devArgs.isDev && devArgs.disableAutoDetectLanguage}
-                  onAutoDetectLanguage={handleAutoDetectLanguage}
-                  onSelectExistingGame={handleSelectExistingFromWelcome}
-                  onNavigateInstall={() => {
+              <Views
+                value={activeView}
+                onValueChange={(id) =>
+                  setActiveView(id as "welcome" | "main" | "settings" | "install")
+                }
+              >
+                <View id="welcome" transition="fade" style={{ width: "100%", height: "100%" }}>
+                  <WelcomeView
+                    skipAutoDetect={devArgs.isDev && devArgs.disableAutoDetectLanguage}
+                    onAutoDetectLanguage={handleAutoDetectLanguage}
+                    onSelectExistingGame={handleSelectExistingFromWelcome}
+                    onNavigateInstall={() => {
+                      setInstallSource("main");
+                      setActiveView("install");
+                    }}
+                  />
+                </View>
+
+                <View id="main" transition="fade" style={{ width: "100%", height: "100%" }}>
+                  <MainView config={config} onChangeConfig={handleUpdateConfig} />
+                </View>
+
+                <View
+                  id="settings"
+                  transition="slide-left"
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <SettingsView
+                    config={config}
+                    onChangeConfig={handleUpdateConfig}
+                    onBack={() => setActiveView("main")}
+                    onOpenInstall={() => {
+                      setInstallSource("settings");
+                      setActiveView("install");
+                    }}
+                  />
+                </View>
+
+                <View
+                  id="install"
+                  transition="slide-left"
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <InstallView
+                    defaultInstallPath={config.gameDir}
+                    isReinstall={isReinstall}
+                    onInstalled={handleInstallSuccess}
+                    onCancel={handleCancelInstall}
+                  />
+                </View>
+              </Views>
+
+              {isMain && (
+                <Header
+                  config={config}
+                  onConfigChange={setConfig}
+                  onOpenSettings={() => setActiveView("settings")}
+                  onOpenInstall={() => {
                     setInstallSource("main");
                     setActiveView("install");
                   }}
                 />
-              </View>
-
-              <View id="main" transition="fade" style={{ width: "100%", height: "100%" }}>
-                <MainView config={config} onChangeConfig={handleUpdateConfig} />
-              </View>
-
-              <View id="settings" transition="slide-left" style={{ width: "100%", height: "100%" }}>
-                <SettingsView
-                  config={config}
-                  onChangeConfig={handleUpdateConfig}
-                  onBack={() => setActiveView("main")}
-                  onOpenInstall={() => {
-                    setInstallSource("settings");
-                    setActiveView("install");
-                  }}
-                />
-              </View>
-
-              <View id="install" transition="slide-left" style={{ width: "100%", height: "100%" }}>
-                <InstallView
-                  defaultInstallPath={config.gameDir}
-                  isReinstall={isReinstall}
-                  onInstalled={handleInstallSuccess}
-                  onCancel={handleCancelInstall}
-                />
-              </View>
-            </Views>
-
-            {isMain && (
-              <Header
-                config={config}
-                onConfigChange={setConfig}
-                onOpenSettings={() => setActiveView("settings")}
-                onOpenInstall={() => {
-                  setInstallSource("main");
-                  setActiveView("install");
-                }}
-              />
-            )}
-          </Flex>
+              )}
+            </Flex>
+          </FeatureBadgeProvider>
         </DialogProvider>
       </ToastProvider>
     </LanguageProvider>

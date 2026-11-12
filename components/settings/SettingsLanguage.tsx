@@ -32,10 +32,10 @@ export function SettingsLanguage({ config, onChangeConfig }: SettingsLanguagePro
   };
 
   return (
-    <Column gap={8} style={{ width: "100%" }}>
+    <Column featureId="settings.language" gap={8} style={{ width: "100%" }}>
       <Row gap={8} align="center">
         <SlidersHorizontal size={14} color={theme.colors.mutedFg} />
-        <Label>{t("settings.launcher")}</Label>
+        <Label featureId="settings.language">{t("settings.launcher")}</Label>
       </Row>
       <NavigationRoot value={config.launcherLang || "en"} onValueChange={handleLanguageChange}>
         <SegmentedNav items={LANG_ITEMS} itemWidth={100} itemHeight={32} />

@@ -174,6 +174,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
         <Row gap={16} align="center">
           <Row gap={8} align="center">
             <Button
+              featureId="header.settings"
               variant="secondary"
               size="lg"
               disabled={isRunning}
@@ -189,6 +190,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
             </Button>
 
             <Button
+              featureId="header.mods"
               variant="secondary"
               size="lg"
               disabled={isModsDisabled}

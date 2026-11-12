@@ -44,13 +44,30 @@ export function SettingsIntegrations({ config, onChangeConfig }: SettingsIntegra
 
   return (
     <Column gap={8} style={{ width: "100%" }}>
-      <Row justify="between" align="center" style={{ width: "100%" }}>
-        <P style={{ color: theme.colors.fg, fontSize: 14 }}>{t("settings.enableDiscordRpc")}</P>
+      <Row
+        featureId="settings.integrations.discord"
+        justify="between"
+        align="center"
+        style={{ width: "100%" }}
+      >
+        <P
+          featureId="settings.integrations.discord"
+          style={{ color: theme.colors.fg, fontSize: 14 }}
+        >
+          {t("settings.enableDiscordRpc")}
+        </P>
         <Switch checked={Boolean(config.discordRpc)} onCheckedChange={handleToggleDiscord} />
       </Row>
 
-      <Row justify="between" align="center" style={{ width: "100%" }}>
-        <P style={{ color: theme.colors.fg, fontSize: 14 }}>{t("settings.lowPerformanceMode")}</P>
+      <Row
+        featureId="settings.integrations.perf"
+        justify="between"
+        align="center"
+        style={{ width: "100%" }}
+      >
+        <P featureId="settings.integrations.perf" style={{ color: theme.colors.fg, fontSize: 14 }}>
+          {t("settings.lowPerformanceMode")}
+        </P>
         <Switch
           checked={Boolean(config.lowPerformanceMode)}
           onCheckedChange={handleToggleLowPerf}

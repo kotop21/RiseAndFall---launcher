@@ -236,7 +236,7 @@ export function GameInstaller({
             padding: 14,
           }}
         >
-          <Label>{t("install.installDir")}</Label>
+          <Label featureId="install.dir">{t("install.installDir")}</Label>
           <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>{installPath}</P>
           <Row gap={6} align="center">
             {hasManifest ? (
@@ -253,7 +253,7 @@ export function GameInstaller({
         </Column>
       ) : (
         <Column gap={8} style={{ width: "100%" }}>
-          <Label>{t("install.installDir")}</Label>
+          <Label featureId="install.dir">{t("install.installDir")}</Label>
           <Row gap={8} align="center" style={{ width: "100%" }}>
             <div style={{ flexGrow: 1 }}>
               <Input
@@ -281,7 +281,7 @@ export function GameInstaller({
 
       <Column gap={8} style={{ width: "100%" }}>
         <Row gap={8} align="center">
-          <Label>{t("install.langPack")}</Label>
+          <Label featureId="install.lang">{t("install.langPack")}</Label>
         </Row>
         <NavigationRoot
           value={selectedLang}

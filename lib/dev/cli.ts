@@ -9,6 +9,9 @@ export interface DevCliArgs {
   lowSpec: boolean;
   logFile: boolean;
   mockRelease: boolean;
+  showAllBadges: boolean;
+  resetBadges: boolean;
+  unreadBadges?: string[];
 }
 
 export function isDevMode(): boolean {
@@ -101,6 +104,8 @@ export function parseDevArgs(
       lowSpec: false,
       logFile: true,
       mockRelease: false,
+      showAllBadges: false,
+      resetBadges: false,
     };
   }
 
@@ -108,6 +113,15 @@ export function parseDevArgs(
   const view = normalizeDevView(extractArgValue(argv, ["--view", "-v"]));
   const lowSpec = hasArgFlag(argv, ["--low-spec", "--low-performance"]);
   const logFile = hasArgFlag(argv, ["--log-file", "--file-logs", "--enable-log-file"]);
+  const showAllBadges = hasArgFlag(argv, ["--show-all-badges", "--all-badges"]);
+  const resetBadges = hasArgFlag(argv, ["--reset-badges", "--clear-badges"]);
+  const unreadRaw = extractArgValue(argv, ["--unread-badges", "--badges"]);
+  const unreadBadges = unreadRaw
+    ? unreadRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
   const mockRelease = hasArgFlag(argv, [
     "--mock-release",
     "--release",
@@ -127,6 +141,9 @@ export function parseDevArgs(
     lowSpec,
     logFile,
     mockRelease,
+    showAllBadges,
+    resetBadges,
+    unreadBadges,
   };
 }
 

@@ -72,6 +72,7 @@ export function GameStatusHeader({ config, onChangeConfig }: GameStatusHeaderPro
     <Column gap={10} style={{ width: "100%" }}>
       <Row justify="between" align="center" style={{ width: "100%", flexWrap: "nowrap", gap: 12 }}>
         <H1
+          featureId="main.profiles"
           style={{
             color: theme.colors.fg,
             fontSize: isSwitcherVisible ? 21 : 24,

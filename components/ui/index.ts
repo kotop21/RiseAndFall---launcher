@@ -29,6 +29,7 @@ export {
   dialogStore,
   useDialog,
 } from "./elements/dialog";
+export { FeatureDot, type FeatureDotProps } from "./elements/feature-dot";
 export {
   type FileDialogOptions,
   FilePickerTrigger,
@@ -76,7 +77,17 @@ export {
   type TooltipProps,
   type TooltipSide,
 } from "./elements/tooltip";
-export { H1, H2, H3, Label, Muted, P } from "./elements/typography";
+export {
+  FeatureBadgeAnchor,
+  type FeatureBadgeAnchorProps,
+  H1,
+  H2,
+  H3,
+  Label,
+  Muted,
+  P,
+  type TypographyProps,
+} from "./elements/typography";
 export {
   useViews,
   View,

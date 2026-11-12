@@ -1,7 +1,9 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
+import { useFeatureBadge } from "@/lib/features";
 import { isLowSpecMode } from "../motion-compat";
 import { theme } from "../theme";
+import { FeatureDot } from "./feature-dot";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "default" | "lg" | "icon";
@@ -14,6 +16,7 @@ export interface ButtonProps {
   onClick?: () => void;
   style?: StyleDesc;
   pressAnimation?: boolean;
+  featureId?: string;
 }
 
 export function Button({
@@ -24,7 +27,9 @@ export function Button({
   onClick,
   style = {},
   pressAnimation = true,
+  featureId,
 }: ButtonProps) {
+  const { showBadge, isFadingOut, badgeHandlers } = useFeatureBadge(featureId);
   const sizes: Record<ButtonSize, { h: number; px: number; fontSize: number; isIcon?: boolean }> = {
     sm: { h: 32, px: 12, fontSize: 12 },
     default: { h: 36, px: 16, fontSize: 14 },
@@ -75,10 +80,18 @@ export function Button({
     ...(style.active || {}),
   };
 
+  const handleDivClick = () => {
+    if (disabled) return;
+    badgeHandlers.onClick();
+    onClick?.();
+  };
+
   return (
     <div
       tabIndex={disabled ? -1 : 0}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : handleDivClick}
+      onMouseEnter={disabled ? undefined : badgeHandlers.onMouseEnter}
+      onMouseLeave={badgeHandlers.onMouseLeave}
       style={{
         position: style.position ?? "relative",
         top: baseTop,
@@ -113,6 +126,16 @@ export function Button({
       >
         {children}
       </text>
+      {showBadge && (
+        <FeatureDot
+          isFadingOut={isFadingOut}
+          style={{
+            position: "absolute",
+            top: 6,
+            right: 6,
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { pack, unpack } from "msgpackr";
 import { getDevArgs } from "@/lib/dev/cli";
+import { ALL_CURRENT_FEATURE_IDS } from "@/lib/features/generated-features";
 import { logger } from "@/lib/logger";
 import { getConfigPath } from "./dir";
 import {
@@ -24,6 +25,7 @@ export const DEFAULT_CONFIG: LauncherConfig = {
   activeProfileId: "slot-1",
   discordRpc: true,
   lowPerformanceMode: false,
+  seenBadges: [...ALL_CURRENT_FEATURE_IDS],
 };
 
 async function fileExists(path: string): Promise<boolean> {
@@ -55,10 +57,14 @@ export async function initConfig(): Promise<{
   const devArgs = getDevArgs();
 
   const applyDevConfigOverrides = (targetConfig: LauncherConfig): LauncherConfig => {
+    let cfg = targetConfig;
     if (devArgs.isDev && devArgs.lang) {
-      return { ...targetConfig, launcherLang: devArgs.lang };
+      cfg = { ...cfg, launcherLang: devArgs.lang };
     }
-    return targetConfig;
+    if (devArgs.isDev && devArgs.resetBadges) {
+      cfg = { ...cfg, seenBadges: [] };
+    }
+    return cfg;
   };
 
   try {

@@ -1,7 +1,8 @@
+import { BASELINE_2_0_0_BADGES } from "@/lib/features/baseline";
 import { logger } from "@/lib/logger";
 import type { GameBuildProfile, LauncherConfig } from "./types";
 
-export const CURRENT_CONFIG_VERSION = 5;
+export const CURRENT_CONFIG_VERSION = 6;
 export const DEFAULT_GAME_ARG = '-datapath "Data\\" -redistpath "Redist\\"';
 
 export function createDefaultProfiles(
@@ -93,7 +94,14 @@ export function migrateConfig(raw: Record<string, unknown>): {
     discordRpc: typeof raw.discordRpc === "boolean" ? raw.discordRpc : true,
     lowPerformanceMode:
       typeof raw.lowPerformanceMode === "boolean" ? raw.lowPerformanceMode : false,
+    seenBadges: Array.isArray(raw.seenBadges)
+      ? (raw.seenBadges as string[])
+      : [...BASELINE_2_0_0_BADGES],
   };
+
+  if (!Array.isArray(raw.seenBadges)) {
+    wasMigrated = true;
+  }
 
   if (wasMigrated) {
     logger.info("config", `migrated schema from v${version} to v${CURRENT_CONFIG_VERSION}`);

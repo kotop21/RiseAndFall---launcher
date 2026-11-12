@@ -68,7 +68,14 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
   };
 
   return (
-    <Button variant="outline" size="sm" disabled={isDisabled} onClick={handleOpen} style={style}>
+    <Button
+      featureId="main.actions.dgvoodoo"
+      variant="outline"
+      size="sm"
+      disabled={isDisabled}
+      onClick={handleOpen}
+      style={style}
+    >
       <Row gap={8} align="center" justify="center">
         <SlidersHorizontal size={14} color={isDisabled ? theme.colors.mutedFg : theme.colors.fg} />
         {getButtonLabel()}

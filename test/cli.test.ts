@@ -87,6 +87,18 @@ describe("Dev CLI: Argument Parsing", () => {
     expect(parseDevArgs([], true).mockRelease).toBe(false);
   });
 
+  it("parses badge dev flags", () => {
+    expect(parseDevArgs(["--show-all-badges"], true).showAllBadges).toBe(true);
+    expect(parseDevArgs(["--all-badges"], true).showAllBadges).toBe(true);
+    expect(parseDevArgs(["--reset-badges"], true).resetBadges).toBe(true);
+    expect(parseDevArgs(["--clear-badges"], true).resetBadges).toBe(true);
+    expect(parseDevArgs([], true).showAllBadges).toBe(false);
+    expect(parseDevArgs([], true).resetBadges).toBe(false);
+
+    const withSpecific = parseDevArgs(["--unread-badges", "header.mods,settings.profiles"], true);
+    expect(withSpecific.unreadBadges).toEqual(["header.mods", "settings.profiles"]);
+  });
+
   it("strictly disables all dev overrides when not in dev mode (production release)", () => {
     const prod = parseDevArgs(
       ["--lang", "ua", "--view", "settings", "--low-spec", "--log-file=false", "-r"],

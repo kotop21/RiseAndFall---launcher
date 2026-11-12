@@ -11,6 +11,9 @@ These command-line arguments are active **only in development mode** (when runni
 | `--release`           | `-r`, `--windows`, `-w`, `--mock-release` | Emulate a full Windows release environment: `isWindows()` returns `true` and `isCliAvailable` returns `true` (enabling dgVoodoo buttons, registry export/import actions, and Windows toast workflows on macOS/Linux). |
 | `--low-spec`          | `--low-performance`                       | Run the adaptive render loop in battery-saving low performance mode (capped framerate).                                                                                                                               |
 | `--log-file`          | `--file-logs`, `--enable-log-file`        | Enable writing log files to disk (`logs/launcher_*.log`). _(In dev mode, disk logging is disabled by default to prevent file clutter, while console output remains active)._                                          |
+| `--show-all-badges`   | `--all-badges`                            | Force all feature badges in the UI to be visible simultaneously for instant visual layout verification.                                                                                                                |
+| `--reset-badges`      | `--clear-badges`                          | Simulate an unread state (empty `seenBadges`), allowing you to test hover timers (1.3s) and click dismissals live.                                                                                                     |
+| `--unread-badges <ids>` | `--badges`                              | Force a comma-separated list of feature IDs to be unread (e.g. `--unread-badges header.mods,settings.profiles`).                                                                                                       |
 
 ## Usage Examples
 
@@ -40,4 +43,13 @@ bun run dev -- --low-spec
 
 # Enable file logging in dev mode
 bun run dev -- --log-file
+
+# Inspect all feature badges visually at once
+bun run dev -- --show-all-badges
+
+# Reset badges to test conscious hover (1.3s) and click dismissal live
+bun run dev -- --reset-badges
+
+# Test specific badges only (e.g. Mods button and Profiles section)
+bun run dev -- --unread-badges header.mods,settings.profiles
 ```

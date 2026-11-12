@@ -1,0 +1,20 @@
+// Generated at build time by scripts/generate-version.js - DO NOT EDIT MANUALLY
+export const ALL_CURRENT_FEATURE_IDS: string[] = [
+  "header.mods",
+  "header.settings",
+  "install.dir",
+  "install.lang",
+  "main.actions.dgvoodoo",
+  "main.actions.donate",
+  "main.profiles",
+  "main.updates",
+  "settings.actions",
+  "settings.actions.dgvoodoo",
+  "settings.actions.export",
+  "settings.actions.import",
+  "settings.actions.reinstall",
+  "settings.integrations.discord",
+  "settings.integrations.perf",
+  "settings.language",
+  "settings.profiles",
+];

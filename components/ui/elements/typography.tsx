@@ -1,9 +1,45 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
+import { useFeatureBadge } from "@/lib/features";
 import { theme } from "../theme";
+import { FeatureDot } from "./feature-dot";
 
-export function H1({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
+export interface FeatureBadgeAnchorProps {
+  featureId?: string;
+  children: ReactNode;
+  style?: StyleDesc;
+}
+
+export function FeatureBadgeAnchor({ featureId, children, style = {} }: FeatureBadgeAnchorProps) {
+  const { showBadge, isFadingOut, badgeHandlers } = useFeatureBadge(featureId);
+
   return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        ...style,
+      }}
+      onMouseEnter={badgeHandlers.onMouseEnter}
+      onMouseLeave={badgeHandlers.onMouseLeave}
+      onClick={badgeHandlers.onClick}
+    >
+      {children}
+      {showBadge && <FeatureDot isFadingOut={isFadingOut} />}
+    </div>
+  );
+}
+
+export interface TypographyProps {
+  children: ReactNode;
+  style?: StyleDesc;
+  featureId?: string;
+}
+
+export function H1({ children, style = {}, featureId }: TypographyProps) {
+  const el = (
     <text
       style={{
         fontFamily: theme.fontFamily,
@@ -16,10 +52,12 @@ export function H1({ children, style = {} }: { children: ReactNode; style?: Styl
       {children}
     </text>
   );
+  if (!featureId) return el;
+  return <FeatureBadgeAnchor featureId={featureId}>{el}</FeatureBadgeAnchor>;
 }
 
-export function H2({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
-  return (
+export function H2({ children, style = {}, featureId }: TypographyProps) {
+  const el = (
     <text
       style={{
         fontFamily: theme.fontFamily,
@@ -32,10 +70,12 @@ export function H2({ children, style = {} }: { children: ReactNode; style?: Styl
       {children}
     </text>
   );
+  if (!featureId) return el;
+  return <FeatureBadgeAnchor featureId={featureId}>{el}</FeatureBadgeAnchor>;
 }
 
-export function H3({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
-  return (
+export function H3({ children, style = {}, featureId }: TypographyProps) {
+  const el = (
     <text
       style={{
         fontFamily: theme.fontFamily,
@@ -48,10 +88,12 @@ export function H3({ children, style = {} }: { children: ReactNode; style?: Styl
       {children}
     </text>
   );
+  if (!featureId) return el;
+  return <FeatureBadgeAnchor featureId={featureId}>{el}</FeatureBadgeAnchor>;
 }
 
-export function P({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
-  return (
+export function P({ children, style = {}, featureId }: TypographyProps) {
+  const el = (
     <text
       style={{
         fontFamily: theme.fontFamily,
@@ -63,10 +105,12 @@ export function P({ children, style = {} }: { children: ReactNode; style?: Style
       {children}
     </text>
   );
+  if (!featureId) return el;
+  return <FeatureBadgeAnchor featureId={featureId}>{el}</FeatureBadgeAnchor>;
 }
 
-export function Muted({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
-  return (
+export function Muted({ children, style = {}, featureId }: TypographyProps) {
+  const el = (
     <text
       style={{
         fontFamily: theme.fontFamily,
@@ -78,10 +122,12 @@ export function Muted({ children, style = {} }: { children: ReactNode; style?: S
       {children}
     </text>
   );
+  if (!featureId) return el;
+  return <FeatureBadgeAnchor featureId={featureId}>{el}</FeatureBadgeAnchor>;
 }
 
-export function Label({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
-  return (
+export function Label({ children, style = {}, featureId }: TypographyProps) {
+  const el = (
     <text
       style={{
         fontFamily: theme.fontFamily,
@@ -95,4 +141,6 @@ export function Label({ children, style = {} }: { children: ReactNode; style?: S
       {children}
     </text>
   );
+  if (!featureId) return el;
+  return <FeatureBadgeAnchor featureId={featureId}>{el}</FeatureBadgeAnchor>;
 }

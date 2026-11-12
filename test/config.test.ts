@@ -54,6 +54,36 @@ describe("Config: Schema Migration & Edge Cases", () => {
     expect(config.activeProfileId).toBe("slot-1");
     expect(config.discordRpc).toBe(true);
     expect(config.lowPerformanceMode).toBe(false);
+    expect(Array.isArray(config.seenBadges)).toBe(true);
+    expect(config.seenBadges.length).toBeGreaterThan(0);
+  });
+
+  it("migrates v5 config without seenBadges to v6 with baseline badges", () => {
+    const v5 = {
+      version: 5,
+      gameDir: "C:\\Game",
+      gameProfiles: createDefaultProfiles("C:\\Game"),
+      activeProfileId: "slot-1",
+      discordRpc: true,
+      lowPerformanceMode: false,
+    };
+    const { config, wasMigrated } = migrateConfig(v5);
+    expect(wasMigrated).toBe(true);
+    expect(config.version).toBe(6);
+    expect(config.seenBadges).toContain("header.settings");
+    expect(config.seenBadges).toContain("settings.profiles");
+    expect(config.seenBadges).not.toContain("header.mods");
+  });
+
+  it("preserves existing seenBadges array if already present", () => {
+    const raw = {
+      version: 6,
+      gameProfiles: createDefaultProfiles(),
+      activeProfileId: "slot-1",
+      seenBadges: ["custom.badge.1", "custom.badge.2"],
+    };
+    const { config } = migrateConfig(raw);
+    expect(config.seenBadges).toEqual(["custom.badge.1", "custom.badge.2"]);
   });
 
   it("migrates v1 legacy config preserving legacy gameDir and gameArg", () => {

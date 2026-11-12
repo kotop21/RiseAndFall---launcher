@@ -152,12 +152,12 @@ export function GameProfiles({
   const canDeleteProfile = isSlotConfigured && configuredCount > 1;
 
   return (
-    <Column gap={16} style={{ width: "100%" }}>
+    <Column featureId="settings.profiles" gap={16} style={{ width: "100%" }}>
       <Column gap={10} style={{ width: "100%" }}>
         <Row justify="between" align="center" style={{ width: "100%" }}>
           <Row gap={8} align="center">
             <Layers size={14} color={theme.colors.mutedFg} />
-            <Label>{t("settings.buildsTitle")}</Label>
+            <Label featureId="settings.profiles">{t("settings.buildsTitle")}</Label>
             <Badge variant={isSlotConfigured ? "success" : "secondary"}>{activeSlotLabel}</Badge>
           </Row>
 

@@ -99,10 +99,10 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
   };
 
   return (
-    <Column gap={10} style={{ width: "100%" }}>
+    <Column featureId="settings.actions" gap={10} style={{ width: "100%" }}>
       <Row gap={8} align="center">
         <Wrench size={14} color={theme.colors.mutedFg} />
-        <Label>{t("settings.actions")}</Label>
+        <Label featureId="settings.actions">{t("settings.actions")}</Label>
       </Row>
 
       <Row gap={10} align="center" style={{ width: "100%" }}>
@@ -124,6 +124,7 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
       <Row gap={10} align="center" style={{ width: "100%" }}>
         <div style={{ flexGrow: 1, minWidth: 0 }}>
           <Button
+            featureId="settings.actions.export"
             variant="secondary"
             size="sm"
             disabled={!isCliAvailable}
@@ -139,6 +140,7 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
 
         <div style={{ flexGrow: 1, minWidth: 0 }}>
           <Button
+            featureId="settings.actions.import"
             variant="secondary"
             size="sm"
             disabled={!isCliAvailable}
