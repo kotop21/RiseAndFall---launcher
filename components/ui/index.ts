@@ -59,6 +59,7 @@ export {
   type PopoverSide,
   type PopoverTriggerProps,
 } from "./elements/popover";
+export { Progress, type ProgressProps, type ProgressVariant } from "./elements/progress";
 export { ScrollArea, type ScrollAreaProps } from "./elements/scroll-area";
 export { Separator } from "./elements/separator";
 export { Skeleton } from "./elements/skeleton";
