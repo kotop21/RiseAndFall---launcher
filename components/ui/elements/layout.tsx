@@ -2,6 +2,7 @@ import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
 import { useFeatureBadge } from "@/lib/features";
 import { theme } from "../theme";
+import { useTooltipTrigger } from "./tooltip";
 
 export interface FlexProps {
   children: ReactNode;
@@ -37,11 +38,14 @@ export function Flex({
   };
 
   const { badgeHandlers } = useFeatureBadge(featureId);
+  const tooltipHandlers = useTooltipTrigger({
+    onMouseEnter: featureId ? badgeHandlers.onMouseEnter : undefined,
+    onMouseLeave: featureId ? badgeHandlers.onMouseLeave : undefined,
+  });
 
   return (
     <div
-      onMouseEnter={featureId ? badgeHandlers.onMouseEnter : undefined}
-      onMouseLeave={featureId ? badgeHandlers.onMouseLeave : undefined}
+      {...tooltipHandlers}
       onClick={featureId ? badgeHandlers.onClick : undefined}
       style={{
         display: "flex",

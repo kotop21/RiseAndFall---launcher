@@ -1,6 +1,7 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
 import { theme } from "../theme";
+import { useTooltipTrigger } from "./tooltip";
 
 export type BadgeVariant = "default" | "secondary" | "outline" | "destructive" | "success";
 
@@ -12,6 +13,7 @@ export interface BadgeProps {
 }
 
 export function Badge({ children, variant = "default", maxChars = 24, style = {} }: BadgeProps) {
+  const tooltipHandlers = useTooltipTrigger();
   const variants: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
     default: { bg: theme.colors.primary, text: theme.colors.primaryFg },
     secondary: { bg: theme.colors.secondary, text: theme.colors.secondaryFg },
@@ -47,6 +49,7 @@ export function Badge({ children, variant = "default", maxChars = 24, style = {}
 
   return (
     <div
+      {...tooltipHandlers}
       style={{
         display: "flex",
         flexDirection: "row",

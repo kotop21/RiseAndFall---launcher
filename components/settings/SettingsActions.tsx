@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 import { exportGameSettings, importGameSettings } from "@/lib/settings-cli";
 import { useGameStatus } from "@/lib/utils/game-status";
 import { isWindows } from "@/lib/utils/os";
-import { Button, Column, Label, Row, theme, useFileDialog, useToast } from "@/ui";
+import { Button, Column, Label, Row, Tooltip, theme, useFileDialog, useToast } from "@/ui";
 
 interface SettingsActionsProps {
   gameDir?: string;
@@ -25,6 +25,9 @@ export function SettingsActions({
   const { toast } = useToast();
 
   const { cliExists: isCliAvailable } = useGameStatus(gameDir);
+  const cliDisabledReason = !isWindows()
+    ? t("toasts.cliOsUnsupportedDesc")
+    : t("errors.SETTINGS_CLI_NOT_FOUND.description");
   const hasWarnedRef = useRef(false);
 
   useEffect(() => {
@@ -135,35 +138,49 @@ export function SettingsActions({
 
       <Row gap={10} align="center" style={{ width: "100%" }}>
         <div style={{ flexGrow: 1, minWidth: 0 }}>
-          <Button
-            featureId="settings.actions.export"
-            variant="secondary"
-            size="sm"
-            disabled={!isCliAvailable}
-            onClick={handleExportRegistrySettings}
+          <Tooltip
+            content={cliDisabledReason}
+            disabled={isCliAvailable}
+            side="top"
             style={{ width: "100%" }}
           >
-            <Row gap={8} align="center">
-              <Download size={14} color={theme.colors.fg} />
-              {t("buttons.exportSettings")}
-            </Row>
-          </Button>
+            <Button
+              featureId="settings.actions.export"
+              variant="secondary"
+              size="sm"
+              disabled={!isCliAvailable}
+              onClick={handleExportRegistrySettings}
+              style={{ width: "100%" }}
+            >
+              <Row gap={8} align="center">
+                <Download size={14} color={theme.colors.fg} />
+                {t("buttons.exportSettings")}
+              </Row>
+            </Button>
+          </Tooltip>
         </div>
 
         <div style={{ flexGrow: 1, minWidth: 0 }}>
-          <Button
-            featureId="settings.actions.import"
-            variant="secondary"
-            size="sm"
-            disabled={!isCliAvailable}
-            onClick={handleImportRegistrySettings}
+          <Tooltip
+            content={cliDisabledReason}
+            disabled={isCliAvailable}
+            side="top"
             style={{ width: "100%" }}
           >
-            <Row gap={8} align="center">
-              <Upload size={14} color={theme.colors.fg} />
-              {t("buttons.importSettings")}
-            </Row>
-          </Button>
+            <Button
+              featureId="settings.actions.import"
+              variant="secondary"
+              size="sm"
+              disabled={!isCliAvailable}
+              onClick={handleImportRegistrySettings}
+              style={{ width: "100%" }}
+            >
+              <Row gap={8} align="center">
+                <Upload size={14} color={theme.colors.fg} />
+                {t("buttons.importSettings")}
+              </Row>
+            </Button>
+          </Tooltip>
         </div>
       </Row>
     </Column>

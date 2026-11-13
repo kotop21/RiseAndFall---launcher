@@ -179,12 +179,24 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
 
   const isButtonDisabled = isRunning || isValidating || !gameExists || !isWin;
 
-  const getButtonText = () => {
+  const getStartDisabledReason = () => {
     if (isRunning) return t("header.gameRunning");
-    if (isValidating) return t("header.checking");
-    if (!gameExists) return t("header.gameMissing");
-    if (!isWin) return t("header.windowsOnly");
-    return t("header.startGame");
+    if (isValidating) return t("install.processing");
+    if (!gameExists) {
+      return !isPathConfigured ? t("toasts.dgvPathRequiredDesc") : t("toasts.gameMissingDesc");
+    }
+    if (!isWin) return t("header.osUnsupportedDesc");
+    return "";
+  };
+
+  const getModsDisabledReason = () => {
+    if (isInstalling) {
+      return isReinstall ? t("install.titleReinstall") : t("install.titleInstall");
+    }
+    if (isRunning) return t("header.gameRunning");
+    if (!isPathConfigured) return t("toasts.dgvPathRequiredDesc");
+    if (!isValidating && !gameExists) return t("toasts.gameMissingDesc");
+    return "";
   };
 
   const isActionReady = !isValidating && gameExists && isWin && !isRunning;
@@ -236,23 +248,25 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
               <Settings size={18} color={theme.colors.fg} />
             </Button>
 
-            <Button
-              featureId="header.mods"
-              variant="secondary"
-              size="lg"
-              disabled={isModsDisabled}
-              onClick={() => {
-                if (!isModsDisabled) setIsModsDialogOpen(true);
-              }}
-              style={{
-                height: 46,
-                width: 46,
-                paddingLeft: 0,
-                paddingRight: 0,
-              }}
-            >
-              <Layers size={18} color={isModsDisabled ? theme.colors.mutedFg : theme.colors.fg} />
-            </Button>
+            <Tooltip content={getModsDisabledReason()} disabled={!isModsDisabled} side="top">
+              <Button
+                featureId="header.mods"
+                variant="secondary"
+                size="lg"
+                disabled={isModsDisabled}
+                onClick={() => {
+                  if (!isModsDisabled) setIsModsDialogOpen(true);
+                }}
+                style={{
+                  height: 46,
+                  width: 46,
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                }}
+              >
+                <Layers size={18} color={isModsDisabled ? theme.colors.mutedFg : theme.colors.fg} />
+              </Button>
+            </Tooltip>
           </Row>
 
           <Column gap={4} align="start">
@@ -324,31 +338,33 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
         ) : isGameMissing ? (
           <DownloadGameButton onClick={onOpenInstall} disabled={isValidating || isRunning} />
         ) : (
-          <Button
-            size="lg"
-            disabled={isButtonDisabled}
-            onClick={handleStartGame}
-            style={{
-              height: 46,
-              paddingLeft: 24,
-              paddingRight: 24,
-            }}
-          >
-            <Row gap={10} align="center">
-              <Play
-                size={18}
-                color={isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg}
-              />
-              <P
-                style={{
-                  color: isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg,
-                  fontWeight: "bold",
-                }}
-              >
-                {getButtonText()}
-              </P>
-            </Row>
-          </Button>
+          <Tooltip content={getStartDisabledReason()} disabled={!isButtonDisabled} side="top">
+            <Button
+              size="lg"
+              disabled={isButtonDisabled}
+              onClick={handleStartGame}
+              style={{
+                height: 46,
+                paddingLeft: 24,
+                paddingRight: 24,
+              }}
+            >
+              <Row gap={10} align="center">
+                <Play
+                  size={18}
+                  color={isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg}
+                />
+                <P
+                  style={{
+                    color: isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {t("header.startGame")}
+                </P>
+              </Row>
+            </Button>
+          </Tooltip>
         )}
       </Row>
 

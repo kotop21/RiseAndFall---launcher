@@ -1,6 +1,7 @@
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { useState } from "react";
 import { theme } from "../theme";
+import { useTooltipTrigger } from "./tooltip";
 
 export type { EventPayload };
 
@@ -28,9 +29,11 @@ export function Input({
   style = {},
 }: InputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const tooltipHandlers = useTooltipTrigger();
 
   return (
     <div
+      {...tooltipHandlers}
       style={{
         display: "flex",
         flexDirection: "row",

@@ -1,4 +1,5 @@
 import type { StyleDesc } from "@gpuix/react";
+import { useTooltipTrigger } from "@/components/ui/elements/tooltip";
 import { Download, RefreshCw } from "@/icon";
 import { useTranslation } from "@/lib/lang";
 import { P, Row, theme } from "@/ui";
@@ -24,6 +25,7 @@ export function DownloadGameButton({
   pressAnimation = true,
 }: DownloadGameButtonProps) {
   const { t } = useTranslation();
+  const tooltipHandlers = useTooltipTrigger();
   const isReinstall = variant === "reinstall";
   const isSecondaryStyle = isInstalling && !disabled;
   const iconColor = disabled
@@ -65,6 +67,7 @@ export function DownloadGameButton({
     <div
       tabIndex={disabled ? -1 : 0}
       onClick={disabled ? undefined : onClick}
+      {...tooltipHandlers}
       style={{
         position: style.position ?? "relative",
         top: baseTop,

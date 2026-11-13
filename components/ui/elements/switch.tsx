@@ -1,6 +1,7 @@
 import type { StyleDesc } from "@gpuix/react";
 import { motion } from "@gpuix/react";
 import { theme } from "../theme";
+import { useTooltipTrigger } from "./tooltip";
 
 export interface SwitchProps {
   checked: boolean;
@@ -10,9 +11,12 @@ export interface SwitchProps {
 }
 
 export function Switch({ checked, onCheckedChange, disabled = false, style = {} }: SwitchProps) {
+  const tooltipHandlers = useTooltipTrigger();
+
   return (
     <div
       onClick={disabled ? undefined : () => onCheckedChange(!checked)}
+      {...tooltipHandlers}
       style={{
         position: "relative",
         display: "flex",

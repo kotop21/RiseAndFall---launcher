@@ -1,9 +1,10 @@
-import type { StyleDesc } from "@gpuix/react";
+import type { EventPayload, StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
 import { useFeatureBadge } from "@/lib/features";
 import { isLowSpecMode } from "../motion-compat";
 import { theme } from "../theme";
 import { FeatureDot } from "./feature-dot";
+import { useTooltipTrigger } from "./tooltip";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "default" | "lg" | "icon";
@@ -14,6 +15,8 @@ export interface ButtonProps {
   size?: ButtonSize;
   disabled?: boolean;
   onClick?: () => void;
+  onMouseEnter?: (event: EventPayload) => void;
+  onMouseLeave?: (event: EventPayload) => void;
   style?: StyleDesc;
   pressAnimation?: boolean;
   featureId?: string;
@@ -25,11 +28,29 @@ export function Button({
   size = "default",
   disabled = false,
   onClick,
+  onMouseEnter,
+  onMouseLeave,
   style = {},
   pressAnimation = true,
   featureId,
 }: ButtonProps) {
   const { showBadge, isFadingOut, badgeHandlers } = useFeatureBadge(featureId);
+  const tooltipHandlers = useTooltipTrigger({
+    onMouseEnter:
+      (!disabled && featureId) || onMouseEnter
+        ? (event) => {
+            if (!disabled) badgeHandlers.onMouseEnter();
+            onMouseEnter?.(event);
+          }
+        : undefined,
+    onMouseLeave:
+      featureId || onMouseLeave
+        ? (event) => {
+            badgeHandlers.onMouseLeave();
+            onMouseLeave?.(event);
+          }
+        : undefined,
+  });
   const sizes: Record<ButtonSize, { h: number; px: number; fontSize: number; isIcon?: boolean }> = {
     sm: { h: 32, px: 12, fontSize: 12 },
     default: { h: 36, px: 16, fontSize: 14 },
@@ -90,8 +111,7 @@ export function Button({
     <div
       tabIndex={disabled ? -1 : 0}
       onClick={disabled ? undefined : handleDivClick}
-      onMouseEnter={disabled ? undefined : badgeHandlers.onMouseEnter}
-      onMouseLeave={badgeHandlers.onMouseLeave}
+      {...tooltipHandlers}
       style={{
         position: style.position ?? "relative",
         top: baseTop,
