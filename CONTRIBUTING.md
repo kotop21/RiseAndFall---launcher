@@ -31,7 +31,7 @@ We follow a structured Git branching workflow:
 ### Step 1: Fork & Clone
 
 ```bash
-git clone https://github.com/<kotop21>/RiseAndFall---launcher.git
+git clone https://github.com/<your-username>/RiseAndFall---launcher.git
 cd RiseAndFall---launcher
 git checkout develop
 ```
