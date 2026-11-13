@@ -13,6 +13,10 @@ export function useFeatureBadge(featureId?: string | null, options: UseFeatureBa
   const [isFadingOut, setIsFadingOut] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const featureIdRef = useRef(featureId);
+  featureIdRef.current = featureId;
+  const markBadgeSeenRef = useRef(markBadgeSeen);
+  markBadgeSeenRef.current = markBadgeSeen;
 
   const active = Boolean(featureId && isBadgeUnseen(featureId));
 
@@ -34,6 +38,7 @@ export function useFeatureBadge(featureId?: string | null, options: UseFeatureBa
     fadeTimerRef.current = setTimeout(() => {
       markBadgeSeen(featureId);
       setIsFadingOut(false);
+      fadeTimerRef.current = null;
     }, fadeDurationMs);
   }, [featureId, active, isFadingOut, markBadgeSeen, fadeDurationMs]);
 
@@ -58,15 +63,17 @@ export function useFeatureBadge(featureId?: string | null, options: UseFeatureBa
 
   const handleClick = useCallback(() => {
     if (!featureId || !active) return;
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    triggerDismiss();
-  }, [featureId, active, triggerDismiss]);
+    clearTimers();
+    setIsFadingOut(false);
+    markBadgeSeen(featureId);
+  }, [featureId, active, clearTimers, markBadgeSeen]);
 
   useEffect(() => {
     return () => {
+      // If it was in the middle of fading out when unmounted, guarantee it gets marked seen
+      if (fadeTimerRef.current && featureIdRef.current) {
+        markBadgeSeenRef.current(featureIdRef.current);
+      }
       clearTimers();
     };
   }, [clearTimers]);

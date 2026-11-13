@@ -11,9 +11,14 @@ import { Button, Row, theme, useToast } from "@/ui";
 interface OpenDgVoodooButtonProps {
   gameDir?: string;
   style?: StyleDesc;
+  featureId?: string;
 }
 
-export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonProps) {
+export function OpenDgVoodooButton({
+  gameDir = "",
+  style,
+  featureId = "main.actions.dgvoodoo",
+}: OpenDgVoodooButtonProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const isWin = isWindows();
@@ -69,7 +74,7 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
   return (
     <Button
-      featureId="main.actions.dgvoodoo"
+      featureId={featureId}
       variant="outline"
       size="sm"
       disabled={isDisabled}

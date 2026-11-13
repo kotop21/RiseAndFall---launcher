@@ -18,10 +18,17 @@ interface SettingsViewProps {
   config: LauncherConfig;
   onChangeConfig: (nextConfig: LauncherConfig) => Promise<void> | void;
   onBack?: () => void;
-  onOpenInstall?: () => void;
+  onOpenInstall?: (targetDir?: string) => void;
+  onOpenNewInstall?: () => void;
 }
 
-export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: SettingsViewProps) {
+export function SettingsView({
+  config,
+  onChangeConfig,
+  onBack,
+  onOpenInstall,
+  onOpenNewInstall,
+}: SettingsViewProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -114,6 +121,21 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
     onBack?.();
   };
 
+  const handleOpenNewInstallClick = async () => {
+    const configuredCount = config.gameProfiles?.filter((p) => Boolean(p.path?.trim())).length || 0;
+    if (configuredCount >= 5) {
+      toast({
+        description: t("toasts.allSlotsFilledDesc"),
+        type: "warn",
+      });
+      return;
+    }
+    if (hasProfileChanges) {
+      await handleSaveProfiles("profile_form");
+    }
+    onOpenNewInstall?.();
+  };
+
   return (
     <ScrollArea direction="vertical" style={{ flexGrow: 1, width: "100%", height: "100%" }}>
       <Column gap={20} style={{ width: "100%", padding: 24 }}>
@@ -204,6 +226,8 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
           hasProfileChanges={hasProfileChanges}
           onSaveProfiles={() => handleSaveProfiles("profile_form")}
           onRevertProfiles={handleRevertProfiles}
+          onOpenInstall={onOpenInstall}
+          onConfigChange={onChangeConfig}
         />
 
         <Separator orientation="horizontal" />
@@ -214,7 +238,13 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
 
         <Separator orientation="horizontal" />
 
-        <SettingsActions gameDir={formState.gameDir} onOpenInstall={onOpenInstall} />
+        <SettingsActions
+          gameDir={formState.gameDir}
+          onOpenNewInstall={handleOpenNewInstallClick}
+          isNewInstallDisabled={
+            (config.gameProfiles?.filter((p) => Boolean(p.path?.trim())).length || 0) >= 5
+          }
+        />
       </Column>
     </ScrollArea>
   );

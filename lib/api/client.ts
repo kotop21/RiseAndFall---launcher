@@ -1,25 +1,34 @@
+import { getResolvedDevApiUrl, IS_DEV_BUILD } from "@/lib/dev";
 import { createLauncherError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 export function getBaseUrl(): string {
-  return (process.env.API_URL || process.env.BUN_PUBLIC_API_URL || "https://raf-game.com").replace(
-    /\/+$/,
-    "",
-  );
+  if (IS_DEV_BUILD) {
+    const resolved = getResolvedDevApiUrl();
+    if (resolved) {
+      return resolved;
+    }
+  }
+  return (
+    process.env.API_URL ||
+    process.env.PROD_API_URL ||
+    process.env.BUN_PUBLIC_API_URL ||
+    "https://raf-game.com"
+  ).replace(/\/+$/, "");
 }
 
 export const API_ROUTES = {
   get health() {
-    return `${getBaseUrl()}/api/health`;
+    return `${getBaseUrl()}/health`;
   },
   get online() {
-    return `${getBaseUrl()}/api/online`;
+    return `${getBaseUrl()}/online`;
   },
   get onlineCount() {
-    return `${getBaseUrl()}/api/online/count`;
+    return `${getBaseUrl()}/online/count`;
   },
   get manifest() {
-    return `${getBaseUrl()}/api/manifest?v=2`;
+    return `${getBaseUrl()}/manifest?v=2`;
   },
   get launcherInfo() {
     return `${getBaseUrl()}/launcher/info`;

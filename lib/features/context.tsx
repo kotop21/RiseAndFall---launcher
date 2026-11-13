@@ -1,4 +1,13 @@
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { getDevArgs } from "@/lib/dev/cli";
 import { ALL_CURRENT_FEATURE_IDS } from "./generated-features";
 import { type FeatureDevOverrides, isBadgeUnseen } from "./logic";
@@ -25,7 +34,14 @@ export function FeatureBadgeProvider({
   allFeatures = ALL_CURRENT_FEATURE_IDS,
 }: FeatureBadgeProviderProps) {
   const [localSeen, setLocalSeen] = useState<string[]>(seenBadges);
+  const seenSetRef = useRef<Set<string>>(new Set(seenBadges));
   const devArgs = getDevArgs();
+
+  // Keep seenSetRef in sync when seenBadges prop changes
+  useEffect(() => {
+    seenSetRef.current = new Set(seenBadges);
+    setLocalSeen(seenBadges);
+  }, [seenBadges]);
 
   // If unreadBadges is passed via devArgs, maintain a mutable set in state so dismissing works live
   const [devUnreadSet, setDevUnreadSet] = useState<Set<string> | undefined>(() => {
@@ -34,8 +50,6 @@ export function FeatureBadgeProvider({
     }
     return undefined;
   });
-
-  const effectiveSeen = seenBadges ?? localSeen;
 
   const devOverrides: FeatureDevOverrides = useMemo(() => {
     if (!devArgs.isDev) return {};
@@ -48,9 +62,10 @@ export function FeatureBadgeProvider({
 
   const checkUnseen = useCallback(
     (featureId: string | undefined | null): boolean => {
-      return isBadgeUnseen(featureId, effectiveSeen, allFeatures, devOverrides);
+      const currentSeen: string[] = [...seenSetRef.current];
+      return isBadgeUnseen(featureId, currentSeen, allFeatures, devOverrides);
     },
-    [effectiveSeen, allFeatures, devOverrides],
+    [allFeatures, devOverrides],
   );
 
   const markBadgeSeen = useCallback(
@@ -67,22 +82,23 @@ export function FeatureBadgeProvider({
         });
       }
 
-      if (effectiveSeen.includes(trimmed)) return;
+      if (seenSetRef.current.has(trimmed)) return;
+      seenSetRef.current.add(trimmed);
 
-      const next = [...effectiveSeen, trimmed];
+      const next: string[] = [...seenSetRef.current];
       setLocalSeen(next);
       onSeenChange?.(next);
     },
-    [devUnreadSet, effectiveSeen, onSeenChange],
+    [devUnreadSet, onSeenChange],
   );
 
   const value = useMemo(
     () => ({
-      seenBadges: effectiveSeen,
+      seenBadges: localSeen,
       isBadgeUnseen: checkUnseen,
       markBadgeSeen,
     }),
-    [effectiveSeen, checkUnseen, markBadgeSeen],
+    [checkUnseen, markBadgeSeen, localSeen],
   );
 
   return <FeatureBadgeContext.Provider value={value}>{children}</FeatureBadgeContext.Provider>;

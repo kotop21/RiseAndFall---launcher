@@ -97,9 +97,13 @@ export function migrateConfig(raw: Record<string, unknown>): {
     seenBadges: Array.isArray(raw.seenBadges)
       ? (raw.seenBadges as string[])
       : [...BASELINE_2_0_0_BADGES],
+    welcomeSeen:
+      typeof raw.welcomeSeen === "boolean"
+        ? raw.welcomeSeen
+        : Boolean(effectiveGameDir || profiles.some((p) => Boolean(p.path?.trim()))),
   };
 
-  if (!Array.isArray(raw.seenBadges)) {
+  if (!Array.isArray(raw.seenBadges) || typeof raw.welcomeSeen !== "boolean") {
     wasMigrated = true;
   }
 

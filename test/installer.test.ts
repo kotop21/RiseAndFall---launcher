@@ -89,7 +89,7 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
       port: 0,
       fetch(req): Response | Promise<Response> {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           return Response.json({
             version: "2.0.0",
             install_en: ["game", "lang_en", "mod_bfm"],
@@ -220,7 +220,7 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
       port: 0,
       fetch(req): Response | Promise<Response> {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           return Response.json({
             version: "2.0.0",
             install_en: ["game"],
@@ -277,7 +277,7 @@ describe("Installer: Complete End-to-End Mock Installation", () => {
       port: 0,
       fetch(req): Response | Promise<Response> {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           return Response.json({
             version: "2.0.0",
             install_en: ["game"],
@@ -432,7 +432,7 @@ describe("Installation Manager: Background Singleton & State Management", () => 
       port: 0,
       fetch(req): Response {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           return Response.json({
             version: "2.0.0",
             install_en: ["game"],
@@ -493,7 +493,7 @@ describe("Installation Manager: Background Singleton & State Management", () => 
       port: 0,
       fetch(req): Response {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           return Response.json({
             version: "2.0.0",
             install_en: ["game"],
@@ -542,7 +542,7 @@ describe("Installation Manager: Background Singleton & State Management", () => 
       port: 0,
       async fetch(req) {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           manifestRequests++;
           return Response.json({
             mode: "auto",
@@ -601,7 +601,7 @@ describe("Installation Manager: Background Singleton & State Management", () => 
       port: 0,
       async fetch(req) {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           manifestRequests++;
           await new Promise((resolve) => setTimeout(resolve, 50));
           return Response.json({ mode: "auto", version: "2.0.0", packages: [] });
@@ -637,7 +637,7 @@ describe("Installation Manager: Background Singleton & State Management", () => 
       port: 0,
       async fetch(req) {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           manifestRequests++;
           return Response.json({
             mode: "auto",

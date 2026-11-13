@@ -54,6 +54,7 @@ describe("Config: Schema Migration & Edge Cases", () => {
     expect(config.activeProfileId).toBe("slot-1");
     expect(config.discordRpc).toBe(true);
     expect(config.lowPerformanceMode).toBe(false);
+    expect(config.welcomeSeen).toBe(false);
     expect(Array.isArray(config.seenBadges)).toBe(true);
     expect(config.seenBadges.length).toBeGreaterThan(0);
   });
@@ -84,6 +85,28 @@ describe("Config: Schema Migration & Edge Cases", () => {
     };
     const { config } = migrateConfig(raw);
     expect(config.seenBadges).toEqual(["custom.badge.1", "custom.badge.2"]);
+  });
+
+  it("preserves welcomeSeen boolean flag when present", () => {
+    const rawSeen = {
+      version: 6,
+      gameProfiles: createDefaultProfiles(),
+      activeProfileId: "slot-1",
+      seenBadges: ["header.settings"],
+      welcomeSeen: true,
+    };
+    const { config } = migrateConfig(rawSeen);
+    expect(config.welcomeSeen).toBe(true);
+
+    const rawUnseen = {
+      version: 6,
+      gameProfiles: createDefaultProfiles(),
+      activeProfileId: "slot-1",
+      seenBadges: ["header.settings"],
+      welcomeSeen: false,
+    };
+    const { config: configUnseen } = migrateConfig(rawUnseen);
+    expect(configUnseen.welcomeSeen).toBe(false);
   });
 
   it("migrates v1 legacy config preserving legacy gameDir and gameArg", () => {

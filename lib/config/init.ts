@@ -1,7 +1,7 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { pack, unpack } from "msgpackr";
-import { getDevArgs } from "@/lib/dev/cli";
+import { getDevArgs, isForceWelcome } from "@/lib/dev";
 import { ALL_CURRENT_FEATURE_IDS } from "@/lib/features/generated-features";
 import { logger } from "@/lib/logger";
 import { getConfigPath } from "./dir";
@@ -26,6 +26,7 @@ export const DEFAULT_CONFIG: LauncherConfig = {
   discordRpc: true,
   lowPerformanceMode: false,
   seenBadges: [...ALL_CURRENT_FEATURE_IDS],
+  welcomeSeen: false,
 };
 
 async function fileExists(path: string): Promise<boolean> {
@@ -37,12 +38,7 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-export function isForceWelcome(): boolean {
-  const flag = (process.env.FORCE_WELCOME || process.env.TEST_MODE || process.env.WELCOME || "")
-    .toLowerCase()
-    .trim();
-  return flag === "1" || flag === "true" || flag === "yes";
-}
+export { isForceWelcome };
 
 export async function hasExistingConfigFile(): Promise<boolean> {
   return fileExists(getConfigPath());

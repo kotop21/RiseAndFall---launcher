@@ -77,26 +77,56 @@ describe("Features: isBadgeUnseen Logic & Bubbling", () => {
 });
 
 describe("Features: Baseline & Migration Specs", () => {
-  it("ensures BASELINE_2_0_0_BADGES contains 2.0.0 features and excludes 2.0.2 mods", () => {
+  it("ensures BASELINE_2_0_0_BADGES contains 2.0.0/2.0.1 features and excludes 2.0.2 new features", () => {
+    // 2.0.0/2.0.1 features
     expect(BASELINE_2_0_0_BADGES).toContain("header.settings");
     expect(BASELINE_2_0_0_BADGES).toContain("settings.profiles");
+    expect(BASELINE_2_0_0_BADGES).toContain("settings.profiles.browse");
+    expect(BASELINE_2_0_0_BADGES).toContain("settings.profiles.revert");
+    expect(BASELINE_2_0_0_BADGES).toContain("settings.profiles.save");
+    expect(BASELINE_2_0_0_BADGES).toContain("settings.language");
+    expect(BASELINE_2_0_0_BADGES).toContain("settings.actions");
     expect(BASELINE_2_0_0_BADGES).toContain("settings.integrations.discord");
+    expect(BASELINE_2_0_0_BADGES).toContain("welcome.browse");
+    expect(BASELINE_2_0_0_BADGES).toContain("welcome.install");
+
+    // Strictly new 2.0.2 features must NOT be in baseline
     expect(BASELINE_2_0_0_BADGES).not.toContain("header.mods");
+    expect(BASELINE_2_0_0_BADGES).not.toContain("settings.actions.freshInstall");
+    expect(BASELINE_2_0_0_BADGES).not.toContain("settings.profiles.delete");
+    expect(BASELINE_2_0_0_BADGES).not.toContain("settings.profiles.reinstall");
   });
 
-  it("ensures migrating user has mods badge active and old features inactive", () => {
+  it("ensures migrating user has 2.0.2 badges active and 2.0.1 features inactive", () => {
     const migratingSeenBadges = [...BASELINE_2_0_0_BADGES];
-    const allFeatures = [...BASELINE_2_0_0_BADGES, "header.mods"];
+    const allFeatures = [...ALL_CURRENT_FEATURE_IDS];
 
-    // Older features must NOT show a badge
-    expect(isBadgeUnseen("header.settings", migratingSeenBadges, allFeatures)).toBe(false);
-    expect(isBadgeUnseen("settings.profiles", migratingSeenBadges, allFeatures)).toBe(false);
+    // Older 2.0.1 leaf features must NOT show a badge
+    expect(isBadgeUnseen("settings.profiles.browse", migratingSeenBadges, allFeatures)).toBe(false);
+    expect(isBadgeUnseen("settings.profiles.save", migratingSeenBadges, allFeatures)).toBe(false);
+    expect(isBadgeUnseen("settings.profiles.revert", migratingSeenBadges, allFeatures)).toBe(false);
+    expect(isBadgeUnseen("settings.actions.dgvoodoo", migratingSeenBadges, allFeatures)).toBe(
+      false,
+    );
+    expect(isBadgeUnseen("settings.language", migratingSeenBadges, allFeatures)).toBe(false);
+    expect(isBadgeUnseen("welcome.browse", migratingSeenBadges, allFeatures)).toBe(false);
+    expect(isBadgeUnseen("welcome.install", migratingSeenBadges, allFeatures)).toBe(false);
     expect(isBadgeUnseen("settings.integrations.discord", migratingSeenBadges, allFeatures)).toBe(
       false,
     );
 
-    // New 2.0.2 feature MUST show a badge
+    // New 2.0.2 features MUST show a badge
     expect(isBadgeUnseen("header.mods", migratingSeenBadges, allFeatures)).toBe(true);
+    expect(isBadgeUnseen("settings.actions.freshInstall", migratingSeenBadges, allFeatures)).toBe(
+      true,
+    );
+    expect(isBadgeUnseen("settings.profiles.delete", migratingSeenBadges, allFeatures)).toBe(true);
+    expect(isBadgeUnseen("settings.profiles.reinstall", migratingSeenBadges, allFeatures)).toBe(
+      true,
+    );
+
+    // header.settings bubbles up because it has unread children in 2.0.2
+    expect(isBadgeUnseen("header.settings", migratingSeenBadges, allFeatures)).toBe(true);
   });
 
   it("ensures new user (Variant 1: clean start) has all badges inactive", () => {
@@ -104,5 +134,19 @@ describe("Features: Baseline & Migration Specs", () => {
     for (const feat of ALL_CURRENT_FEATURE_IDS) {
       expect(isBadgeUnseen(feat, newUserSeenBadges, ALL_CURRENT_FEATURE_IDS)).toBe(false);
     }
+  });
+
+  it("marks clicked feature seen immediately so returning to the view displays no badge", () => {
+    const initialSeen = [...BASELINE_2_0_0_BADGES];
+    const targetFeature = "settings.actions.freshInstall";
+
+    // Before click: target is unread
+    expect(isBadgeUnseen(targetFeature, initialSeen, ALL_CURRENT_FEATURE_IDS)).toBe(true);
+
+    // Click occurs: feature is synchronously appended to seen list
+    const updatedSeen = [...initialSeen, targetFeature];
+
+    // After click: target is read immediately, even before unmount/remount
+    expect(isBadgeUnseen(targetFeature, updatedSeen, ALL_CURRENT_FEATURE_IDS)).toBe(false);
   });
 });

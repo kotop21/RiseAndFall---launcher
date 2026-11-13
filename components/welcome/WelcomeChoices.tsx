@@ -84,6 +84,7 @@ export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: Welc
           </div>
 
           <Button
+            featureId="welcome.browse"
             variant="secondary"
             size="sm"
             disabled={isPicking}
@@ -122,7 +123,13 @@ export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: Welc
             </Column>
           </div>
 
-          <Button variant="default" size="sm" onClick={onNavigateInstall} style={{ flexShrink: 0 }}>
+          <Button
+            featureId="welcome.install"
+            variant="default"
+            size="sm"
+            onClick={onNavigateInstall}
+            style={{ flexShrink: 0 }}
+          >
             <Row gap={6} align="center" justify="center">
               <Download size={14} color={theme.colors.primaryFg} />
               {t("welcome.install")}

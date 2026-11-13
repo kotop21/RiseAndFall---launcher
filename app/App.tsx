@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { DevOverlay } from "@/components/dev";
 import { Header } from "@/components/Header";
 import { saveConfig } from "@/lib/config/save";
 import type { LauncherConfig } from "@/lib/config/types";
-import { getDevArgs } from "@/lib/dev/cli";
+import { getDevArgs } from "@/lib/dev";
 import { FeatureBadgeProvider } from "@/lib/features";
 import { LanguageProvider } from "@/lib/lang";
 import { logger } from "@/lib/logger";
@@ -37,10 +38,12 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
   const [activeView, setActiveView] = useState<"welcome" | "main" | "settings" | "install">(
     getInitialView,
   );
-  const [installSource, setInstallSource] = useState<"main" | "settings">("main");
+  const [installSource, setInstallSource] = useState<"welcome" | "main" | "settings">("main");
+  const [isReinstall, setIsReinstall] = useState(false);
+  const [installTargetDir, setInstallTargetDir] = useState<string | undefined>(undefined);
+  const [installPrevProfileId, setInstallPrevProfileId] = useState<string | null>(null);
 
   const isMain = activeView === "main";
-  const isReinstall = installSource === "settings";
 
   const handleUpdateConfig = async (nextConfig: LauncherConfig) => {
     setConfig(nextConfig);
@@ -66,20 +69,40 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
     [devArgs.isDev, devArgs.disableAutoDetectLanguage],
   );
 
+  const handleCompleteWelcome = useCallback(() => {
+    setConfig((prevConfig) => {
+      if (prevConfig.welcomeSeen) {
+        return prevConfig;
+      }
+      const nextCfg: LauncherConfig = { ...prevConfig, welcomeSeen: true };
+      saveConfig(nextCfg).catch((err) => {
+        logger.error("config", "Failed saving welcomeSeen to config:", err);
+      });
+      return nextCfg;
+    });
+  }, []);
+
   const handleSelectExistingFromWelcome = async (gameDir: string) => {
-    const updatedProfiles = (config.gameProfiles || []).map((p) =>
-      p.id === (config.activeProfileId || "slot-1") ? { ...p, path: gameDir } : p,
-    );
-    const nextCfg: LauncherConfig = {
-      ...config,
-      gameDir,
-      gameProfiles: updatedProfiles,
-    };
-    await handleUpdateConfig(nextCfg);
+    let nextCfg: LauncherConfig | null = null;
+    setConfig((prev) => {
+      const updatedProfiles = (prev.gameProfiles || []).map((p) =>
+        p.id === (prev.activeProfileId || "slot-1") ? { ...p, path: gameDir } : p,
+      );
+      nextCfg = {
+        ...prev,
+        gameDir,
+        gameProfiles: updatedProfiles,
+      };
+      return nextCfg;
+    });
+    if (nextCfg) {
+      await saveConfig(nextCfg);
+    }
     setActiveView("main");
   };
 
   const handleInstallSuccess = useCallback((installedPath: string) => {
+    setInstallPrevProfileId(null);
     setConfig((prevConfig) => {
       const updatedProfiles = (prevConfig.gameProfiles || []).map((p) =>
         p.id === (prevConfig.activeProfileId || "slot-1") ? { ...p, path: installedPath } : p,
@@ -95,17 +118,98 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
 
   useEffect(() => {
     return installationManager.onInstalled((installedPath, updatedConfig) => {
+      setInstallPrevProfileId(null);
       if (updatedConfig) {
         setConfig(updatedConfig);
       } else {
         handleInstallSuccess(installedPath);
       }
+      setActiveView("main");
     });
   }, [handleInstallSuccess]);
 
-  const handleCancelInstall = () => {
-    setActiveView(installSource === "settings" ? "settings" : "main");
-  };
+  const handleOpenReinstall = useCallback(
+    (targetDir?: string) => {
+      setIsReinstall(true);
+      setInstallTargetDir(targetDir || config.gameDir);
+      setInstallPrevProfileId(null);
+      setInstallSource("settings");
+      setActiveView("install");
+    },
+    [config.gameDir],
+  );
+
+  const handleOpenNewInstall = useCallback(async () => {
+    const profiles = config.gameProfiles || [];
+    const emptySlot = profiles.find((p) => !p.path?.trim());
+
+    if (!emptySlot) {
+      return;
+    }
+
+    const prevActiveId = config.activeProfileId || "slot-1";
+    setInstallPrevProfileId(prevActiveId);
+    setIsReinstall(false);
+    setInstallTargetDir(undefined);
+    setInstallSource("settings");
+
+    let configToSave: LauncherConfig | null = null;
+    setConfig((prev) => {
+      if (prev.activeProfileId === emptySlot.id) {
+        return prev;
+      }
+      const updated: LauncherConfig = {
+        ...prev,
+        activeProfileId: emptySlot.id,
+        gameDir: "",
+      };
+      configToSave = updated;
+      return updated;
+    });
+
+    if (configToSave) {
+      try {
+        await saveConfig(configToSave);
+      } catch (err) {
+        logger.error("config", "Failed saving active profile for new install:", err);
+      }
+    }
+
+    setActiveView("install");
+  }, [config]);
+
+  const handleCancelInstall = useCallback(() => {
+    if (installPrevProfileId) {
+      const prevId = installPrevProfileId;
+      setInstallPrevProfileId(null);
+
+      setConfig((prev) => {
+        const currentActive = prev.gameProfiles?.find((p) => p.id === prev.activeProfileId);
+        if (!currentActive?.path?.trim() && prevId !== prev.activeProfileId) {
+          const prevProfile = prev.gameProfiles?.find((p) => p.id === prevId);
+          const restoredConfig: LauncherConfig = {
+            ...prev,
+            activeProfileId: prevId,
+            gameDir: prevProfile?.path || prev.gameDir,
+            gameArg: prevProfile?.gameArg || prev.gameArg,
+          };
+          saveConfig(restoredConfig).catch((err) => {
+            logger.error("config", "Failed restoring profile on install cancel:", err);
+          });
+          return restoredConfig;
+        }
+        return prev;
+      });
+    }
+
+    if (installSource === "welcome") {
+      setActiveView("welcome");
+    } else if (installSource === "settings") {
+      setActiveView("settings");
+    } else {
+      setActiveView("main");
+    }
+  }, [installPrevProfileId, installSource]);
 
   const handleSeenBadgesChange = useCallback((nextSeen: string[]) => {
     setConfig((prev) => {
@@ -142,11 +246,17 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
               >
                 <View id="welcome" transition="fade" style={{ width: "100%", height: "100%" }}>
                   <WelcomeView
+                    welcomeSeen={Boolean(config.welcomeSeen)}
+                    onCompleteWelcome={handleCompleteWelcome}
                     skipAutoDetect={devArgs.isDev && devArgs.disableAutoDetectLanguage}
                     onAutoDetectLanguage={handleAutoDetectLanguage}
                     onSelectExistingGame={handleSelectExistingFromWelcome}
                     onNavigateInstall={() => {
-                      setInstallSource("main");
+                      handleCompleteWelcome();
+                      setIsReinstall(false);
+                      setInstallTargetDir(undefined);
+                      setInstallPrevProfileId(null);
+                      setInstallSource("welcome");
                       setActiveView("install");
                     }}
                   />
@@ -165,10 +275,8 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
                     config={config}
                     onChangeConfig={handleUpdateConfig}
                     onBack={() => setActiveView("main")}
-                    onOpenInstall={() => {
-                      setInstallSource("settings");
-                      setActiveView("install");
-                    }}
+                    onOpenInstall={handleOpenReinstall}
+                    onOpenNewInstall={handleOpenNewInstall}
                   />
                 </View>
 
@@ -178,7 +286,9 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
                   style={{ width: "100%", height: "100%" }}
                 >
                   <InstallView
-                    defaultInstallPath={config.gameDir}
+                    defaultInstallPath={
+                      isReinstall ? installTargetDir || config.gameDir : undefined
+                    }
                     isReinstall={isReinstall}
                     onInstalled={handleInstallSuccess}
                     onCancel={handleCancelInstall}
@@ -192,12 +302,16 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
                   onConfigChange={setConfig}
                   onOpenSettings={() => setActiveView("settings")}
                   onOpenInstall={() => {
+                    setIsReinstall(false);
+                    setInstallTargetDir(undefined);
+                    setInstallPrevProfileId(null);
                     setInstallSource("main");
                     setActiveView("install");
                   }}
                 />
               )}
             </Flex>
+            <DevOverlay />
           </FeatureBadgeProvider>
         </DialogProvider>
       </ToastProvider>

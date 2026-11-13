@@ -48,7 +48,9 @@
     "setPathFirst": "Укажите путь для этого профиля",
     "launchArgsProfileHint": "Аргументы запуска сохраняются индивидуально для {profile}. ",
     "enableDiscordRpc": "Отображать активность в Discord",
-    "lowPerformanceMode": "Режим низкой производительности"
+    "lowPerformanceMode": "Режим низкой производительности",
+    "deleteDialogTitle": "Удалить игру?",
+    "deleteDialogDesc": "Вы точно хотите удалить? Это приведет к полному удалению игры, но ваши сохранения или кастомные файлы останутся."
   },
   "install": {
     "titleInstall": "Установка игры",
@@ -88,6 +90,11 @@
     "update": "Обновить",
     "updating": "Обновление...",
     "alreadyInstalled": "Уже установлено",
+    "delete": "Удалить",
+    "deleteGame": "Удалить игру",
+    "deleteCountdown": "Удалить ({n}с)",
+    "deleting": "Удаление...",
+    "freshInstall": "Новая установка игры",
     "donate": "Донат",
     "donateTooltip": "Держится на личном железе и времени. Спасибо за поддержку!"
   },
@@ -220,6 +227,8 @@
     "dgvOsUnsupportedDesc": "Панель управления требует Windows.",
     "settingsSavedDesc": "Параметры успешно обновлены.",
     "profileClearedDesc": "Путь удален из текущего слота.",
+    "gameDeletedDesc": "Файлы игры удалены, профиль очищен.",
+    "allSlotsFilledDesc": "Все слоты профилей (5/5) заполнены. Удалите один профиль перед новой установкой.",
     "filesLockedDesc": "Закройте игру перед очисткой папки.",
     "sessionSaveErrorDesc": "Не удалось записать время сессии.",
     "settingsExportSuccessDesc": "Файл записан в {path}",

@@ -48,7 +48,9 @@
     "setPathFirst": "Вкажіть шлях для цього профілю",
     "launchArgsProfileHint": "Параметри запуску зберігаються окремо для {profile}.",
     "enableDiscordRpc": "Відображати активність у Discord",
-    "lowPerformanceMode": "Режим низької продуктивності"
+    "lowPerformanceMode": "Режим низької продуктивності",
+    "deleteDialogTitle": "Видалити гру?",
+    "deleteDialogDesc": "Ви точно хочете видалити? Це призведе до повного видалення гри, але ваші збереження або власні файли залишаться."
   },
   "install": {
     "titleInstall": "Встановлення гри",
@@ -88,6 +90,11 @@
     "update": "Оновити",
     "updating": "Оновлення...",
     "alreadyInstalled": "Вже встановлено",
+    "delete": "Видалити",
+    "deleteGame": "Видалити гру",
+    "deleteCountdown": "Видалити ({n}с)",
+    "deleting": "Видалення...",
+    "freshInstall": "Нове встановлення гри",
     "donate": "Донат",
     "donateTooltip": "Тримається на власному залізі та часі. Дякую за підтримку!"
   },
@@ -220,6 +227,8 @@
     "dgvOsUnsupportedDesc": "Панель керування вимагає Windows.",
     "settingsSavedDesc": "Параметри успішно оновлено.",
     "profileClearedDesc": "Шлях вилучено з поточного слота.",
+    "gameDeletedDesc": "Файли гри видалено, профіль очищено.",
+    "allSlotsFilledDesc": "Усі слоти профілів (5/5) заповнені. Видаліть один профіль перед новим встановленням.",
     "filesLockedDesc": "Закрийте гру перед очищенням теки.",
     "sessionSaveErrorDesc": "Не вдалося записати час сесії.",
     "settingsExportSuccessDesc": "Файл збережено у {path}",

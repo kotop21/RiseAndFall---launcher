@@ -13,13 +13,13 @@ import type { LauncherAppError } from "@/lib/errors";
 
 describe("API: Routes Builder", () => {
   it("builds correct manifest route", () => {
-    expect(API_ROUTES.manifest).toContain("/api/manifest");
+    expect(API_ROUTES.manifest).toContain("/manifest");
   });
 
   it("builds correct online & health routes", () => {
-    expect(API_ROUTES.health).toContain("/api/health");
-    expect(API_ROUTES.online).toContain("/api/online");
-    expect(API_ROUTES.onlineCount).toContain("/api/online/count");
+    expect(API_ROUTES.health).toContain("/health");
+    expect(API_ROUTES.online).toContain("/online");
+    expect(API_ROUTES.onlineCount).toContain("/online/count");
   });
 });
 
@@ -46,7 +46,7 @@ describe("API: Manifest Fetching", () => {
       port: 0,
       fetch(req) {
         const url = new URL(req.url);
-        if (url.pathname === "/api/manifest") {
+        if (url.pathname === "/manifest") {
           return Response.json(mockManifest);
         }
         return new Response("Not found", { status: 404 });

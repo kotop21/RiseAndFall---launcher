@@ -6,7 +6,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { fetchLauncherInfo, getLauncherDownloadUrl } from "@/lib/api";
-import { isDevMode } from "@/lib/dev/cli";
+import { getDevArgs, isDevMode } from "@/lib/dev";
 import { extractZip } from "@/lib/explorer/extract";
 import type { ReleaseItem } from "@/lib/github/types";
 import { logger } from "@/lib/logger";
@@ -262,8 +262,8 @@ async function doUpdateLauncher(
     const newExeRelPath = relative(payloadDir, newExeFullPath);
     logger.info("updater", `Detected new executable: ${newExeRelPath} in ${payloadDir}`);
 
-    // If running in dev mode or non-windows:
-    if (isDevMode()) {
+    // If running in dev mode (without --allow-self-update) or non-windows:
+    if (isDevMode() && !getDevArgs().allowSelfUpdate) {
       logger.info(
         "updater",
         `Dev mode active. Update verified in staging: ${payloadDir} (Main exe: ${newExeRelPath})`,

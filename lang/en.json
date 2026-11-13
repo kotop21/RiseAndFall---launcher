@@ -48,7 +48,9 @@
     "setPathFirst": "Select path to assign to this profile",
     "launchArgsProfileHint": "Arguments applied specifically for {profile}.",
     "enableDiscordRpc": "Enable Discord Rich Presence",
-    "lowPerformanceMode": "Low Performance Mode"
+    "lowPerformanceMode": "Low Performance Mode",
+    "deleteDialogTitle": "Delete Game?",
+    "deleteDialogDesc": "Are you sure you want to delete? This will completely remove game files, but your saves and custom files will remain."
   },
   "install": {
     "titleInstall": "Install Game",
@@ -88,6 +90,11 @@
     "update": "Update",
     "updating": "Updating...",
     "alreadyInstalled": "Already installed",
+    "delete": "Delete",
+    "deleteGame": "Delete Game",
+    "deleteCountdown": "Delete ({n}s)",
+    "deleting": "Deleting...",
+    "freshInstall": "Install New Game",
     "donate": "Donate",
     "donateTooltip": "Runs on personal hardware & time. Thanks for supporting!"
   },
@@ -220,6 +227,8 @@
     "dgvOsUnsupportedDesc": "Control panel requires Windows.",
     "settingsSavedDesc": "Configuration updated successfully.",
     "profileClearedDesc": "Path removed from current slot.",
+    "gameDeletedDesc": "Game files deleted, profile cleared.",
+    "allSlotsFilledDesc": "All profile slots (5/5) are full. Remove a profile before installing a new one.",
     "filesLockedDesc": "Close the game before cleaning directory.",
     "sessionSaveErrorDesc": "Failed to update playtime statistics.",
     "settingsExportSuccessDesc": "Saved to {path}",

@@ -1,11 +1,9 @@
 import { useEffect, useRef } from "react";
-import { DownloadGameButton } from "@/components/DownloadGameButton";
 import { OpenDgVoodooButton } from "@/components/OpenDgVoodooButton";
 import { Download, Upload, Wrench } from "@/icon";
 import { createLauncherError, formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
-import { useInstallation } from "@/lib/manager/install";
 import { exportGameSettings, importGameSettings } from "@/lib/settings-cli";
 import { useGameStatus } from "@/lib/utils/game-status";
 import { isWindows } from "@/lib/utils/os";
@@ -13,14 +11,18 @@ import { Button, Column, Label, Row, theme, useFileDialog, useToast } from "@/ui
 
 interface SettingsActionsProps {
   gameDir?: string;
-  onOpenInstall?: () => void;
+  onOpenNewInstall?: () => void;
+  isNewInstallDisabled?: boolean;
 }
 
-export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActionsProps) {
+export function SettingsActions({
+  gameDir = "",
+  onOpenNewInstall,
+  isNewInstallDisabled = false,
+}: SettingsActionsProps) {
   const { t } = useTranslation();
   const { pickFolder, pickFile } = useFileDialog();
   const { toast } = useToast();
-  const installation = useInstallation();
 
   const { cliExists: isCliAvailable } = useGameStatus(gameDir);
   const hasWarnedRef = useRef(false);
@@ -107,17 +109,27 @@ export function SettingsActions({ gameDir = "", onOpenInstall }: SettingsActions
 
       <Row gap={10} align="center" style={{ width: "100%" }}>
         <div style={{ flexGrow: 1, minWidth: 0 }}>
-          <OpenDgVoodooButton gameDir={gameDir} style={{ width: "100%" }} />
+          <OpenDgVoodooButton
+            featureId="settings.actions.dgvoodoo"
+            gameDir={gameDir}
+            style={{ width: "100%" }}
+          />
         </div>
 
         <div style={{ flexGrow: 1, minWidth: 0 }}>
-          <DownloadGameButton
-            variant="reinstall"
+          <Button
+            featureId="settings.actions.freshInstall"
+            variant="default"
             size="sm"
-            isInstalling={installation.isInstalling}
-            onClick={onOpenInstall}
+            disabled={isNewInstallDisabled}
+            onClick={onOpenNewInstall}
             style={{ width: "100%" }}
-          />
+          >
+            <Row gap={8} align="center" justify="center">
+              <Download size={14} color={theme.colors.primaryFg} />
+              {t("buttons.freshInstall")}
+            </Row>
+          </Button>
         </div>
       </Row>
 

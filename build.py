@@ -93,20 +93,6 @@ def ensure_native_addon(dist_dir):
         os.remove(tmp_tar)
     log_info("Windows native addon prepared successfully.")
 
-def read_api_url():
-    if "API_URL" in os.environ and os.environ["API_URL"].strip():
-        return os.environ["API_URL"].strip()
-    if os.path.exists(".env"):
-        with open(".env", "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("API_URL="):
-                    val = line.split("=", 1)[1].strip()
-                    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
-                        val = val[1:-1]
-                    return val
-    return "http://localhost:3000"
-
 def main():
     ensure_docker()
     root_dir = os.path.abspath(os.path.dirname(__file__))
@@ -117,30 +103,16 @@ def main():
 
     ensure_native_addon(dist_dir)
 
-    api_url = read_api_url().rstrip("/")
-    log_info(f"Using target API_URL: {api_url}")
-
     is_release = os.environ.get("RELEASE", "0") in ("1", "true", "TRUE")
     deno_extra_flags = "--no-terminal" if is_release else ""
+    build_mode = "prod" if is_release else "dev"
     log_info(f"Build target mode: {'RELEASE (no-terminal)' if is_release else 'DEV (console enabled)'}")
 
     log_info("Generating version...")
     run_command(["bun", "run", "scripts/generate-version.js"])
 
-    log_info("Bundling JS via Bun with injected API_URL...")
-    define_arg = f'process.env.API_URL={json.dumps(api_url)}'
-    run_command([
-        "bun", "build", "index.tsx",
-        "--outdir", "dist/build",
-        "--target", "node",
-        "--minify",
-        "--sourcemap=external",
-        "--define", define_arg,
-        "--define", 'process.env.NODE_ENV="production"',
-        "--external", "@gpuix/native-darwin-arm64",
-        "--external", "@gpuix/native-darwin-universal",
-        "--external", "@gpuix/native-win32-x64-msvc"
-    ])
+    log_info(f"Bundling JS via scripts/build-bundle.js (--mode={build_mode})...")
+    run_command(["bun", "run", "scripts/build-bundle.js", f"--mode={build_mode}"])
 
     cache_bust = str(int(time.time()))
     image_name = "bungpuix-raf-builder"

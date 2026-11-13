@@ -1,3 +1,5 @@
+import { IS_DEV_BUILD } from "./env";
+
 export type SupportedDevView = "welcome" | "main" | "settings" | "install";
 export type SupportedDevLang = "en" | "ua" | "ru";
 
@@ -12,27 +14,29 @@ export interface DevCliArgs {
   showAllBadges: boolean;
   resetBadges: boolean;
   unreadBadges?: string[];
+  apiOverride?: string;
+  forceProdApi: boolean;
+  devMenu: boolean;
+  forceWelcome: boolean;
+  allowSelfUpdate: boolean;
 }
 
+export const PROD_DEV_ARGS: DevCliArgs = {
+  isDev: false,
+  disableAutoDetectLanguage: false,
+  lowSpec: false,
+  logFile: true,
+  mockRelease: false,
+  showAllBadges: false,
+  resetBadges: false,
+  forceProdApi: false,
+  devMenu: false,
+  forceWelcome: false,
+  allowSelfUpdate: true,
+};
+
 export function isDevMode(): boolean {
-  if (process.env.NODE_ENV === "production") {
-    return false;
-  }
-  if (process.platform !== "win32") {
-    return true;
-  }
-  const exec = process.execPath.toLowerCase();
-  if (exec.includes("bun") || exec.includes("node")) {
-    return true;
-  }
-  if (!exec.endsWith(".exe")) {
-    return true;
-  }
-  const mainArg = process.argv[1] || "";
-  if (mainArg.endsWith(".tsx") || mainArg.endsWith(".ts")) {
-    return true;
-  }
-  return false;
+  return IS_DEV_BUILD;
 }
 
 function extractArgValue(argv: string[], names: string[]): string | undefined {
@@ -93,20 +97,26 @@ function normalizeDevView(raw: string | undefined): SupportedDevView | undefined
   return undefined;
 }
 
+function isForceWelcomeEnvSet(): boolean {
+  const flag = (process.env.FORCE_WELCOME || process.env.TEST_MODE || process.env.WELCOME || "")
+    .toLowerCase()
+    .trim();
+  return flag === "1" || flag === "true" || flag === "yes";
+}
+
+export function isForceWelcome(): boolean {
+  if (!isDevMode()) {
+    return false;
+  }
+  return getDevArgs().forceWelcome || isForceWelcomeEnvSet();
+}
+
 export function parseDevArgs(
   argv: string[] = process.argv.slice(2),
   isDev = isDevMode(),
 ): DevCliArgs {
   if (!isDev) {
-    return {
-      isDev: false,
-      disableAutoDetectLanguage: false,
-      lowSpec: false,
-      logFile: true,
-      mockRelease: false,
-      showAllBadges: false,
-      resetBadges: false,
-    };
+    return { ...PROD_DEV_ARGS };
   }
 
   const lang = normalizeDevLang(extractArgValue(argv, ["--lang", "--language", "-l"]));
@@ -133,6 +143,13 @@ export function parseDevArgs(
     "-w",
   ]);
 
+  const rawApiOverride = extractArgValue(argv, ["--api", "--api-url"])?.trim();
+  const apiOverride = rawApiOverride ? rawApiOverride.replace(/\/+$/, "") : undefined;
+  const forceProdApi = hasArgFlag(argv, ["--prod", "--prod-api"]);
+  const devMenu = hasArgFlag(argv, ["--dev-menu"]);
+  const forceWelcome = hasArgFlag(argv, ["--force-welcome"]);
+  const allowSelfUpdate = hasArgFlag(argv, ["--allow-self-update"]);
+
   return {
     isDev: true,
     lang,
@@ -144,6 +161,11 @@ export function parseDevArgs(
     showAllBadges,
     resetBadges,
     unreadBadges,
+    apiOverride,
+    forceProdApi,
+    devMenu,
+    forceWelcome,
+    allowSelfUpdate,
   };
 }
 

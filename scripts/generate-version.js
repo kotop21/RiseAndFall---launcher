@@ -1,7 +1,6 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import pkg from "../package.json" with { type: "json" };
-import { BASELINE_2_0_0_BADGES } from "../lib/features/baseline";
 
 const version = pkg.version || "0.0.0";
 const targetVersionPath = join(import.meta.dir, "../lib/utils/version.generated.ts");
@@ -15,10 +14,10 @@ await writeFile(targetVersionPath, versionContent, "utf-8");
 console.log(`Version: generated build target with version v${version}`);
 
 // Collect all feature IDs from app/ and components/
-const featureIdRegex = /featureId=["']([^"']+)["']/g;
-const collected = new Set(BASELINE_2_0_0_BADGES);
+const featureIdRegex = /featureId\s*=\s*["']([^"']+)["']/g;
+const collected = new Set();
 
-async function scanDirectory(dir: string) {
+async function scanDirectory(dir) {
   try {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
@@ -27,7 +26,7 @@ async function scanDirectory(dir: string) {
         await scanDirectory(fullPath);
       } else if (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) {
         const text = await readFile(fullPath, "utf-8");
-        let match: RegExpExecArray | null;
+        let match;
         while ((match = featureIdRegex.exec(text)) !== null) {
           if (match[1]?.trim()) {
             collected.add(match[1].trim());
