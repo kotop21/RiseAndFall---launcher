@@ -156,6 +156,7 @@ export class InstallationManager {
       progress: {
         status: "downloading",
         message: "",
+        percent: 0,
       },
       targetDir,
       lang,
@@ -203,6 +204,7 @@ export class InstallationManager {
             progress: {
               status: "completed",
               message: this.state.progress?.message || "",
+              percent: 100,
             },
             error: null,
           });
@@ -303,4 +305,37 @@ export function useInstallation() {
     abort: useCallback(() => installationManager.abort(), []),
     reset: useCallback(() => installationManager.reset(), []),
   };
+}
+
+/**
+ * Subscribes only to the boolean `isInstalling` state so callers avoid re-rendering on progress ticks.
+ */
+export function useIsInstalling(): boolean {
+  const [isInstalling, setIsInstalling] = useState(
+    () => installationManager.getState().isInstalling,
+  );
+
+  useEffect(() => {
+    return installationManager.subscribe((next) => {
+      setIsInstalling((prev) => (prev === next.isInstalling ? prev : next.isInstalling));
+    });
+  }, []);
+
+  return isInstalling;
+}
+
+/**
+ * Formats the current installation/reinstallation progress message for display above progress bars.
+ */
+export function formatInstallStatusMessage(
+  state: Pick<InstallationState, "status" | "progress" | "isReinstall">,
+  t: (key: string) => string,
+): string {
+  if (state.progress?.message) {
+    return state.progress.message;
+  }
+  if (state.status === "downloading") {
+    return state.isReinstall ? t("install.statusPreparingReinstall") : t("install.statusStarting");
+  }
+  return "";
 }

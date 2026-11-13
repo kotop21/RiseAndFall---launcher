@@ -39,9 +39,48 @@ export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" 
 export interface InstallProgress {
   status: InstallStatus;
   message: string;
+  percent?: number;
   bytesDownloaded?: number;
   totalBytes?: number;
   bytesPerSecond?: number;
+}
+
+function getPackageWeightBytes(pkg: ManifestPackage): number | null {
+  if (typeof pkg.size === "number" && Number.isFinite(pkg.size) && pkg.size > 0) {
+    return pkg.size;
+  }
+  if (typeof pkg.size === "string") {
+    const parsed = Number.parseFloat(pkg.size.trim());
+    if (Number.isFinite(parsed) && parsed > 0 && /^\d+(\.\d+)?$/.test(pkg.size.trim())) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function computeQueuePercent(
+  packages: ManifestPackage[],
+  index: number,
+  packageFraction: number,
+): number {
+  if (packages.length === 0) return 0;
+  const clampedFraction = Math.max(0, Math.min(1, packageFraction));
+  const weights = packages.map(getPackageWeightBytes);
+  const allHaveWeights = weights.every((w): w is number => w !== null);
+
+  if (allHaveWeights) {
+    const totalWeight = weights.reduce((acc, w) => acc + w, 0);
+    if (totalWeight > 0) {
+      let completedWeight = 0;
+      for (let i = 0; i < index; i++) {
+        completedWeight += weights[i] ?? 0;
+      }
+      const currentWeight = weights[index] ?? 0;
+      return Math.round(((completedWeight + currentWeight * clampedFraction) / totalWeight) * 100);
+    }
+  }
+
+  return Math.round(((index + clampedFraction) / packages.length) * 100);
 }
 
 export interface InstallGameOptions {
@@ -138,6 +177,7 @@ async function doInstallGamePackage({
     onProgress?.({
       status: "extracting",
       message: getTranslation(currentLang, "install.cleaningOld"),
+      percent: 0,
     });
     if (!(await cleanGameDirectory(cleanDir))) {
       logger.error("install", `Failed cleaning directory: ${cleanDir}`);
@@ -167,6 +207,7 @@ async function doInstallGamePackage({
     onProgress?.({
       status: "downloading",
       message: getTranslation(currentLang, "install.fetchingManifest"),
+      percent: 0,
     });
 
     try {
@@ -214,6 +255,7 @@ async function doInstallGamePackage({
   }
 
   let cumulativeBytes = 0;
+  let lastPercent = 0;
 
   for (let i = 0; i < packages.length; i++) {
     if (signal?.aborted) {
@@ -229,9 +271,11 @@ async function doInstallGamePackage({
 
     logger.info("install", `Starting package download: ${pkg.name} (${pkg.id})`);
 
+    lastPercent = computeQueuePercent(packages, i, 0);
     onProgress?.({
       status: "downloading",
       message: getTranslation(currentLang, "install.connecting").replace("{step}", stepLabel),
+      percent: lastPercent,
       bytesDownloaded: cumulativeBytes,
     });
 
@@ -247,10 +291,14 @@ async function doInstallGamePackage({
             p.totalBytes && p.totalBytes > 0
               ? `${currentMB} / ${(p.totalBytes / 1024 / 1024).toFixed(1)} MB`
               : `${currentMB} MB`;
+          const pkgFraction =
+            p.totalBytes && p.totalBytes > 0 ? Math.min(1, p.bytesDownloaded / p.totalBytes) : 0;
+          lastPercent = computeQueuePercent(packages, i, pkgFraction * 0.9);
 
           onProgress?.({
             status: "downloading",
             message: `${stepLabel}: ${sizeStr} (${speedStr})`,
+            percent: lastPercent,
             bytesDownloaded: cumulativeBytes + p.bytesDownloaded,
             totalBytes: p.totalBytes,
             bytesPerSecond: p.bytesPerSecond,
@@ -277,7 +325,7 @@ async function doInstallGamePackage({
 
       const normalized = normalizeError(err, "DOWNLOAD_FAILED");
       const launchErr = createLauncherError(normalized.code, normalized.description, err);
-      onProgress?.({ status: "error", message: launchErr.description });
+      onProgress?.({ status: "error", message: launchErr.description, percent: lastPercent });
       return { success: false, error: launchErr };
     }
 
@@ -291,9 +339,11 @@ async function doInstallGamePackage({
       };
     }
 
+    lastPercent = computeQueuePercent(packages, i, 0.92);
     onProgress?.({
       status: "extracting",
       message: getTranslation(currentLang, "install.extracting").replace("{step}", stepLabel),
+      percent: lastPercent,
       bytesDownloaded: cumulativeBytes,
     });
 
@@ -325,7 +375,7 @@ async function doInstallGamePackage({
       }
 
       const launchErr = createLauncherError(normalized.code, undefined, err);
-      onProgress?.({ status: "error", message: launchErr.description });
+      onProgress?.({ status: "error", message: launchErr.description, percent: lastPercent });
       return { success: false, error: launchErr };
     } finally {
       try {
@@ -367,6 +417,7 @@ async function doInstallGamePackage({
   onProgress?.({
     status: "completed",
     message: getTranslation(currentLang, "install.completed"),
+    percent: 100,
     bytesDownloaded: cumulativeBytes,
   });
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
+import { isLowSpecMode, safeMotion as motion } from "@/components/ui/motion-compat";
 import { AlertTriangle, CheckCircle, Download, Folder, RefreshCw } from "@/icon";
 import { getInstallLanguages } from "@/lib/api";
 import { formatErrorToast } from "@/lib/errors";
@@ -7,6 +8,7 @@ import { getLanguageDisplayLabel, useTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
 import {
   ensureInstallDir,
+  formatInstallStatusMessage,
   GAME_INSTALL_DIR_NAME,
   hasInstallManifestSync,
   useInstallation,
@@ -19,6 +21,7 @@ import {
   Label,
   Muted,
   P,
+  Progress,
   Row,
   Separator,
   theme,
@@ -102,6 +105,8 @@ export function GameInstaller({
   }));
 
   const status = installation.status;
+  const shouldAnimateRevealRef = useRef(status === "idle");
+
   const installPath =
     isInstalling || (status === "completed" && installation.targetDir)
       ? installation.targetDir
@@ -113,13 +118,7 @@ export function GameInstaller({
   const selectedLang =
     isInstalling || (status === "completed" && installation.lang) ? installation.lang : localLang;
 
-  const statusMessage =
-    installation.progress?.message ||
-    (status === "downloading"
-      ? isReinstall
-        ? t("install.statusPreparingReinstall")
-        : t("install.statusStarting")
-      : "");
+  const statusMessage = formatInstallStatusMessage(installation, t);
 
   const setInstallPath = (path: string) => {
     if (!isInstalling) setLocalInstallPath(path);
@@ -222,6 +221,8 @@ export function GameInstaller({
     installation.abort();
   };
 
+  const lowSpec = isLowSpecMode();
+
   return (
     <Column gap={20} style={{ width: "100%" }}>
       {isReinstall ? (
@@ -279,39 +280,67 @@ export function GameInstaller({
         </Column>
       )}
 
-      <Column gap={8} style={{ width: "100%" }}>
-        <Row gap={8} align="center">
-          <Label featureId="install.lang">{t("install.langPack")}</Label>
-        </Row>
-        <NavigationRoot
-          value={selectedLang}
-          onValueChange={(val) => {
-            if (!isInstalling) setSelectedLang(val);
-          }}
-        >
-          <SegmentedNav items={langNavItems} itemWidth={115} itemHeight={32} />
-        </NavigationRoot>
-      </Column>
-
-      {status !== "idle" && (
-        <Column
-          gap={6}
-          style={{
-            width: "100%",
-            backgroundColor: theme.colors.muted,
-            borderRadius: theme.radius.md,
-            padding: 12,
-          }}
-        >
+      <Column gap={0} style={{ width: "100%" }}>
+        <Column gap={8} style={{ width: "100%" }}>
           <Row gap={8} align="center">
-            {status === "completed" && <CheckCircle size={16} color={theme.colors.successFg} />}
-            <P style={{ fontWeight: "bold" }}>
-              {status === "completed" ? t("install.ready") : t("install.processing")}
-            </P>
+            <Label featureId="install.lang">{t("install.langPack")}</Label>
           </Row>
-          <Muted>{statusMessage}</Muted>
+          <NavigationRoot
+            value={selectedLang}
+            onValueChange={(val) => {
+              if (!isInstalling) setSelectedLang(val);
+            }}
+          >
+            <SegmentedNav items={langNavItems} itemWidth={115} itemHeight={32} />
+          </NavigationRoot>
         </Column>
-      )}
+
+        {status !== "idle" && (
+          <motion.div
+            initial={
+              lowSpec || !shouldAnimateRevealRef.current
+                ? false
+                : { height: 0, opacity: 0, top: -6 }
+            }
+            animate={{ height: 110, opacity: 1, top: 0 }}
+            transition={
+              lowSpec || !shouldAnimateRevealRef.current
+                ? { duration: 0 }
+                : { duration: 0.22, ease: "easeOut" }
+            }
+            style={{
+              position: "relative",
+              width: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ width: "100%", paddingTop: 20 }}>
+              <Column
+                gap={8}
+                style={{
+                  width: "100%",
+                  backgroundColor: theme.colors.muted,
+                  borderRadius: theme.radius.md,
+                  padding: 12,
+                }}
+              >
+                <Row gap={8} align="center">
+                  {status === "completed" && (
+                    <CheckCircle size={16} color={theme.colors.successFg} />
+                  )}
+                  <P style={{ fontWeight: "bold" }}>
+                    {status === "completed" ? t("install.ready") : t("install.processing")}
+                  </P>
+                </Row>
+                <Muted>{statusMessage}</Muted>
+                <Progress
+                  value={status === "completed" ? 100 : (installation.progress?.percent ?? 0)}
+                />
+              </Column>
+            </div>
+          </motion.div>
+        )}
+      </Column>
 
       <Separator orientation="horizontal" />
 
