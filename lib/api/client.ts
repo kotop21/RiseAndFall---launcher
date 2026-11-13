@@ -70,6 +70,7 @@ export interface ManifestPackage {
 export interface ManifestResponse {
   version: string;
   mode?: string;
+  required_mods?: string[];
   packages: ManifestPackage[];
   [key: `install_${string}`]: string[] | unknown;
 }

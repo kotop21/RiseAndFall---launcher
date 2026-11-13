@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Download, RefreshCw, Trash2 } from "@/icon";
 import { fetchManifest, type ManifestPackage } from "@/lib/api";
 import { useTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
 import {
-  checkAllModsStatus,
+  evaluateModsState,
+  formatByteSize,
+  installationManager,
   installMod,
   type ModInstallStatus,
-  type ModsManifest,
-  syncLocalModsWithDisk,
+  sortModsForDisplay,
   uninstallMod,
 } from "@/lib/manager/install";
 import {
@@ -27,51 +28,17 @@ import {
   useToast,
 } from "@/ui";
 
-/**
- * List of mod IDs that cannot be deleted by user (only installed or updated).
- * Add any protected mod IDs here (e.g. "mod_bfm").
- */
-export const NON_REMOVABLE_MOD_IDS: string[] = ["mod_bfm"];
-
 export interface ModsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   gameDir?: string;
 }
 
-function formatModSize(size?: number | string): string {
-  if (size === undefined || size === null || size === "") return "—";
-  let bytes = 0;
-  if (typeof size === "number") {
-    bytes = size;
-  } else {
-    const clean = size.trim().toLowerCase();
-    if (clean.endsWith("gb") || clean.endsWith("mb") || clean.endsWith("kb")) {
-      return size.trim();
-    }
-    const parsed = parseFloat(clean);
-    bytes = Number.isNaN(parsed) ? 0 : parsed;
-  }
-
-  if (bytes <= 0) return "0 KB";
-
-  const ONE_KB = 1024;
-  const ONE_MB = 1024 * 1024;
-  const ONE_GB = 1024 * 1024 * 1024;
-
-  if (bytes >= ONE_GB) {
-    return `${(bytes / ONE_GB).toFixed(1)} GB`;
-  }
-  if (bytes >= ONE_MB) {
-    return `${(bytes / ONE_MB).toFixed(1)} MB`;
-  }
-  return `${Math.max(1, Math.round(bytes / ONE_KB))} KB`;
-}
-
 export function ModsDialog({ open, onOpenChange, gameDir = "" }: ModsDialogProps) {
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
   const { toast } = useToast();
   const [mods, setMods] = useState<ManifestPackage[]>([]);
+  const [requiredModIds, setRequiredModIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<Record<string, ModInstallStatus>>({});
   const [loading, setLoading] = useState(false);
   const [activeInstallingId, setActiveInstallingId] = useState<string | null>(null);
@@ -84,26 +51,17 @@ export function ModsDialog({ open, onOpenChange, gameDir = "" }: ModsDialogProps
     setLoading(true);
 
     const initMods = async () => {
-      let localConfig: ModsManifest | undefined;
-      // 1. До получения манифеста проверяем физические файлы на диске и синхронизируем их с конфигурацией
-      if (gameDir.trim()) {
-        try {
-          localConfig = await syncLocalModsWithDisk(gameDir.trim());
-        } catch {}
-      }
-
-      // 2. Получаем манифест с API и сверяем данные API с локальной конфигурацией
       try {
         const manifest = await fetchManifest();
         if (!isMounted) return;
+        installationManager.setCachedManifest(manifest);
 
-        const modPackages = (manifest.packages || []).filter((p) => p.id.startsWith("mod_"));
-        setMods(modPackages);
+        const state = await evaluateModsState(gameDir, manifest);
+        if (!isMounted) return;
 
-        if (gameDir.trim()) {
-          const stats = await checkAllModsStatus(gameDir.trim(), modPackages, localConfig);
-          if (isMounted) setStatuses(stats);
-        }
+        setMods(state.mods);
+        setRequiredModIds(state.requiredModIds);
+        setStatuses(state.statuses);
       } catch {
         if (!isMounted) return;
         toast({
@@ -133,11 +91,11 @@ export function ModsDialog({ open, onOpenChange, gameDir = "" }: ModsDialogProps
     }
 
     const currentStatus = statuses[mod.id] || "not_installed";
-    const isNonRemovable = NON_REMOVABLE_MOD_IDS.includes(mod.id);
+    const isRequired = requiredModIds.includes(mod.id);
 
     if (currentStatus === "installed") {
-      if (isNonRemovable) {
-        // Protected mod cannot be uninstalled
+      if (isRequired) {
+        // Required mod cannot be uninstalled
         return;
       }
       logger.info("mods", `uninstall started (${mod.id})`);
@@ -205,6 +163,11 @@ export function ModsDialog({ open, onOpenChange, gameDir = "" }: ModsDialogProps
     }
   };
 
+  const sortedMods = useMemo(
+    () => sortModsForDisplay(mods, statuses, requiredModIds, lang),
+    [mods, statuses, requiredModIds, lang],
+  );
+
   const installedCount = mods.filter((m) => statuses[m.id] === "installed").length;
   const isAnyInstalling = activeInstallingId !== null;
 
@@ -239,15 +202,15 @@ export function ModsDialog({ open, onOpenChange, gameDir = "" }: ModsDialogProps
             </Row>
           ) : null}
 
-          {mods.map((mod) => {
+          {sortedMods.map((mod) => {
             const status = statuses[mod.id] || "not_installed";
-            const isNonRemovable = NON_REMOVABLE_MOD_IDS.includes(mod.id);
+            const isRequired = requiredModIds.includes(mod.id);
             const isCurrentInstalling = activeInstallingId === mod.id;
             const rawSize =
               mod.size ??
               (mod as unknown as Record<string, unknown>).size_bytes ??
               (mod as unknown as Record<string, unknown>).file_size;
-            const sizeStr = formatModSize(rawSize as number | string | undefined);
+            const sizeStr = formatByteSize(rawSize as number | string | undefined);
             const desc = mod.description?.trim() ? mod.description.trim() : t("mods.noDescription");
 
             return (
@@ -295,6 +258,8 @@ export function ModsDialog({ open, onOpenChange, gameDir = "" }: ModsDialogProps
                           : t("mods.notInstalled")}
                     </Badge>
 
+                    {isRequired && <Badge variant="default">{t("mods.required")}</Badge>}
+
                     {/* Обычный бейдж с весом: KB если <1MB, MB если >=1MB, GB если >=1GB */}
                     <Badge variant="secondary">{sizeStr}</Badge>
                   </Row>
@@ -309,7 +274,7 @@ export function ModsDialog({ open, onOpenChange, gameDir = "" }: ModsDialogProps
                   </P>
                 </Column>
 
-                {status === "installed" && isNonRemovable ? (
+                {status === "installed" && isRequired ? (
                   <Button
                     variant="secondary"
                     size="sm"

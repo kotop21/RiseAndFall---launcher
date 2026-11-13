@@ -95,6 +95,7 @@
     "deleteCountdown": "Delete ({n}s)",
     "deleting": "Deleting...",
     "freshInstall": "Install New Game",
+    "retry": "Try again",
     "donate": "Donate",
     "donateTooltip": "Runs on personal hardware & time. Thanks for supporting!"
   },
@@ -206,18 +207,21 @@
   },
   "mods": {
     "title": "Modifications Catalog",
+    "requiredTitle": "Required Modifications",
     "description": "Choose modifications to enhance graphics, audio, and gameplay. Changes are applied automatically.",
     "installedCount": "{installed}/{total} installed",
     "noDescription": "No description available",
     "installed": "Installed",
     "notInstalled": "Missing",
     "updateAvailable": "Update",
+    "required": "Required",
     "active": "Active",
     "install": "Install",
     "update": "Update",
     "uninstall": "Uninstall",
     "installing": "Installing...",
     "uninstalling": "Removing...",
+    "error": "Error",
     "noMods": "No modifications found"
   },
   "toasts": {
