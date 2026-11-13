@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { DevOverlay } from "@/components/dev";
 import { Header } from "@/components/Header";
+import { RequiredModsWatcher } from "@/components/RequiredModsDialog";
 import { saveConfig } from "@/lib/config/save";
 import type { LauncherConfig } from "@/lib/config/types";
 import { getDevArgs } from "@/lib/dev";
@@ -311,6 +312,7 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
                 />
               )}
             </Flex>
+            <RequiredModsWatcher gameDir={config.gameDir} activeView={activeView} />
             <DevOverlay />
           </FeatureBadgeProvider>
         </DialogProvider>
