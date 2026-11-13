@@ -8,7 +8,7 @@ import { getDevArgs } from "@/lib/dev";
 import { FeatureBadgeProvider } from "@/lib/features";
 import { LanguageProvider } from "@/lib/lang";
 import { logger } from "@/lib/logger";
-import { installationManager } from "@/lib/manager/install";
+import { installationManager, useIsInstalling } from "@/lib/manager/install";
 import { DialogProvider, Flex, ToastProvider, theme, View, Views } from "@/ui";
 import { InstallView } from "./views/InstallView";
 import { MainView } from "./views/MainView";
@@ -45,6 +45,7 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
   const [installPrevProfileId, setInstallPrevProfileId] = useState<string | null>(null);
 
   const isMain = activeView === "main";
+  const isInstalling = useIsInstalling();
 
   const handleUpdateConfig = async (nextConfig: LauncherConfig) => {
     setConfig(nextConfig);
@@ -236,7 +237,7 @@ export function App({ initialConfig, isFirstLaunch = false }: AppProps) {
                 width: "100%",
                 height: "100%",
                 backgroundColor: theme.colors.bg,
-                paddingBottom: isMain ? 72 : 0,
+                paddingBottom: isMain ? (isInstalling ? 110 : 72) : 0,
               }}
             >
               <Views

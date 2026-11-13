@@ -25,8 +25,17 @@ export function DownloadGameButton({
 }: DownloadGameButtonProps) {
   const { t } = useTranslation();
   const isReinstall = variant === "reinstall";
-  const iconColor = disabled ? theme.colors.mutedFg : theme.colors.primaryFg;
-  const textColor = disabled ? theme.colors.mutedFg : theme.colors.primaryFg;
+  const isSecondaryStyle = isInstalling && !disabled;
+  const iconColor = disabled
+    ? theme.colors.mutedFg
+    : isSecondaryStyle
+      ? theme.colors.secondaryFg
+      : theme.colors.primaryFg;
+  const textColor = disabled
+    ? theme.colors.mutedFg
+    : isSecondaryStyle
+      ? theme.colors.secondaryFg
+      : theme.colors.primaryFg;
 
   const buttonText = isInstalling
     ? t("install.processing")
@@ -39,9 +48,15 @@ export function DownloadGameButton({
 
   const shouldAnimate = pressAnimation && !isLowSpecMode();
   const baseTop = typeof style.top === "number" ? style.top : 0;
+  const bg = disabled
+    ? theme.colors.muted
+    : isSecondaryStyle
+      ? theme.colors.secondary
+      : theme.colors.primary;
+  const hoverBg = isSecondaryStyle ? theme.colors.secondaryHover : theme.colors.primaryHover;
 
   const activeStyle: Omit<StyleDesc, "hover" | "active"> = {
-    backgroundColor: theme.colors.primaryHover,
+    backgroundColor: hoverBg,
     ...(shouldAnimate ? { top: baseTop + 1 } : {}),
     ...(style.active || {}),
   };
@@ -62,13 +77,13 @@ export function DownloadGameButton({
         paddingLeft: px,
         paddingRight: px,
         borderRadius: theme.radius.md,
-        backgroundColor: disabled ? theme.colors.muted : theme.colors.primary,
+        backgroundColor: bg,
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
         hover: disabled
           ? undefined
           : {
-              backgroundColor: theme.colors.primaryHover,
+              backgroundColor: hoverBg,
               ...(style.hover || {}),
             },
         ...style,

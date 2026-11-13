@@ -8,12 +8,28 @@ import { discordRpc } from "@/lib/discord-rpc";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
-import { useInstallation } from "@/lib/manager/install";
+import {
+  formatInstallStatusMessage,
+  installationManager,
+  useInstallation,
+  useIsInstalling,
+} from "@/lib/manager/install";
 import { launchExe } from "@/lib/process/launch";
 import { launcherTracker } from "@/lib/process/launcher-tracker";
 import { useGameStatus } from "@/lib/utils/game-status";
 import { isWindows } from "@/lib/utils/os";
-import { Button, Column, Muted, P, Row, Tooltip, theme, Header as UiHeader, useToast } from "@/ui";
+import {
+  Button,
+  Column,
+  Muted,
+  P,
+  Progress,
+  Row,
+  Tooltip,
+  theme,
+  Header as UiHeader,
+  useToast,
+} from "@/ui";
 import { DownloadGameButton } from "./DownloadGameButton";
 import { ModsDialog } from "./ModsDialog";
 
@@ -24,9 +40,31 @@ interface HeaderProps {
   onOpenInstall?: () => void;
 }
 
+function HeaderInstallBanner() {
+  const { t } = useTranslation();
+  const installation = useInstallation();
+  const installStatusMessage = formatInstallStatusMessage(installation, t);
+
+  return (
+    <Column
+      gap={6}
+      style={{
+        width: "100%",
+        paddingLeft: 16,
+        paddingRight: 16,
+        paddingTop: 8,
+      }}
+    >
+      <Muted style={{ fontSize: 12 }}>{installStatusMessage}</Muted>
+      <Progress height={6} value={installation.progress?.percent ?? 0} />
+    </Column>
+  );
+}
+
 export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }: HeaderProps) {
   const { t, lang } = useTranslation();
-  const installation = useInstallation();
+  const isInstalling = useIsInstalling();
+  const isReinstall = isInstalling ? installationManager.getState().isReinstall : false;
   const [isModsDialogOpen, setIsModsDialogOpen] = useState(false);
 
   const formatLastLaunch = (rawDate: string | null) => {
@@ -53,7 +91,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
   const isPathConfigured = Boolean(config.gameDir?.trim());
   const { gameExists, isValidating } = useGameStatus(config.gameDir);
   const isGameMissing = !isPathConfigured || (!isValidating && !gameExists);
-  const isModsDisabled = isGameMissing || installation.isInstalling || isRunning;
+  const isModsDisabled = isGameMissing || isInstalling || isRunning;
 
   const formatLauncherPlaytime = (mins: number) => {
     if (!mins || mins <= 0) return "0 min";
@@ -154,21 +192,30 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
   return (
     <UiHeader
       variant="down"
-      size={72}
+      size={isInstalling ? 110 : 72}
       style={{
         backgroundColor: theme.colors.card,
         borderTopWidth: 1,
         borderColor: theme.colors.border,
+        flexDirection: "column",
+        alignItems: "stretch",
+        justifyContent: "flex-end",
+        paddingLeft: 0,
+        paddingRight: 0,
+        paddingTop: 0,
+        paddingBottom: 0,
       }}
     >
+      {isInstalling && <HeaderInstallBanner />}
+
       <Row
         justify="between"
         align="center"
         style={{
           width: "100%",
           height: 72,
-          paddingLeft: 13,
-          paddingRight: 13,
+          paddingLeft: 29,
+          paddingRight: 29,
         }}
       >
         <Row gap={16} align="center">
@@ -268,9 +315,9 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
           </Column>
         </Row>
 
-        {installation.isInstalling ? (
+        {isInstalling ? (
           <DownloadGameButton
-            variant={installation.isReinstall ? "reinstall" : "download"}
+            variant={isReinstall ? "reinstall" : "download"}
             isInstalling={true}
             onClick={onOpenInstall}
           />

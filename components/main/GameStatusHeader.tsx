@@ -15,6 +15,7 @@ const QUOTES = [
   "«Stand firm, warriors of antiquity!»",
 ];
 
+const SESSION_QUOTE = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 const rawVersion = getLauncherVersion().trim().replace(/^v/i, "");
 const launcherLabel = `Launcher v${rawVersion}`;
 
@@ -26,7 +27,6 @@ interface GameStatusHeaderProps {
 export function GameStatusHeader({ config, onChangeConfig }: GameStatusHeaderProps) {
   const { t, lang } = useTranslation();
   const { dgVoodooExists: isDgVoodooReady } = useGameStatus(config.gameDir);
-  const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
   const handleSelectSlot = async (slotId: string) => {
     if (slotId === config.activeProfileId) return;
@@ -114,7 +114,7 @@ export function GameStatusHeader({ config, onChangeConfig }: GameStatusHeaderPro
         </Badge>
       </Row>
 
-      <Muted>{quote}</Muted>
+      <Muted>{SESSION_QUOTE}</Muted>
     </Column>
   );
 }
