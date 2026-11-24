@@ -13,6 +13,7 @@ import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
 import { logger } from "@/lib/logger";
 import { uninstallGameProfile } from "@/lib/manager/uninstall";
+import { useGameStatus } from "@/lib/utils/game-status";
 import {
   Badge,
   Button,
@@ -28,6 +29,7 @@ import {
   Label,
   Muted,
   Row,
+  Tooltip,
   theme,
   useFileDialog,
   useToast,
@@ -246,7 +248,7 @@ export function GameProfiles({
   };
 
   const handleReinstallProfile = async () => {
-    if (!isSlotConfigured || isDeleting) return;
+    if (isSlotActionDisabled) return;
     if (hasProfileChanges) {
       await onSaveProfiles();
     }
@@ -268,6 +270,19 @@ export function GameProfiles({
   const activeSlotLabel = t("settings.slotLabel").replace("{n}", String(activeSlotIndex + 1));
   const activeProfile = formState.gameProfiles[activeSlotIndex];
   const isSlotConfigured = Boolean(activeProfile?.path?.trim());
+  const { gameExists, isValidating } = useGameStatus(formState.gameDir);
+
+  const isSlotActionDisabled = !isSlotConfigured || isValidating || !gameExists || isDeleting;
+  const isProfileActionDisabled = !hasProfileChanges || isDeleting;
+
+  const getSlotActionDisabledReason = () => {
+    if (isDeleting) return t("buttons.deleting");
+    if (!isSlotConfigured) return t("toasts.dgvPathRequiredDesc");
+    if (isValidating) return t("install.processing");
+    if (!gameExists) return t("toasts.gameMissingDesc");
+    return "";
+  };
+  const slotDisabledReason = getSlotActionDisabledReason();
 
   return (
     <Column featureId="settings.profiles" gap={16} style={{ width: "100%" }}>
@@ -351,31 +366,41 @@ export function GameProfiles({
         style={{ width: "100%", marginTop: 2, flexWrap: "wrap", gap: 10 }}
       >
         <Row gap={8} align="center">
-          <Button
-            featureId="settings.profiles.delete"
-            variant="destructive"
-            size="sm"
-            disabled={!isSlotConfigured || isDeleting}
-            onClick={handleOpenDeleteDialog}
-          >
-            <Row gap={6} align="center">
-              <Trash2 size={14} color={theme.colors.destructiveFg} />
-              {t("buttons.deleteGame")}
-            </Row>
-          </Button>
+          <Tooltip content={slotDisabledReason} disabled={!isSlotActionDisabled} side="top">
+            <Button
+              featureId="settings.profiles.delete"
+              variant="destructive"
+              size="sm"
+              disabled={isSlotActionDisabled}
+              onClick={handleOpenDeleteDialog}
+            >
+              <Row gap={6} align="center">
+                <Trash2
+                  size={14}
+                  color={isSlotActionDisabled ? theme.colors.mutedFg : theme.colors.destructiveFg}
+                />
+                {t("buttons.deleteGame")}
+              </Row>
+            </Button>
+          </Tooltip>
 
-          <Button
-            featureId="settings.profiles.reinstall"
-            variant="outline"
-            size="sm"
-            disabled={!isSlotConfigured || isDeleting}
-            onClick={handleReinstallProfile}
-          >
-            <Row gap={6} align="center">
-              <RotateCcw size={14} color={theme.colors.fg} />
-              {t("buttons.reinstall")}
-            </Row>
-          </Button>
+          <Tooltip content={slotDisabledReason} disabled={!isSlotActionDisabled} side="top">
+            <Button
+              featureId="settings.profiles.reinstall"
+              variant="outline"
+              size="sm"
+              disabled={isSlotActionDisabled}
+              onClick={handleReinstallProfile}
+            >
+              <Row gap={6} align="center">
+                <RotateCcw
+                  size={14}
+                  color={isSlotActionDisabled ? theme.colors.mutedFg : theme.colors.fg}
+                />
+                {t("buttons.reinstall")}
+              </Row>
+            </Button>
+          </Tooltip>
         </Row>
 
         <Row gap={10} align="center">
@@ -383,11 +408,14 @@ export function GameProfiles({
             featureId="settings.profiles.revert"
             variant="secondary"
             size="sm"
-            disabled={!hasProfileChanges || isDeleting}
+            disabled={isProfileActionDisabled}
             onClick={onRevertProfiles}
           >
             <Row gap={8} align="center">
-              <RotateCcw size={14} color={theme.colors.fg} />
+              <RotateCcw
+                size={14}
+                color={isProfileActionDisabled ? theme.colors.mutedFg : theme.colors.fg}
+              />
               {t("buttons.revert")}
             </Row>
           </Button>
@@ -396,11 +424,14 @@ export function GameProfiles({
             featureId="settings.profiles.save"
             variant="default"
             size="sm"
-            disabled={!hasProfileChanges || isDeleting}
+            disabled={isProfileActionDisabled}
             onClick={onSaveProfiles}
           >
             <Row gap={8} align="center">
-              <Check size={14} color={theme.colors.primaryFg} />
+              <Check
+                size={14}
+                color={isProfileActionDisabled ? theme.colors.mutedFg : theme.colors.primaryFg}
+              />
               {t("buttons.save")}
             </Row>
           </Button>

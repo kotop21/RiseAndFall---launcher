@@ -129,7 +129,10 @@ export function SettingsActions({
             style={{ width: "100%" }}
           >
             <Row gap={8} align="center" justify="center">
-              <Download size={14} color={theme.colors.primaryFg} />
+              <Download
+                size={14}
+                color={isNewInstallDisabled ? theme.colors.mutedFg : theme.colors.primaryFg}
+              />
               {t("buttons.freshInstall")}
             </Row>
           </Button>
@@ -153,7 +156,10 @@ export function SettingsActions({
               style={{ width: "100%" }}
             >
               <Row gap={8} align="center">
-                <Download size={14} color={theme.colors.fg} />
+                <Download
+                  size={14}
+                  color={!isCliAvailable ? theme.colors.mutedFg : theme.colors.fg}
+                />
                 {t("buttons.exportSettings")}
               </Row>
             </Button>
@@ -176,7 +182,10 @@ export function SettingsActions({
               style={{ width: "100%" }}
             >
               <Row gap={8} align="center">
-                <Upload size={14} color={theme.colors.fg} />
+                <Upload
+                  size={14}
+                  color={!isCliAvailable ? theme.colors.mutedFg : theme.colors.fg}
+                />
                 {t("buttons.importSettings")}
               </Row>
             </Button>
