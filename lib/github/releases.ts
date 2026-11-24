@@ -40,7 +40,12 @@ function formatReleaseTitle(
 
   const inlineText = body
     .split(/\r?\n+/)
-    .map((line) => line.replace(/^[\s*\-•#\d.]+/g, "").trim())
+    .map((line) =>
+      line
+        .replace(/^[\s*\-•#\d.]+/g, "")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .trim(),
+    )
     .filter(Boolean)
     .join(" • ");
 

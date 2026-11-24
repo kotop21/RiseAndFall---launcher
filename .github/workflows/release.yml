@@ -62,6 +62,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -148,12 +149,44 @@ jobs:
             dist/RiseAndFall-Launcher_Setup_*.exe
             dist/RiseAndFall-Launcher_Portable_*.zip
 
+      - name: Generate Release Notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          PREV_TAG=$(git describe --tags --abbrev=0 --match "v*" "${CURRENT_TAG}^" 2>/dev/null || true)
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..${CURRENT_TAG}"
+          else
+            RANGE="${CURRENT_TAG}"
+          fi
+
+          COMMITS=$(git log "$RANGE" --no-merges --pretty=format:"- %s ([%h](${REPO_URL}/commit/%H))")
+          if [ -z "$COMMITS" ]; then
+            COMMITS=$(git log "$RANGE" --pretty=format:"- %s ([%h](${REPO_URL}/commit/%H))")
+          fi
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- Release ${CURRENT_TAG}"
+          fi
+
+          {
+            echo "# Rise & Fall Launcher ${CURRENT_TAG}!"
+            echo ""
+            echo "## Changes"
+            echo ""
+            echo "$COMMITS"
+          } > dist/release_notes.md
+
       - name: Create Draft GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          name: ${{ github.ref_name }}
+          body_path: dist/release_notes.md
           draft: true
           preserve_order: true
           files: |
