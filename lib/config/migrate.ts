@@ -1,7 +1,8 @@
+import { BASELINE_2_0_0_BADGES } from "@/lib/features/baseline";
 import { logger } from "@/lib/logger";
 import type { GameBuildProfile, LauncherConfig } from "./types";
 
-export const CURRENT_CONFIG_VERSION = 5;
+export const CURRENT_CONFIG_VERSION = 6;
 export const DEFAULT_GAME_ARG = '-datapath "Data\\" -redistpath "Redist\\"';
 
 export function createDefaultProfiles(
@@ -53,8 +54,9 @@ export function migrateConfig(raw: Record<string, unknown>): {
     wasMigrated = true;
   }
 
-  if (typeof raw.gameDir === "string" && raw.gameDir && !profiles[0].path) {
-    profiles[0].path = raw.gameDir;
+  const firstProfile = profiles[0];
+  if (firstProfile && typeof raw.gameDir === "string" && raw.gameDir && !firstProfile.path) {
+    firstProfile.path = raw.gameDir;
     wasMigrated = true;
   }
 
@@ -62,7 +64,7 @@ export function migrateConfig(raw: Record<string, unknown>): {
     typeof raw.activeProfileId === "string" && raw.activeProfileId ? raw.activeProfileId : "slot-1";
 
   if (!profiles.some((p) => p.id === activeProfileId)) {
-    activeProfileId = profiles[0].id;
+    activeProfileId = firstProfile ? firstProfile.id : "slot-1";
     wasMigrated = true;
   }
 
@@ -92,7 +94,18 @@ export function migrateConfig(raw: Record<string, unknown>): {
     discordRpc: typeof raw.discordRpc === "boolean" ? raw.discordRpc : true,
     lowPerformanceMode:
       typeof raw.lowPerformanceMode === "boolean" ? raw.lowPerformanceMode : false,
+    seenBadges: Array.isArray(raw.seenBadges)
+      ? (raw.seenBadges as string[])
+      : [...BASELINE_2_0_0_BADGES],
+    welcomeSeen:
+      typeof raw.welcomeSeen === "boolean"
+        ? raw.welcomeSeen
+        : Boolean(effectiveGameDir || profiles.some((p) => Boolean(p.path?.trim()))),
   };
+
+  if (!Array.isArray(raw.seenBadges) || typeof raw.welcomeSeen !== "boolean") {
+    wasMigrated = true;
+  }
 
   if (wasMigrated) {
     logger.info("config", `migrated schema from v${version} to v${CURRENT_CONFIG_VERSION}`);

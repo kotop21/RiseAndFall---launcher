@@ -39,6 +39,11 @@ export const TagIcon = Tag;
 export const Layers: FC<PresetIconProps> = (props) => <Icon name="Layers" {...props} />;
 export const LayersIcon = Layers;
 
+export const MousePointerClick: FC<PresetIconProps> = (props) => (
+  <Icon name="MousePointerClick" {...props} />
+);
+export const MousePointerClickIcon = MousePointerClick;
+
 export const Calendar: FC<PresetIconProps> = (props) => <Icon name="Calendar" {...props} />;
 export const CalendarIcon = Calendar;
 
@@ -63,6 +68,9 @@ export const CheckIcon = Check;
 export const CheckCircle: FC<PresetIconProps> = (props) => <Icon name="CheckCircle" {...props} />;
 export const CheckCircleIcon = CheckCircle;
 
+export const CircleCheck: FC<PresetIconProps> = (props) => <Icon name="CircleCheck" {...props} />;
+export const CircleCheckIcon = CircleCheck;
+
 export const Trash2: FC<PresetIconProps> = (props) => <Icon name="Trash2" {...props} />;
 export const Trash2Icon = Trash2;
 
@@ -82,3 +90,12 @@ export const RotateCcwIcon = RotateCcw;
 
 export const Heart: FC<PresetIconProps> = (props) => <Icon name="Heart" {...props} />;
 export const HeartIcon = Heart;
+
+export const X: FC<PresetIconProps> = (props) => <Icon name="X" {...props} />;
+export const XIcon = X;
+
+export const Info: FC<PresetIconProps> = (props) => <Icon name="Info" {...props} />;
+export const InfoIcon = Info;
+
+export const XCircle: FC<PresetIconProps> = (props) => <Icon name="XCircle" {...props} />;
+export const XCircleIcon = XCircle;

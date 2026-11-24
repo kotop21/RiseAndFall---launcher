@@ -1,6 +1,18 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
+import { useFeatureBadge } from "@/lib/features";
 import { theme } from "../theme";
+import { useTooltipTrigger } from "./tooltip";
+
+export interface FlexProps {
+  children: ReactNode;
+  direction?: "row" | "column";
+  align?: "start" | "center" | "end" | "stretch";
+  justify?: "start" | "center" | "end" | "between" | "around";
+  gap?: number;
+  style?: StyleDesc;
+  featureId?: string;
+}
 
 export function Flex({
   children,
@@ -9,14 +21,8 @@ export function Flex({
   justify = "start",
   gap = 0,
   style = {},
-}: {
-  children: ReactNode;
-  direction?: "row" | "column";
-  align?: "start" | "center" | "end" | "stretch";
-  justify?: "start" | "center" | "end" | "between" | "around";
-  gap?: number;
-  style?: StyleDesc;
-}) {
+  featureId,
+}: FlexProps) {
   const alignMap: Record<"start" | "center" | "end" | "stretch", string> = {
     start: "flex-start",
     center: "center",
@@ -31,8 +37,16 @@ export function Flex({
     around: "space-around",
   };
 
+  const { badgeHandlers } = useFeatureBadge(featureId);
+  const tooltipHandlers = useTooltipTrigger({
+    onMouseEnter: featureId ? badgeHandlers.onMouseEnter : undefined,
+    onMouseLeave: featureId ? badgeHandlers.onMouseLeave : undefined,
+  });
+
   return (
     <div
+      {...tooltipHandlers}
+      onClick={featureId ? badgeHandlers.onClick : undefined}
       style={{
         display: "flex",
         flexDirection: direction,
@@ -47,24 +61,44 @@ export function Flex({
   );
 }
 
+export interface RowProps {
+  children: ReactNode;
+  align?: "start" | "center" | "end" | "stretch";
+  justify?: "start" | "center" | "end" | "between";
+  gap?: number;
+  style?: StyleDesc;
+  featureId?: string;
+}
+
 export function Row({
   children,
   align = "center",
   justify = "start",
   gap = 8,
   style = {},
-}: {
+  featureId,
+}: RowProps) {
+  return (
+    <Flex
+      direction="row"
+      align={align}
+      justify={justify}
+      gap={gap}
+      style={style}
+      featureId={featureId}
+    >
+      {children}
+    </Flex>
+  );
+}
+
+export interface ColumnProps {
   children: ReactNode;
   align?: "start" | "center" | "end" | "stretch";
   justify?: "start" | "center" | "end" | "between";
   gap?: number;
   style?: StyleDesc;
-}) {
-  return (
-    <Flex direction="row" align={align} justify={justify} gap={gap} style={style}>
-      {children}
-    </Flex>
-  );
+  featureId?: string;
 }
 
 export function Column({
@@ -73,15 +107,17 @@ export function Column({
   justify = "start",
   gap = 8,
   style = {},
-}: {
-  children: ReactNode;
-  align?: "start" | "center" | "end" | "stretch";
-  justify?: "start" | "center" | "end" | "between";
-  gap?: number;
-  style?: StyleDesc;
-}) {
+  featureId,
+}: ColumnProps) {
   return (
-    <Flex direction="column" align={align} justify={justify} gap={gap} style={style}>
+    <Flex
+      direction="column"
+      align={align}
+      justify={justify}
+      gap={gap}
+      style={style}
+      featureId={featureId}
+    >
       {children}
     </Flex>
   );

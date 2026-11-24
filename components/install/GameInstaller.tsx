@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { NavigationRoot, SegmentedNav } from "@/components/ui/elements/navigation";
-import { AlertTriangle, CheckCircle, Download, Folder, Globe, RefreshCw } from "@/icon";
+import { isLowSpecMode, safeMotion as motion } from "@/components/ui/motion-compat";
+import { AlertTriangle, CheckCircle, Download, Folder, RefreshCw } from "@/icon";
+import { getInstallLanguages } from "@/lib/api";
 import { formatErrorToast } from "@/lib/errors";
-import { useTranslation } from "@/lib/lang";
+import { getLanguageDisplayLabel, useTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
 import {
   ensureInstallDir,
+  formatInstallStatusMessage,
   GAME_INSTALL_DIR_NAME,
   hasInstallManifestSync,
   useInstallation,
@@ -17,6 +21,7 @@ import {
   Label,
   Muted,
   P,
+  Progress,
   Row,
   Separator,
   theme,
@@ -30,11 +35,6 @@ interface GameInstallerProps {
   onInstalled?: (installedPath: string) => void;
   onCancel?: () => void;
 }
-
-const LANG_NAV_ITEMS = [
-  { id: "en", label: "English" },
-  { id: "ru", label: "Russian" },
-];
 
 export function GameInstaller({
   defaultInstallPath = "",
@@ -61,6 +61,7 @@ export function GameInstaller({
 
   const [localInstallPath, setLocalInstallPath] = useState(getInitialPath);
   const [localLang, setLocalLang] = useState<string>("en");
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>(["en", "ru"]);
   const [confirmReinstall, setConfirmReinstall] = useState(false);
   const [confirmAbort, setConfirmAbort] = useState(false);
   const [isPickingFolder, setIsPickingFolder] = useState(false);
@@ -68,7 +69,44 @@ export function GameInstaller({
   const resetConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetAbortTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const getOrFetchManifest = installation.getOrFetchManifest;
+  const clearCachedManifest = installation.clearCachedManifest;
+
+  useEffect(() => {
+    let isMounted = true;
+    getOrFetchManifest()
+      .then((manifest) => {
+        if (!isMounted) return;
+        try {
+          const langs = getInstallLanguages(manifest);
+          if (langs.length > 0) {
+            setAvailableLanguages(langs);
+            const firstLang = langs[0];
+            setLocalLang((prev) => (firstLang && !langs.includes(prev) ? firstLang : prev));
+          }
+        } catch (err) {
+          logger.warn("installer", "Failed resolving install languages from manifest:", err);
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        logger.warn("installer", "Failed fetching manifest for dynamic install languages:", err);
+      });
+
+    return () => {
+      isMounted = false;
+      clearCachedManifest();
+    };
+  }, [getOrFetchManifest, clearCachedManifest]);
+
+  const langNavItems = availableLanguages.map((code) => ({
+    id: code,
+    label: getLanguageDisplayLabel(code),
+  }));
+
   const status = installation.status;
+  const shouldAnimateRevealRef = useRef(status === "idle");
+
   const installPath =
     isInstalling || (status === "completed" && installation.targetDir)
       ? installation.targetDir
@@ -80,13 +118,7 @@ export function GameInstaller({
   const selectedLang =
     isInstalling || (status === "completed" && installation.lang) ? installation.lang : localLang;
 
-  const statusMessage =
-    installation.progress?.message ||
-    (status === "downloading"
-      ? isReinstall
-        ? t("install.statusPreparingReinstall")
-        : t("install.statusStarting")
-      : "");
+  const statusMessage = formatInstallStatusMessage(installation, t);
 
   const setInstallPath = (path: string) => {
     if (!isInstalling) setLocalInstallPath(path);
@@ -138,8 +170,7 @@ export function GameInstaller({
     const rawTarget = installPath.trim();
     if (!rawTarget) {
       toast({
-        title: t("toasts.installPathRequiredTitle"),
-        description: t("toasts.installPathRequiredDesc"),
+        description: t("errors.TARGET_DIR_REQUIRED.description"),
         type: "warn",
       });
       return;
@@ -151,7 +182,7 @@ export function GameInstaller({
 
     const res = await installation.startInstall({
       targetDir: target,
-      lang: selectedLang === "ru" ? "ru" : "en",
+      lang: selectedLang,
       isReinstall,
       onInstalled,
     });
@@ -190,6 +221,8 @@ export function GameInstaller({
     installation.abort();
   };
 
+  const lowSpec = isLowSpecMode();
+
   return (
     <Column gap={20} style={{ width: "100%" }}>
       {isReinstall ? (
@@ -204,11 +237,11 @@ export function GameInstaller({
             padding: 14,
           }}
         >
-          <Label>{t("install.targetDir")}</Label>
+          <Label featureId="install.dir">{t("install.installDir")}</Label>
           <P style={{ color: theme.colors.mutedFg, fontSize: 13 }}>{installPath}</P>
           <Row gap={6} align="center">
             {hasManifest ? (
-              <CheckCircle size={14} color={theme.colors.success} />
+              <CheckCircle size={14} color={theme.colors.successFg} />
             ) : (
               <AlertTriangle size={14} color={theme.colors.mutedFg} />
             )}
@@ -221,7 +254,7 @@ export function GameInstaller({
         </Column>
       ) : (
         <Column gap={8} style={{ width: "100%" }}>
-          <Label>{t("install.installDir")}</Label>
+          <Label featureId="install.dir">{t("install.installDir")}</Label>
           <Row gap={8} align="center" style={{ width: "100%" }}>
             <div style={{ flexGrow: 1 }}>
               <Input
@@ -240,47 +273,74 @@ export function GameInstaller({
             >
               <Row gap={8} align="center">
                 <Folder size={14} color={theme.colors.fg} />
-                {t("settings.browse")}
+                {t("buttons.browse")}
               </Row>
             </Button>
           </Row>
         </Column>
       )}
 
-      <Column gap={8} style={{ width: "100%" }}>
-        <Row gap={8} align="center">
-          <Globe size={14} color={theme.colors.mutedFg} />
-          <Label>{t("install.langPack")}</Label>
-        </Row>
-        <NavigationRoot
-          value={selectedLang}
-          onValueChange={(val) => {
-            if (!isInstalling) setSelectedLang(val);
-          }}
-        >
-          <SegmentedNav items={LANG_NAV_ITEMS} itemWidth={100} itemHeight={32} />
-        </NavigationRoot>
-      </Column>
-
-      {status !== "idle" && (
-        <Column
-          gap={6}
-          style={{
-            width: "100%",
-            backgroundColor: theme.colors.muted,
-            borderRadius: theme.radius.md,
-            padding: 12,
-          }}
-        >
+      <Column gap={0} style={{ width: "100%" }}>
+        <Column gap={8} style={{ width: "100%" }}>
           <Row gap={8} align="center">
-            {status === "completed" && <CheckCircle size={16} color={theme.colors.success} />}
-            <P style={{ fontWeight: "bold" }}>
-              {status === "completed" ? t("install.ready") : t("install.processing")}
-            </P>
+            <Label featureId="install.lang">{t("install.langPack")}</Label>
           </Row>
-          <Muted>{statusMessage}</Muted>
+          <NavigationRoot
+            value={selectedLang}
+            onValueChange={(val) => {
+              if (!isInstalling) setSelectedLang(val);
+            }}
+          >
+            <SegmentedNav items={langNavItems} itemWidth={115} itemHeight={32} />
+          </NavigationRoot>
         </Column>
-      )}
+
+        {status !== "idle" && (
+          <motion.div
+            initial={
+              lowSpec || !shouldAnimateRevealRef.current
+                ? false
+                : { height: 0, opacity: 0, top: -6 }
+            }
+            animate={{ height: 110, opacity: 1, top: 0 }}
+            transition={
+              lowSpec || !shouldAnimateRevealRef.current
+                ? { duration: 0 }
+                : { duration: 0.22, ease: "easeOut" }
+            }
+            style={{
+              position: "relative",
+              width: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ width: "100%", paddingTop: 20 }}>
+              <Column
+                gap={8}
+                style={{
+                  width: "100%",
+                  backgroundColor: theme.colors.muted,
+                  borderRadius: theme.radius.md,
+                  padding: 12,
+                }}
+              >
+                <Row gap={8} align="center">
+                  {status === "completed" && (
+                    <CheckCircle size={16} color={theme.colors.successFg} />
+                  )}
+                  <P style={{ fontWeight: "bold" }}>
+                    {status === "completed" ? t("install.ready") : t("install.processing")}
+                  </P>
+                </Row>
+                <Muted>{statusMessage}</Muted>
+                <Progress
+                  value={status === "completed" ? 100 : (installation.progress?.percent ?? 0)}
+                />
+              </Column>
+            </div>
+          </motion.div>
+        )}
+      </Column>
 
       <Separator orientation="horizontal" />
 
@@ -320,9 +380,9 @@ export function GameInstaller({
                     ? hasManifest
                       ? t("install.btnReinstallConfirm")
                       : t("install.btnReinstallConfirmNoManifest")
-                    : t("install.btnReinstall")
+                    : t("buttons.reinstall")
                   : status === "completed"
-                    ? t("install.btnReinstall")
+                    ? t("buttons.reinstall")
                     : t("install.btnInstall")}
               </P>
             </Row>

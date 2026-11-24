@@ -1,17 +1,35 @@
-import { type Dispatch, type SetStateAction, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { ProfileSwitcher } from "@/components/ProfileSwitcher";
 import { Check, Folder, Layers, RotateCcw, Trash2 } from "@/icon";
 import type { GameBuildProfile, LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
+import { uninstallGameProfile } from "@/lib/manager/uninstall";
+import { useGameStatus } from "@/lib/utils/game-status";
 import {
   Badge,
   Button,
   Column,
+  Dialog,
+  DialogBody,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   Label,
   Muted,
   Row,
+  Tooltip,
   theme,
   useFileDialog,
   useToast,
@@ -31,20 +49,46 @@ export interface GameProfilesProps {
   hasProfileChanges: boolean;
   onSaveProfiles: () => Promise<void>;
   onRevertProfiles: () => void;
+  onOpenInstall?: (targetDir?: string) => void;
+  onConfigChange?: (nextConfig: LauncherConfig) => Promise<void> | void;
 }
 
 export function GameProfiles({
+  config,
   formState,
   setFormState,
   hasProfileChanges,
   onSaveProfiles,
   onRevertProfiles,
+  onOpenInstall,
+  onConfigChange,
 }: GameProfilesProps) {
   const { t } = useTranslation();
   const { pickFolder } = useFileDialog();
   const { toast } = useToast();
 
   const [isPickingFolder, setIsPickingFolder] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearCountdown = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setCountdown(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSelectSlot = (slotId: string) => {
     if (slotId === formState.activeProfileId) return;
@@ -85,14 +129,14 @@ export function GameProfiles({
 
       if (!isValid) {
         toast({
-          title: t("toasts.welcomeMissingTitle"),
-          description: t("toasts.welcomeMissingDesc"),
+          description: t("toasts.gameMissingDesc"),
           type: "error",
         });
         return;
       }
 
       if (pickedPath) {
+        logger.info("profile", `game path set (${formState.activeProfileId})`);
         const updatedProfiles = formState.gameProfiles.map((prof) => {
           if (prof.id === formState.activeProfileId) {
             return { ...prof, path: pickedPath };
@@ -113,31 +157,110 @@ export function GameProfiles({
     }
   };
 
-  const handleClearCurrentSlot = () => {
-    const configuredCount = formState.gameProfiles.filter((p) => Boolean(p.path?.trim())).length;
+  const handleOpenDeleteDialog = () => {
+    clearCountdown();
+    setDeleteDialogOpen(true);
+  };
 
-    if (configuredCount <= 1) {
+  const handleCloseDeleteDialog = (open: boolean) => {
+    if (isDeleting) return;
+    if (!open) {
+      clearCountdown();
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleDeleteConfirmClick = async () => {
+    if (isDeleting) return;
+
+    if (countdown === null) {
+      setCountdown(3);
+      timerRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
       return;
     }
 
-    const updatedProfiles = formState.gameProfiles.map((prof) => {
-      if (prof.id === formState.activeProfileId) {
-        return { ...prof, path: "" };
+    if (countdown === 0) {
+      setIsDeleting(true);
+      try {
+        const baseConfig: LauncherConfig = {
+          ...config,
+          activeProfileId: formState.activeProfileId,
+          gameProfiles: formState.gameProfiles,
+          gameDir: formState.gameDir,
+          gameArg: formState.gameArg,
+        };
+        const res = await uninstallGameProfile(formState.activeProfileId, baseConfig);
+        if (!res.success) {
+          if (res.error === "CLEAN_FAILED") {
+            toast({
+              description: t("toasts.filesLockedDesc"),
+              type: "error",
+            });
+          } else {
+            toast({
+              description: t("errors.UNKNOWN_ERROR.description"),
+              type: "error",
+            });
+          }
+          setIsDeleting(false);
+          clearCountdown();
+          return;
+        }
+
+        if (res.nextConfig) {
+          await onConfigChange?.(res.nextConfig);
+
+          const nextActiveId = res.nextConfig.activeProfileId;
+          const nextTarget = res.nextConfig.gameProfiles.find((p) => p.id === nextActiveId);
+
+          setFormState({
+            activeProfileId: nextActiveId,
+            gameDir: nextTarget?.path || "",
+            gameArg: nextTarget?.gameArg || res.nextConfig.gameArg,
+            gameProfiles: res.nextConfig.gameProfiles,
+          });
+        }
+
+        toast({
+          description: t("toasts.gameDeletedDesc"),
+          type: "success",
+        });
+
+        setDeleteDialogOpen(false);
+        clearCountdown();
+      } catch (err) {
+        toast(formatErrorToast(err, "UNKNOWN_ERROR"));
+      } finally {
+        setIsDeleting(false);
       }
-      return prof;
-    });
+    }
+  };
 
-    const nextConfigured = updatedProfiles.find((p) => Boolean(p.path?.trim()));
-    const nextSlotId = nextConfigured ? nextConfigured.id : formState.activeProfileId;
-    const nextTarget = updatedProfiles.find((p) => p.id === nextSlotId);
+  const handleReinstallProfile = async () => {
+    if (isSlotActionDisabled) return;
+    if (hasProfileChanges) {
+      await onSaveProfiles();
+    }
+    onOpenInstall?.(formState.gameDir);
+  };
 
-    setFormState((prev) => ({
-      ...prev,
-      gameProfiles: updatedProfiles,
-      activeProfileId: nextSlotId,
-      gameDir: nextTarget?.path || "",
-      gameArg: nextTarget?.gameArg || prev.gameArg,
-    }));
+  const getDeleteButtonText = () => {
+    if (isDeleting) return t("buttons.deleting");
+    if (countdown !== null && countdown > 0) {
+      return t("buttons.deleteCountdown").replace("{n}", String(countdown));
+    }
+    return t("buttons.delete");
   };
 
   const activeSlotIndex = Math.max(
@@ -147,16 +270,27 @@ export function GameProfiles({
   const activeSlotLabel = t("settings.slotLabel").replace("{n}", String(activeSlotIndex + 1));
   const activeProfile = formState.gameProfiles[activeSlotIndex];
   const isSlotConfigured = Boolean(activeProfile?.path?.trim());
-  const configuredCount = formState.gameProfiles.filter((p) => Boolean(p.path?.trim())).length;
-  const canDeleteProfile = isSlotConfigured && configuredCount > 1;
+  const { gameExists, isValidating } = useGameStatus(formState.gameDir);
+
+  const isSlotActionDisabled = !isSlotConfigured || isValidating || !gameExists || isDeleting;
+  const isProfileActionDisabled = !hasProfileChanges || isDeleting;
+
+  const getSlotActionDisabledReason = () => {
+    if (isDeleting) return t("buttons.deleting");
+    if (!isSlotConfigured) return t("toasts.dgvPathRequiredDesc");
+    if (isValidating) return t("install.processing");
+    if (!gameExists) return t("toasts.gameMissingDesc");
+    return "";
+  };
+  const slotDisabledReason = getSlotActionDisabledReason();
 
   return (
-    <Column gap={16} style={{ width: "100%" }}>
+    <Column featureId="settings.profiles" gap={16} style={{ width: "100%" }}>
       <Column gap={10} style={{ width: "100%" }}>
         <Row justify="between" align="center" style={{ width: "100%" }}>
           <Row gap={8} align="center">
             <Layers size={14} color={theme.colors.mutedFg} />
-            <Label>{t("settings.buildsTitle")}</Label>
+            <Label featureId="settings.profiles">{t("settings.buildsTitle")}</Label>
             <Badge variant={isSlotConfigured ? "success" : "secondary"}>{activeSlotLabel}</Badge>
           </Row>
 
@@ -172,22 +306,6 @@ export function GameProfiles({
       <Column gap={8} style={{ width: "100%" }}>
         <Row justify="between" align="center" style={{ width: "100%" }}>
           <Label>{t("settings.gamePath")}</Label>
-          {canDeleteProfile && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleClearCurrentSlot}
-              style={{
-                width: 32,
-                height: 32,
-                paddingLeft: 0,
-                paddingRight: 0,
-                backgroundColor: theme.colors.destructive,
-              }}
-            >
-              <Trash2 size={15} color={theme.colors.destructiveFg} />
-            </Button>
-          )}
         </Row>
 
         <Row gap={8} align="center" style={{ width: "100%" }}>
@@ -207,10 +325,15 @@ export function GameProfiles({
               placeholder={t("settings.setPathFirst")}
             />
           </div>
-          <Button variant="secondary" disabled={isPickingFolder} onClick={handleSelectGamePath}>
+          <Button
+            featureId="settings.profiles.browse"
+            variant="secondary"
+            disabled={isPickingFolder}
+            onClick={handleSelectGamePath}
+          >
             <Row gap={8} align="center">
               <Folder size={14} color={theme.colors.fg} />
-              {t("settings.browse")}
+              {t("buttons.browse")}
             </Row>
           </Button>
         </Row>
@@ -237,26 +360,144 @@ export function GameProfiles({
         <Muted>{t("settings.launchArgsProfileHint").replace("{profile}", activeSlotLabel)}</Muted>
       </Column>
 
-      <Row gap={10} justify="end" align="center" style={{ width: "100%", marginTop: 2 }}>
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={!hasProfileChanges}
-          onClick={onRevertProfiles}
-        >
-          <Row gap={8} align="center">
-            <RotateCcw size={14} color={theme.colors.fg} />
-            {t("buttons.revert")}
-          </Row>
-        </Button>
+      <Row
+        justify="between"
+        align="center"
+        style={{ width: "100%", marginTop: 2, flexWrap: "wrap", gap: 10 }}
+      >
+        <Row gap={8} align="center">
+          <Tooltip content={slotDisabledReason} disabled={!isSlotActionDisabled} side="top">
+            <Button
+              featureId="settings.profiles.delete"
+              variant="destructive"
+              size="sm"
+              disabled={isSlotActionDisabled}
+              onClick={handleOpenDeleteDialog}
+            >
+              <Row gap={6} align="center">
+                <Trash2
+                  size={14}
+                  color={isSlotActionDisabled ? theme.colors.mutedFg : theme.colors.destructiveFg}
+                />
+                {t("buttons.deleteGame")}
+              </Row>
+            </Button>
+          </Tooltip>
 
-        <Button variant="default" size="sm" disabled={!hasProfileChanges} onClick={onSaveProfiles}>
-          <Row gap={8} align="center">
-            <Check size={14} color={theme.colors.primaryFg} />
-            {t("buttons.save")}
-          </Row>
-        </Button>
+          <Tooltip content={slotDisabledReason} disabled={!isSlotActionDisabled} side="top">
+            <Button
+              featureId="settings.profiles.reinstall"
+              variant="outline"
+              size="sm"
+              disabled={isSlotActionDisabled}
+              onClick={handleReinstallProfile}
+            >
+              <Row gap={6} align="center">
+                <RotateCcw
+                  size={14}
+                  color={isSlotActionDisabled ? theme.colors.mutedFg : theme.colors.fg}
+                />
+                {t("buttons.reinstall")}
+              </Row>
+            </Button>
+          </Tooltip>
+        </Row>
+
+        <Row gap={10} align="center">
+          <Button
+            featureId="settings.profiles.revert"
+            variant="secondary"
+            size="sm"
+            disabled={isProfileActionDisabled}
+            onClick={onRevertProfiles}
+          >
+            <Row gap={8} align="center">
+              <RotateCcw
+                size={14}
+                color={isProfileActionDisabled ? theme.colors.mutedFg : theme.colors.fg}
+              />
+              {t("buttons.revert")}
+            </Row>
+          </Button>
+
+          <Button
+            featureId="settings.profiles.save"
+            variant="default"
+            size="sm"
+            disabled={isProfileActionDisabled}
+            onClick={onSaveProfiles}
+          >
+            <Row gap={8} align="center">
+              <Check
+                size={14}
+                color={isProfileActionDisabled ? theme.colors.mutedFg : theme.colors.primaryFg}
+              />
+              {t("buttons.save")}
+            </Row>
+          </Button>
+        </Row>
       </Row>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={handleCloseDeleteDialog}
+        width={480}
+        minWidth={360}
+        maxWidth={540}
+      >
+        <DialogHeader>
+          <Row gap={8} align="center" style={{ flexGrow: 1, minWidth: 0, flexWrap: "wrap" }}>
+            <DialogTitle>{t("settings.deleteDialogTitle")}</DialogTitle>
+            <Badge variant="secondary">{activeSlotLabel}</Badge>
+          </Row>
+          {!isDeleting && <DialogClose />}
+        </DialogHeader>
+
+        <DialogDescription>{t("settings.deleteDialogDesc")}</DialogDescription>
+
+        <DialogBody>
+          <Column gap={8} style={{ width: "100%" }}>
+            <div
+              style={{
+                paddingTop: 8,
+                paddingBottom: 8,
+                paddingLeft: 12,
+                paddingRight: 12,
+                backgroundColor: theme.colors.card,
+                borderRadius: theme.radius.sm,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <Muted style={{ fontSize: 13, color: theme.colors.fg }}>{formState.gameDir}</Muted>
+            </div>
+          </Column>
+        </DialogBody>
+
+        <DialogFooter>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={isDeleting}
+            onClick={() => handleCloseDeleteDialog(false)}
+          >
+            {t("install.cancel")}
+          </Button>
+
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={isDeleting || (countdown !== null && countdown > 0)}
+            onClick={handleDeleteConfirmClick}
+            style={{ minWidth: 120 }}
+          >
+            <Row gap={6} align="center">
+              <Trash2 size={14} color={theme.colors.destructiveFg} />
+              {getDeleteButtonText()}
+            </Row>
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </Column>
   );
 }

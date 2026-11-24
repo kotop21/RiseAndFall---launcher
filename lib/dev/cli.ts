@@ -1,3 +1,5 @@
+import { IS_DEV_BUILD } from "./env";
+
 export type SupportedDevView = "welcome" | "main" | "settings" | "install";
 export type SupportedDevLang = "en" | "ua" | "ru";
 
@@ -9,32 +11,38 @@ export interface DevCliArgs {
   lowSpec: boolean;
   logFile: boolean;
   mockRelease: boolean;
+  showAllBadges: boolean;
+  resetBadges: boolean;
+  unreadBadges?: string[];
+  apiOverride?: string;
+  forceProdApi: boolean;
+  devMenu: boolean;
+  forceWelcome: boolean;
+  allowSelfUpdate: boolean;
 }
 
+export const PROD_DEV_ARGS: DevCliArgs = {
+  isDev: false,
+  disableAutoDetectLanguage: false,
+  lowSpec: false,
+  logFile: true,
+  mockRelease: false,
+  showAllBadges: false,
+  resetBadges: false,
+  forceProdApi: false,
+  devMenu: false,
+  forceWelcome: false,
+  allowSelfUpdate: true,
+};
+
 export function isDevMode(): boolean {
-  if (process.env.NODE_ENV === "production") {
-    return false;
-  }
-  if (process.platform !== "win32") {
-    return true;
-  }
-  const exec = process.execPath.toLowerCase();
-  if (exec.includes("bun") || exec.includes("node")) {
-    return true;
-  }
-  if (!exec.endsWith(".exe")) {
-    return true;
-  }
-  const mainArg = process.argv[1] || "";
-  if (mainArg.endsWith(".tsx") || mainArg.endsWith(".ts")) {
-    return true;
-  }
-  return false;
+  return IS_DEV_BUILD;
 }
 
 function extractArgValue(argv: string[], names: string[]): string | undefined {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
+    if (!arg) continue;
     for (const name of names) {
       if (arg === name) {
         const next = argv[i + 1];
@@ -89,24 +97,41 @@ function normalizeDevView(raw: string | undefined): SupportedDevView | undefined
   return undefined;
 }
 
+function isForceWelcomeEnvSet(): boolean {
+  const flag = (process.env.FORCE_WELCOME || process.env.TEST_MODE || process.env.WELCOME || "")
+    .toLowerCase()
+    .trim();
+  return flag === "1" || flag === "true" || flag === "yes";
+}
+
+export function isForceWelcome(): boolean {
+  if (!isDevMode()) {
+    return false;
+  }
+  return getDevArgs().forceWelcome || isForceWelcomeEnvSet();
+}
+
 export function parseDevArgs(
   argv: string[] = process.argv.slice(2),
   isDev = isDevMode(),
 ): DevCliArgs {
   if (!isDev) {
-    return {
-      isDev: false,
-      disableAutoDetectLanguage: false,
-      lowSpec: false,
-      logFile: true,
-      mockRelease: false,
-    };
+    return { ...PROD_DEV_ARGS };
   }
 
   const lang = normalizeDevLang(extractArgValue(argv, ["--lang", "--language", "-l"]));
   const view = normalizeDevView(extractArgValue(argv, ["--view", "-v"]));
   const lowSpec = hasArgFlag(argv, ["--low-spec", "--low-performance"]);
   const logFile = hasArgFlag(argv, ["--log-file", "--file-logs", "--enable-log-file"]);
+  const showAllBadges = hasArgFlag(argv, ["--show-all-badges", "--all-badges"]);
+  const resetBadges = hasArgFlag(argv, ["--reset-badges", "--clear-badges"]);
+  const unreadRaw = extractArgValue(argv, ["--unread-badges", "--badges"]);
+  const unreadBadges = unreadRaw
+    ? unreadRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
   const mockRelease = hasArgFlag(argv, [
     "--mock-release",
     "--release",
@@ -118,6 +143,13 @@ export function parseDevArgs(
     "-w",
   ]);
 
+  const rawApiOverride = extractArgValue(argv, ["--api", "--api-url"])?.trim();
+  const apiOverride = rawApiOverride ? rawApiOverride.replace(/\/+$/, "") : undefined;
+  const forceProdApi = hasArgFlag(argv, ["--prod", "--prod-api"]);
+  const devMenu = hasArgFlag(argv, ["--dev-menu"]);
+  const forceWelcome = hasArgFlag(argv, ["--force-welcome"]);
+  const allowSelfUpdate = hasArgFlag(argv, ["--allow-self-update"]);
+
   return {
     isDev: true,
     lang,
@@ -126,6 +158,14 @@ export function parseDevArgs(
     lowSpec,
     logFile,
     mockRelease,
+    showAllBadges,
+    resetBadges,
+    unreadBadges,
+    apiOverride,
+    forceProdApi,
+    devMenu,
+    forceWelcome,
+    allowSelfUpdate,
   };
 }
 

@@ -6,27 +6,30 @@ import { useTranslation } from "@/lib/lang";
 import { launchExe } from "@/lib/process/launch";
 import { useGameStatus } from "@/lib/utils/game-status";
 import { isWindows } from "@/lib/utils/os";
-import { Button, Row, theme, useToast } from "@/ui";
+import { Button, Row, Tooltip, theme, useToast } from "@/ui";
 
 interface OpenDgVoodooButtonProps {
   gameDir?: string;
   style?: StyleDesc;
+  featureId?: string;
 }
 
-export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonProps) {
+export function OpenDgVoodooButton({
+  gameDir = "",
+  style,
+  featureId = "main.actions.dgvoodoo",
+}: OpenDgVoodooButtonProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const isWin = isWindows();
   const { dgVoodooExists: fileExists, isValidating } = useGameStatus(gameDir);
 
+  const cleanDir = gameDir.trim();
   const isDisabled = isValidating || !fileExists || !isWin;
 
   const handleOpen = async () => {
-    const cleanDir = gameDir.trim();
-
     if (!cleanDir) {
       toast({
-        title: t("toasts.dgvPathRequiredTitle"),
         description: t("toasts.dgvPathRequiredDesc"),
         type: "warn",
       });
@@ -35,8 +38,7 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!fileExists) {
       toast({
-        title: t("toasts.dgvMissingTitle"),
-        description: t("toasts.dgvMissingDesc"),
+        description: t("errors.DGV_EXE_NOT_FOUND.description"),
         type: "error",
       });
       return;
@@ -44,7 +46,6 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
 
     if (!isWin) {
       toast({
-        title: t("toasts.dgvOsUnsupportedTitle"),
         description: t("toasts.dgvOsUnsupportedDesc"),
         type: "error",
       });
@@ -63,19 +64,37 @@ export function OpenDgVoodooButton({ gameDir = "", style }: OpenDgVoodooButtonPr
     }
   };
 
-  const getButtonLabel = () => {
-    if (isValidating) return t("header.checking");
-    if (!fileExists) return t("main.dgVoodooMissing");
-    if (!isWin) return t("header.windowsOnly");
-    return t("buttons.openDgVoodoo");
+  const getDisabledReason = () => {
+    if (isValidating) return t("install.processing");
+    if (!cleanDir) return t("toasts.dgvPathRequiredDesc");
+    if (!fileExists) return t("errors.DGV_EXE_NOT_FOUND.description");
+    if (!isWin) return t("toasts.dgvOsUnsupportedDesc");
+    return "";
   };
 
   return (
-    <Button variant="outline" size="sm" disabled={isDisabled} onClick={handleOpen} style={style}>
-      <Row gap={8} align="center" justify="center">
-        <SlidersHorizontal size={14} color={isDisabled ? theme.colors.mutedFg : theme.colors.fg} />
-        {getButtonLabel()}
-      </Row>
-    </Button>
+    <Tooltip
+      content={getDisabledReason()}
+      disabled={!isDisabled}
+      side="top"
+      style={style?.width !== undefined ? { width: style.width } : undefined}
+    >
+      <Button
+        featureId={featureId}
+        variant="outline"
+        size="sm"
+        disabled={isDisabled}
+        onClick={handleOpen}
+        style={style}
+      >
+        <Row gap={8} align="center" justify="center">
+          <SlidersHorizontal
+            size={14}
+            color={isDisabled ? theme.colors.mutedFg : theme.colors.fg}
+          />
+          {t("buttons.openDgVoodoo")}
+        </Row>
+      </Button>
+    </Tooltip>
   );
 }

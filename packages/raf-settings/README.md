@@ -13,20 +13,16 @@ raf-settings.exe export <target_directory>
 
 ```
 
-* **Arguments:**
-* `<target_directory>` (string, required): Directory where the output file will be created.
+- **Arguments:**
+- `<target_directory>` (string, required): Directory where the output file will be created.
 
+- **Output:**
+- Generates `raf-settings.json`.
+- If the file already exists, appends an incremental numeric suffix: `raf-settings-1.json`, `raf-settings-2.json`, etc.
 
-* **Output:**
-* Generates `raf-settings.json`.
-* If the file already exists, appends an incremental numeric suffix: `raf-settings-1.json`, `raf-settings-2.json`, etc.
-
-
-* **Exit Codes:**
-* `0`: Export successful.
-* `1`: Error (missing registry keys, invalid path, or non-Windows OS).
-
-
+- **Exit Codes:**
+- `0`: Export successful.
+- `1`: Error (missing registry keys, invalid path, or non-Windows OS).
 
 ---
 
@@ -39,25 +35,20 @@ raf-settings.exe import <json_file_path>
 
 ```
 
-* **Arguments:**
-* `<json_file_path>` (string, required): Full or relative path to a settings JSON file.
+- **Arguments:**
+- `<json_file_path>` (string, required): Full or relative path to a settings JSON file.
 
+- **Validation:**
+- Requires `"game": "Rise and Fall: Civilizations at War"`.
+- Verifies section path safety (rejects path traversal `..` or illegal characters).
+- Enforces `DWORD` bounds (`uint32`) and maximum string lengths.
 
-* **Validation:**
-* Requires `"game": "Rise and Fall: Civilizations at War"`.
-* Verifies section path safety (rejects path traversal `..` or illegal characters).
-* Enforces `DWORD` bounds (`uint32`) and maximum string lengths.
+- **Output:**
+- Restores valid `DWORD` and `REG_SZ` (string) values into `HKCU\Software\Midway Home Entertainment\Rise and Fall`.
 
-
-* **Output:**
-* Restores valid `DWORD` and `REG_SZ` (string) values into `HKCU\Software\Midway Home Entertainment\Rise and Fall`.
-
-
-* **Exit Codes:**
-* `0`: Import successful.
-* `1`: Error (validation failed, file not found, permission denied, or non-Windows OS).
-
-
+- **Exit Codes:**
+- `0`: Import successful.
+- `1`: Error (validation failed, file not found, permission denied, or non-Windows OS).
 
 ---
 
@@ -65,11 +56,11 @@ raf-settings.exe import <json_file_path>
 
 The following keys are strictly excluded from both export and import:
 
-* **Secrets & Accounts:** All `GameSpy` keys and subkeys (dynamically and case-insensitively ignored: passwords, CD keys, accounts, automatch, etc.), `Player Name`, `Host Game Name`, `MatchMaking.com Game Name`.
-* **Hardware & System:** `Graphics Device ID`, `Graphics Vendor ID`, `Graphics Autodetect Version`, `Network Adapter`, `System RAM Size`, `Rasterizer Name`.
-* **Local Paths:** `Install Directory`, `Rise Install`.
-* **Session Cache & Saves:** `Last Auto Save`, `Last Game File`, `Last Quick Save`, `Last Scenario File`, `Last Open Post Game Stats Page`.
-* **Registry Markers:** `Rise and Fall`, `Version Number`.
+- **Secrets & Accounts:** All `GameSpy` keys and subkeys (dynamically and case-insensitively ignored: passwords, CD keys, accounts, automatch, etc.), `Player Name`, `Host Game Name`, `MatchMaking.com Game Name`.
+- **Hardware & System:** `Graphics Device ID`, `Graphics Vendor ID`, `Graphics Autodetect Version`, `Network Adapter`, `System RAM Size`, `Rasterizer Name`.
+- **Local Paths:** `Install Directory`, `Rise Install`.
+- **Session Cache & Saves:** `Last Auto Save`, `Last Game File`, `Last Quick Save`, `Last Scenario File`, `Last Open Post Game Stats Page`.
+- **Registry Markers:** `Rise and Fall`, `Version Number`.
 
 ---
 
@@ -100,5 +91,4 @@ The following keys are strictly excluded from both export and import:
     }
   }
 }
-
 ```

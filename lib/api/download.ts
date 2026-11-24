@@ -39,7 +39,11 @@ export async function fetchManifest(signal?: AbortSignal): Promise<ManifestRespo
   try {
     const res = await fetch(url, {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "X-Launcher-Version": "2.0.0",
+        "X-Client-Version": "2.0.0",
+      },
       signal,
     });
 
@@ -122,6 +126,7 @@ export async function downloadFromMirrors(
 
   for (let i = 0; i < mirrors.length; i++) {
     const url = mirrors[i];
+    if (!url) continue;
 
     if (signal?.aborted) {
       try {

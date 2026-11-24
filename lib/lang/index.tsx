@@ -76,3 +76,5 @@ export function LanguageProvider({ lang, children }: { lang: string; children: R
 export function useTranslation() {
   return useContext(LanguageContext);
 }
+
+export * from "./languages";

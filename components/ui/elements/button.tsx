@@ -1,6 +1,10 @@
-import type { StyleDesc } from "@gpuix/react";
+import type { EventPayload, StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
+import { useFeatureBadge } from "@/lib/features";
+import { isLowSpecMode } from "../motion-compat";
 import { theme } from "../theme";
+import { FeatureDot } from "./feature-dot";
+import { useTooltipTrigger } from "./tooltip";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "default" | "lg" | "icon";
@@ -11,7 +15,11 @@ export interface ButtonProps {
   size?: ButtonSize;
   disabled?: boolean;
   onClick?: () => void;
+  onMouseEnter?: (event: EventPayload) => void;
+  onMouseLeave?: (event: EventPayload) => void;
   style?: StyleDesc;
+  pressAnimation?: boolean;
+  featureId?: string;
 }
 
 export function Button({
@@ -20,8 +28,29 @@ export function Button({
   size = "default",
   disabled = false,
   onClick,
+  onMouseEnter,
+  onMouseLeave,
   style = {},
+  pressAnimation = true,
+  featureId,
 }: ButtonProps) {
+  const { showBadge, isFadingOut, badgeHandlers } = useFeatureBadge(featureId);
+  const tooltipHandlers = useTooltipTrigger({
+    onMouseEnter:
+      (!disabled && featureId) || onMouseEnter
+        ? (event) => {
+            if (!disabled) badgeHandlers.onMouseEnter();
+            onMouseEnter?.(event);
+          }
+        : undefined,
+    onMouseLeave:
+      featureId || onMouseLeave
+        ? (event) => {
+            badgeHandlers.onMouseLeave();
+            onMouseLeave?.(event);
+          }
+        : undefined,
+  });
   const sizes: Record<ButtonSize, { h: number; px: number; fontSize: number; isIcon?: boolean }> = {
     sm: { h: 32, px: 12, fontSize: 12 },
     default: { h: 36, px: 16, fontSize: 14 },
@@ -46,13 +75,13 @@ export function Button({
     outline: {
       bg: "transparent",
       text: theme.colors.fg,
-      hoverBg: theme.colors.accent,
+      hoverBg: theme.colors.secondaryHover,
       border: theme.colors.border,
     },
     ghost: {
       bg: "transparent",
       text: theme.colors.fg,
-      hoverBg: theme.colors.accent,
+      hoverBg: theme.colors.secondaryHover,
     },
     destructive: {
       bg: theme.colors.destructive,
@@ -63,12 +92,29 @@ export function Button({
 
   const s = sizes[size];
   const v = variants[variant];
+  const shouldAnimate = pressAnimation && !isLowSpecMode();
+  const baseTop = typeof style.top === "number" ? style.top : 0;
+
+  const activeStyle: Omit<StyleDesc, "hover" | "active"> = {
+    backgroundColor: v.hoverBg,
+    ...(shouldAnimate ? { top: baseTop + 1 } : {}),
+    ...(style.active || {}),
+  };
+
+  const handleDivClick = () => {
+    if (disabled) return;
+    badgeHandlers.onClick();
+    onClick?.();
+  };
 
   return (
     <div
       tabIndex={disabled ? -1 : 0}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : handleDivClick}
+      {...tooltipHandlers}
       style={{
+        position: style.position ?? "relative",
+        top: baseTop,
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
@@ -84,9 +130,9 @@ export function Button({
         borderColor: v.border ?? "transparent",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
-        hover: disabled ? undefined : { backgroundColor: v.hoverBg },
-        active: disabled ? undefined : { opacity: 0.9 },
+        hover: disabled ? undefined : { backgroundColor: v.hoverBg, ...(style.hover || {}) },
         ...style,
+        active: disabled ? undefined : activeStyle,
       }}
     >
       <text
@@ -100,6 +146,16 @@ export function Button({
       >
         {children}
       </text>
+      {showBadge && (
+        <FeatureDot
+          isFadingOut={isFadingOut}
+          style={{
+            position: "absolute",
+            top: 6,
+            right: 6,
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -33,8 +33,7 @@ export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: Welc
 
       if (!isValid) {
         toast({
-          title: t("toasts.welcomeMissingTitle"),
-          description: t("toasts.welcomeMissingDesc"),
+          description: t("toasts.gameMissingDesc"),
           type: "error",
         });
         return;
@@ -43,7 +42,6 @@ export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: Welc
       await onSelectExistingGame(path);
     } catch {
       toast({
-        title: t("toasts.welcomeAccessDeniedTitle"),
         description: t("toasts.welcomeAccessDeniedDesc"),
         type: "error",
       });
@@ -86,6 +84,7 @@ export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: Welc
           </div>
 
           <Button
+            featureId="welcome.browse"
             variant="secondary"
             size="sm"
             disabled={isPicking}
@@ -94,7 +93,7 @@ export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: Welc
           >
             <Row gap={6} align="center" justify="center">
               <FolderCheck size={14} color={theme.colors.fg} />
-              {t("welcome.browse")}
+              {t("buttons.browse")}
             </Row>
           </Button>
         </div>
@@ -120,11 +119,17 @@ export function WelcomeChoices({ onSelectExistingGame, onNavigateInstall }: Welc
                 <Download size={16} color={theme.colors.fg} />
                 <P style={{ fontWeight: "bold" }}>{t("welcome.freshInstall")}</P>
               </Row>
-              <Muted style={{ fontSize: 12 }}>{t("welcome.freshDesc")}</Muted>
+              <Muted style={{ fontSize: 12 }}>{t("install.subInstall")}</Muted>
             </Column>
           </div>
 
-          <Button variant="default" size="sm" onClick={onNavigateInstall} style={{ flexShrink: 0 }}>
+          <Button
+            featureId="welcome.install"
+            variant="default"
+            size="sm"
+            onClick={onNavigateInstall}
+            style={{ flexShrink: 0 }}
+          >
             <Row gap={6} align="center" justify="center">
               <Download size={14} color={theme.colors.primaryFg} />
               {t("welcome.install")}

@@ -87,9 +87,55 @@ describe("Dev CLI: Argument Parsing", () => {
     expect(parseDevArgs([], true).mockRelease).toBe(false);
   });
 
+  it("parses badge dev flags", () => {
+    expect(parseDevArgs(["--show-all-badges"], true).showAllBadges).toBe(true);
+    expect(parseDevArgs(["--all-badges"], true).showAllBadges).toBe(true);
+    expect(parseDevArgs(["--reset-badges"], true).resetBadges).toBe(true);
+    expect(parseDevArgs(["--clear-badges"], true).resetBadges).toBe(true);
+    expect(parseDevArgs([], true).showAllBadges).toBe(false);
+    expect(parseDevArgs([], true).resetBadges).toBe(false);
+
+    const withSpecific = parseDevArgs(["--unread-badges", "header.mods,settings.profiles"], true);
+    expect(withSpecific.unreadBadges).toEqual(["header.mods", "settings.profiles"]);
+  });
+
+  it("parses new centralized dev flags (--api, --prod, --dev-menu, --force-welcome, --allow-self-update)", () => {
+    const withApi = parseDevArgs(["--api", "http://192.168.1.5:3000/"], true);
+    expect(withApi.apiOverride).toBe("http://192.168.1.5:3000");
+
+    const withApiEq = parseDevArgs(["--api-url=https://staging.example.com"], true);
+    expect(withApiEq.apiOverride).toBe("https://staging.example.com");
+
+    expect(parseDevArgs(["--prod"], true).forceProdApi).toBe(true);
+    expect(parseDevArgs(["--prod-api"], true).forceProdApi).toBe(true);
+    expect(parseDevArgs(["--dev-menu"], true).devMenu).toBe(true);
+    expect(parseDevArgs(["--force-welcome"], true).forceWelcome).toBe(true);
+    expect(parseDevArgs(["--allow-self-update"], true).allowSelfUpdate).toBe(true);
+
+    const empty = parseDevArgs([], true);
+    expect(empty.apiOverride).toBeUndefined();
+    expect(empty.forceProdApi).toBe(false);
+    expect(empty.devMenu).toBe(false);
+    expect(empty.forceWelcome).toBe(false);
+    expect(empty.allowSelfUpdate).toBe(false);
+  });
+
   it("strictly disables all dev overrides when not in dev mode (production release)", () => {
     const prod = parseDevArgs(
-      ["--lang", "ua", "--view", "settings", "--low-spec", "--log-file=false", "-r"],
+      [
+        "--lang",
+        "ua",
+        "--view",
+        "settings",
+        "--low-spec",
+        "--log-file=false",
+        "-r",
+        "--api",
+        "http://localhost:9999",
+        "--dev-menu",
+        "--force-welcome",
+        "--allow-self-update",
+      ],
       false,
     );
     expect(prod.isDev).toBe(false);
@@ -99,6 +145,10 @@ describe("Dev CLI: Argument Parsing", () => {
     expect(prod.lowSpec).toBe(false);
     expect(prod.logFile).toBe(true); // In production, file logging is active by default
     expect(prod.mockRelease).toBe(false);
+    expect(prod.apiOverride).toBeUndefined();
+    expect(prod.devMenu).toBe(false);
+    expect(prod.forceWelcome).toBe(false);
+    expect(prod.allowSelfUpdate).toBe(true);
   });
 
   it("caches singleton getDevArgs and allows resetting", () => {

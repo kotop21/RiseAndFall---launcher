@@ -1,3 +1,5 @@
+export type { LauncherReleaseInfo } from "@/lib/api";
+
 export interface ReleaseAsset {
   id: number;
   name: string;

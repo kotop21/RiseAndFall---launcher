@@ -3,9 +3,12 @@ import { WelcomeChoices } from "@/components/welcome";
 import { Sparkles, Wrench } from "@/icon";
 import { useTranslation } from "@/lib/lang";
 import { detectSystemLanguage } from "@/lib/lang/detect";
+import { logger } from "@/lib/logger";
 import { Column, H1, H2, Muted, theme, View, Views } from "@/ui";
 
 interface WelcomeViewProps {
+  welcomeSeen?: boolean;
+  onCompleteWelcome?: () => void;
   onAutoDetectLanguage?: (lang: "en" | "ru" | "ua") => void;
   onSelectExistingGame: (gameDir: string) => Promise<void> | void;
   onNavigateInstall: () => void;
@@ -13,41 +16,52 @@ interface WelcomeViewProps {
 }
 
 export function WelcomeView({
+  welcomeSeen = false,
+  onCompleteWelcome,
   onAutoDetectLanguage,
   onSelectExistingGame,
   onNavigateInstall,
   skipAutoDetect = false,
 }: WelcomeViewProps) {
   const { t } = useTranslation();
-  const [slide, setSlide] = useState<"greeting" | "preparing" | "choice">("greeting");
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [slide, setSlide] = useState<"greeting" | "preparing" | "choice">(() =>
+    welcomeSeen ? "choice" : "greeting",
+  );
+  const hasDetectedLang = useRef(false);
 
+  // 1. Автодетект языка системы: запускается строго один раз (если приветствие еще не было просмотрено)
   useEffect(() => {
-    if (!skipAutoDetect) {
-      const detected = detectSystemLanguage();
-      onAutoDetectLanguage?.(detected);
+    if (!skipAutoDetect && !hasDetectedLang.current && !welcomeSeen) {
+      hasDetectedLang.current = true;
+      try {
+        const detected = detectSystemLanguage();
+        onAutoDetectLanguage?.(detected);
+      } catch (err) {
+        logger.warn("lang", "Auto language detection failed in WelcomeView:", err);
+      }
+    }
+  }, [onAutoDetectLanguage, skipAutoDetect, welcomeSeen]);
+
+  // 2. Таймеры автоматического переключения слайдов (запускаются только при первом просмотре)
+  useEffect(() => {
+    if (welcomeSeen) {
+      return;
     }
 
-    timers.current.push(
-      setTimeout(() => {
-        setSlide("preparing");
-      }, 1600),
-    );
+    const t1 = setTimeout(() => {
+      setSlide("preparing");
+    }, 1600);
 
-    timers.current.push(
-      setTimeout(() => {
-        setSlide("choice");
-      }, 4400),
-    );
+    const t2 = setTimeout(() => {
+      setSlide("choice");
+      onCompleteWelcome?.();
+    }, 4400);
 
     return () => {
-      timers.current.forEach((t) => {
-        clearTimeout(t);
-      });
-
-      timers.current = [];
+      clearTimeout(t1);
+      clearTimeout(t2);
     };
-  }, [onAutoDetectLanguage, skipAutoDetect]);
+  }, [welcomeSeen, onCompleteWelcome]);
 
   return (
     <div

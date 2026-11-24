@@ -2,7 +2,7 @@
 #define MyAppExeName "raf-launcher.exe"
 
 #ifndef MyAppVersion
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "2.0.2"
 #endif
 
 [Setup]
@@ -23,6 +23,8 @@ SolidCompression=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequiredOverridesAllowed=dialog commandline
+CloseApplications=yes
+CloseApplicationsFilter=*.exe,*.dll,*.node
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

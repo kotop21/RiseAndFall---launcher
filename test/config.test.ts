@@ -19,12 +19,12 @@ describe("Config: Path & Defaults", () => {
   it("creates 5 default profile slots", () => {
     const profiles = createDefaultProfiles("C:\\Games\\Raf", "-test");
     expect(profiles.length).toBe(5);
-    expect(profiles[0].id).toBe("slot-1");
-    expect(profiles[0].path).toBe("C:\\Games\\Raf");
-    expect(profiles[0].gameArg).toBe("-test");
-    expect(profiles[1].id).toBe("slot-2");
-    expect(profiles[1].path).toBe("");
-    expect(profiles[1].gameArg).toBe(DEFAULT_GAME_ARG);
+    expect(profiles[0]?.id).toBe("slot-1");
+    expect(profiles[0]?.path).toBe("C:\\Games\\Raf");
+    expect(profiles[0]?.gameArg).toBe("-test");
+    expect(profiles[1]?.id).toBe("slot-2");
+    expect(profiles[1]?.path).toBe("");
+    expect(profiles[1]?.gameArg).toBe(DEFAULT_GAME_ARG);
   });
 
   it("checks force welcome flag parsing", () => {
@@ -54,6 +54,59 @@ describe("Config: Schema Migration & Edge Cases", () => {
     expect(config.activeProfileId).toBe("slot-1");
     expect(config.discordRpc).toBe(true);
     expect(config.lowPerformanceMode).toBe(false);
+    expect(config.welcomeSeen).toBe(false);
+    expect(Array.isArray(config.seenBadges)).toBe(true);
+    expect(config.seenBadges.length).toBeGreaterThan(0);
+  });
+
+  it("migrates v5 config without seenBadges to v6 with baseline badges", () => {
+    const v5 = {
+      version: 5,
+      gameDir: "C:\\Game",
+      gameProfiles: createDefaultProfiles("C:\\Game"),
+      activeProfileId: "slot-1",
+      discordRpc: true,
+      lowPerformanceMode: false,
+    };
+    const { config, wasMigrated } = migrateConfig(v5);
+    expect(wasMigrated).toBe(true);
+    expect(config.version).toBe(6);
+    expect(config.seenBadges).toContain("header.settings");
+    expect(config.seenBadges).toContain("settings.profiles");
+    expect(config.seenBadges).not.toContain("header.mods");
+  });
+
+  it("preserves existing seenBadges array if already present", () => {
+    const raw = {
+      version: 6,
+      gameProfiles: createDefaultProfiles(),
+      activeProfileId: "slot-1",
+      seenBadges: ["custom.badge.1", "custom.badge.2"],
+    };
+    const { config } = migrateConfig(raw);
+    expect(config.seenBadges).toEqual(["custom.badge.1", "custom.badge.2"]);
+  });
+
+  it("preserves welcomeSeen boolean flag when present", () => {
+    const rawSeen = {
+      version: 6,
+      gameProfiles: createDefaultProfiles(),
+      activeProfileId: "slot-1",
+      seenBadges: ["header.settings"],
+      welcomeSeen: true,
+    };
+    const { config } = migrateConfig(rawSeen);
+    expect(config.welcomeSeen).toBe(true);
+
+    const rawUnseen = {
+      version: 6,
+      gameProfiles: createDefaultProfiles(),
+      activeProfileId: "slot-1",
+      seenBadges: ["header.settings"],
+      welcomeSeen: false,
+    };
+    const { config: configUnseen } = migrateConfig(rawUnseen);
+    expect(configUnseen.welcomeSeen).toBe(false);
   });
 
   it("migrates v1 legacy config preserving legacy gameDir and gameArg", () => {
@@ -71,8 +124,8 @@ describe("Config: Schema Migration & Edge Cases", () => {
     expect(config.gameArg).toBe("-windowed -dev");
     expect(config.launcherLang).toBe("ru");
     expect(config.gameProfiles.length).toBe(5);
-    expect(config.gameProfiles[0].path).toBe("D:\\Games\\RiseAndFall");
-    expect(config.gameProfiles[0].gameArg).toBe("-windowed -dev");
+    expect(config.gameProfiles[0]?.path).toBe("D:\\Games\\RiseAndFall");
+    expect(config.gameProfiles[0]?.gameArg).toBe("-windowed -dev");
   });
 
   it("ensures incomplete profiles array is padded up to 5 slots", () => {
@@ -88,9 +141,9 @@ describe("Config: Schema Migration & Edge Cases", () => {
     const { config, wasMigrated } = migrateConfig(raw);
     expect(wasMigrated).toBe(true);
     expect(config.gameProfiles.length).toBe(5);
-    expect(config.gameProfiles[0].name).toBe("Custom 1");
-    expect(config.gameProfiles[1].name).toBe("Custom 2");
-    expect(config.gameProfiles[2].id).toBe("slot-3");
+    expect(config.gameProfiles[0]?.name).toBe("Custom 1");
+    expect(config.gameProfiles[1]?.name).toBe("Custom 2");
+    expect(config.gameProfiles[2]?.id).toBe("slot-3");
     expect(config.activeProfileId).toBe("slot-2");
   });
 

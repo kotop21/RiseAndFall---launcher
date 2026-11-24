@@ -1,19 +1,37 @@
 import { join } from "node:path";
 import { useState } from "react";
-import { Calendar, Clock, Play, Settings, Timer, Users } from "@/icon";
+import { Calendar, Clock, Layers, Play, Settings, Timer, Users } from "@/icon";
 import { useOnlineTracker } from "@/lib/api/online";
 import { recordGameSession } from "@/lib/config/session";
 import type { LauncherConfig } from "@/lib/config/types";
 import { discordRpc } from "@/lib/discord-rpc";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
-import { useInstallation } from "@/lib/manager/install";
+import { logger } from "@/lib/logger";
+import {
+  formatInstallStatusMessage,
+  installationManager,
+  useInstallation,
+  useIsInstalling,
+} from "@/lib/manager/install";
 import { launchExe } from "@/lib/process/launch";
 import { launcherTracker } from "@/lib/process/launcher-tracker";
 import { useGameStatus } from "@/lib/utils/game-status";
 import { isWindows } from "@/lib/utils/os";
-import { Button, Column, Muted, P, Row, Tooltip, theme, Header as UiHeader, useToast } from "@/ui";
+import {
+  Button,
+  Column,
+  Muted,
+  P,
+  Progress,
+  Row,
+  Tooltip,
+  theme,
+  Header as UiHeader,
+  useToast,
+} from "@/ui";
 import { DownloadGameButton } from "./DownloadGameButton";
+import { ModsDialog } from "./ModsDialog";
 
 interface HeaderProps {
   config: LauncherConfig;
@@ -22,9 +40,32 @@ interface HeaderProps {
   onOpenInstall?: () => void;
 }
 
+function HeaderInstallBanner() {
+  const { t } = useTranslation();
+  const installation = useInstallation();
+  const installStatusMessage = formatInstallStatusMessage(installation, t);
+
+  return (
+    <Column
+      gap={6}
+      style={{
+        width: "100%",
+        paddingLeft: 16,
+        paddingRight: 16,
+        paddingTop: 8,
+      }}
+    >
+      <Muted style={{ fontSize: 12 }}>{installStatusMessage}</Muted>
+      <Progress height={6} value={installation.progress?.percent ?? 0} />
+    </Column>
+  );
+}
+
 export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }: HeaderProps) {
   const { t, lang } = useTranslation();
-  const installation = useInstallation();
+  const isInstalling = useIsInstalling();
+  const isReinstall = isInstalling ? installationManager.getState().isReinstall : false;
+  const [isModsDialogOpen, setIsModsDialogOpen] = useState(false);
 
   const formatLastLaunch = (rawDate: string | null) => {
     if (!rawDate) return t("main.neverPlayed");
@@ -49,6 +90,8 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
   const isWin = isWindows();
   const isPathConfigured = Boolean(config.gameDir?.trim());
   const { gameExists, isValidating } = useGameStatus(config.gameDir);
+  const isGameMissing = !isPathConfigured || (!isValidating && !gameExists);
+  const isModsDisabled = isGameMissing || isInstalling || isRunning;
 
   const formatLauncherPlaytime = (mins: number) => {
     if (!mins || mins <= 0) return "0 min";
@@ -65,8 +108,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
   const handleStartGame = async () => {
     if (!gameExists) {
       toast({
-        title: t("header.gameMissing"),
-        description: t("header.gameMissingDesc"),
+        description: t("toasts.gameMissingDesc"),
         type: "error",
       });
       return;
@@ -74,7 +116,6 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
 
     if (!isWin) {
       toast({
-        title: t("header.windowsOnly"),
         description: t("header.osUnsupportedDesc"),
         type: "error",
       });
@@ -82,12 +123,13 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
     }
 
     if (isRunning) return;
+    const activeSlot = config.activeProfileId || "slot-1";
+    logger.info("game", `start requested (${activeSlot})`);
     setIsRunning(true);
     discordRpc.setGameRunning(true);
     launcherTracker.saveToDisk().catch(() => {});
 
     toast({
-      title: t("header.startingGame"),
       description: t("header.startingDesc"),
       type: "info",
       duration: 2000,
@@ -102,6 +144,7 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
         rawArgs: config.gameArg,
         trackSession: true,
         onSessionEnd: async (daemonResult) => {
+          logger.info("game", `session ended (${daemonResult.elapsedMinutes}m)`);
           setIsRunning(false);
           discordRpc.setGameRunning(false);
           launcherTracker.saveToDisk().catch(() => {});
@@ -114,7 +157,6 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
             onConfigChange?.(nextConfig);
           } catch (_err) {
             toast({
-              title: t("toasts.sessionSaveErrorTitle"),
               description: t("toasts.sessionSaveErrorDesc"),
               type: "warn",
               duration: 3500,
@@ -137,12 +179,24 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
 
   const isButtonDisabled = isRunning || isValidating || !gameExists || !isWin;
 
-  const getButtonText = () => {
+  const getStartDisabledReason = () => {
     if (isRunning) return t("header.gameRunning");
-    if (isValidating) return t("header.checking");
-    if (!gameExists) return t("header.gameMissing");
-    if (!isWin) return t("header.windowsOnly");
-    return t("header.startGame");
+    if (isValidating) return t("install.processing");
+    if (!gameExists) {
+      return !isPathConfigured ? t("toasts.dgvPathRequiredDesc") : t("toasts.gameMissingDesc");
+    }
+    if (!isWin) return t("header.osUnsupportedDesc");
+    return "";
+  };
+
+  const getModsDisabledReason = () => {
+    if (isInstalling) {
+      return isReinstall ? t("install.titleReinstall") : t("install.titleInstall");
+    }
+    if (isRunning) return t("header.gameRunning");
+    if (!isPathConfigured) return t("toasts.dgvPathRequiredDesc");
+    if (!isValidating && !gameExists) return t("toasts.gameMissingDesc");
+    return "";
   };
 
   const isActionReady = !isValidating && gameExists && isWin && !isRunning;
@@ -150,38 +204,70 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
   return (
     <UiHeader
       variant="down"
-      size={72}
+      size={isInstalling ? 110 : 72}
       style={{
         backgroundColor: theme.colors.card,
         borderTopWidth: 1,
         borderColor: theme.colors.border,
+        flexDirection: "column",
+        alignItems: "stretch",
+        justifyContent: "flex-end",
+        paddingLeft: 0,
+        paddingRight: 0,
+        paddingTop: 0,
+        paddingBottom: 0,
       }}
     >
+      {isInstalling && <HeaderInstallBanner />}
+
       <Row
         justify="between"
         align="center"
         style={{
           width: "100%",
           height: 72,
-          paddingLeft: 13,
-          paddingRight: 13,
+          paddingLeft: 29,
+          paddingRight: 29,
         }}
       >
         <Row gap={16} align="center">
-          <Button
-            variant="secondary"
-            size="lg"
-            disabled={isRunning}
-            onClick={onOpenSettings}
-            style={{
-              height: 46,
-              width: 46,
-              paddingLeft: 0,
-              paddingRight: 0,
-            }}
-          >
-            <Settings size={18} color={theme.colors.fg} />
-          </Button>
+          <Row gap={8} align="center">
+            <Button
+              featureId="header.settings"
+              variant="secondary"
+              size="lg"
+              disabled={isRunning}
+              onClick={onOpenSettings}
+              style={{
+                height: 46,
+                width: 46,
+                paddingLeft: 0,
+                paddingRight: 0,
+              }}
+            >
+              <Settings size={18} color={theme.colors.fg} />
+            </Button>
+
+            <Tooltip content={getModsDisabledReason()} disabled={!isModsDisabled} side="top">
+              <Button
+                featureId="header.mods"
+                variant="secondary"
+                size="lg"
+                disabled={isModsDisabled}
+                onClick={() => {
+                  if (!isModsDisabled) setIsModsDialogOpen(true);
+                }}
+                style={{
+                  height: 46,
+                  width: 46,
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                }}
+              >
+                <Layers size={18} color={isModsDisabled ? theme.colors.mutedFg : theme.colors.fg} />
+              </Button>
+            </Tooltip>
+          </Row>
 
           <Column gap={4} align="start">
             <Row gap={8} align="center">
@@ -243,42 +329,50 @@ export function Header({ config, onConfigChange, onOpenSettings, onOpenInstall }
           </Column>
         </Row>
 
-        {installation.isInstalling ? (
+        {isInstalling ? (
           <DownloadGameButton
-            variant={installation.isReinstall ? "reinstall" : "download"}
+            variant={isReinstall ? "reinstall" : "download"}
             isInstalling={true}
             onClick={onOpenInstall}
           />
-        ) : !isPathConfigured || (!isValidating && !gameExists) ? (
+        ) : isGameMissing ? (
           <DownloadGameButton onClick={onOpenInstall} disabled={isValidating || isRunning} />
         ) : (
-          <Button
-            size="lg"
-            disabled={isButtonDisabled}
-            onClick={handleStartGame}
-            style={{
-              height: 46,
-              paddingLeft: 24,
-              paddingRight: 24,
-            }}
-          >
-            <Row gap={10} align="center">
-              <Play
-                size={18}
-                color={isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg}
-              />
-              <P
-                style={{
-                  color: isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg,
-                  fontWeight: "bold",
-                }}
-              >
-                {getButtonText()}
-              </P>
-            </Row>
-          </Button>
+          <Tooltip content={getStartDisabledReason()} disabled={!isButtonDisabled} side="top">
+            <Button
+              size="lg"
+              disabled={isButtonDisabled}
+              onClick={handleStartGame}
+              style={{
+                height: 46,
+                paddingLeft: 24,
+                paddingRight: 24,
+              }}
+            >
+              <Row gap={10} align="center">
+                <Play
+                  size={18}
+                  color={isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg}
+                />
+                <P
+                  style={{
+                    color: isActionReady ? theme.colors.primaryFg : theme.colors.mutedFg,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {t("header.startGame")}
+                </P>
+              </Row>
+            </Button>
+          </Tooltip>
         )}
       </Row>
+
+      <ModsDialog
+        open={isModsDialogOpen}
+        onOpenChange={setIsModsDialogOpen}
+        gameDir={config.gameDir}
+      />
     </UiHeader>
   );
 }

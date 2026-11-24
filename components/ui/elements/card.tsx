@@ -1,10 +1,14 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
 import { theme } from "../theme";
+import { useTooltipTrigger } from "./tooltip";
 
 export function Card({ children, style = {} }: { children: ReactNode; style?: StyleDesc }) {
+  const tooltipHandlers = useTooltipTrigger();
+
   return (
     <div
+      {...tooltipHandlers}
       style={{
         display: "flex",
         flexDirection: "column",

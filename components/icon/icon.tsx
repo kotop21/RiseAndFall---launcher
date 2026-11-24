@@ -5,6 +5,7 @@ import {
   Calendar,
   Check,
   CheckCircle,
+  CircleCheck,
   Clock,
   Download,
   ExternalLink,
@@ -13,7 +14,9 @@ import {
   FolderOpen,
   Globe,
   Heart,
+  Info,
   Layers,
+  MousePointerClick,
   Play,
   RefreshCw,
   RotateCcw,
@@ -26,6 +29,8 @@ import {
   Upload,
   Users,
   Wrench,
+  X,
+  XCircle,
 } from "lucide-static";
 
 const icons = {
@@ -41,6 +46,7 @@ const icons = {
   SlidersHorizontal,
   Tag,
   Layers,
+  MousePointerClick,
   Calendar,
   Play,
   Users,
@@ -49,12 +55,16 @@ const icons = {
   Settings,
   Check,
   CheckCircle,
+  CircleCheck,
   Trash2,
   Globe,
   AlertTriangle,
   ArrowLeft,
   RotateCcw,
   Heart,
+  Info,
+  X,
+  XCircle,
 } as const;
 
 export type IconName = keyof typeof icons;

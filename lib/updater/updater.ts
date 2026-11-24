@@ -5,7 +5,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { isDevMode } from "@/lib/dev/cli";
+import { fetchLauncherInfo, getLauncherDownloadUrl } from "@/lib/api";
+import { getDevArgs, isDevMode } from "@/lib/dev";
 import { extractZip } from "@/lib/explorer/extract";
 import type { ReleaseItem } from "@/lib/github/types";
 import { logger } from "@/lib/logger";
@@ -27,9 +28,7 @@ export function resolveDownloadUrl(release: ReleaseItem): string | null {
     if (exeAsset?.downloadUrl) return exeAsset.downloadUrl;
   }
 
-  const ver = release.version.trim();
-  const vTag = ver.startsWith("v") ? ver : `v${ver}`;
-  return `https://github.com/kotop21/RiseAndFall---launcher/releases/download/${ver}/RiseAndFall-Launcher_Portable_${vTag}.zip`;
+  return getLauncherDownloadUrl("portable");
 }
 
 function findExecutableInDir(dir: string): string | null {
@@ -76,6 +75,49 @@ function findExecutableInDir(dir: string): string | null {
   });
 
   return fallbackExe || entries[0] || null;
+}
+
+export async function canWriteToDirectory(dir: string): Promise<boolean> {
+  const probePath = join(dir, `.raf-write-probe-${process.pid}-${Date.now()}`);
+  try {
+    await writeFile(probePath, "1", "utf-8");
+    await rm(probePath, { force: true });
+    return true;
+  } catch {
+    try {
+      await rm(probePath, { force: true });
+    } catch {}
+    return false;
+  }
+}
+
+export function buildPowerShellElevationScript(batPath: string): string {
+  const escapedPath = batPath.replace(/'/g, "''");
+  return `Start-Process -FilePath '${escapedPath}' -Verb RunAs -WindowStyle Hidden`;
+}
+
+async function launchElevatedBatch(batPath: string): Promise<boolean> {
+  const script = buildPowerShellElevationScript(batPath);
+  const encoded = Buffer.from(script, "utf16le").toString("base64");
+
+  return new Promise((resolve) => {
+    const proc = spawn(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", encoded],
+      {
+        stdio: "ignore",
+        windowsHide: true,
+      },
+    );
+
+    proc.on("close", (code) => {
+      resolve(code === 0);
+    });
+    proc.on("error", (err) => {
+      logger.error("updater", "Failed to spawn PowerShell for UAC elevation:", err);
+      resolve(false);
+    });
+  });
 }
 
 export async function downloadReleaseArchive(
@@ -139,9 +181,13 @@ export async function downloadReleaseArchive(
     const nodeReadable = Readable.fromWeb(
       res.body as unknown as Parameters<typeof Readable.fromWeb>[0],
     );
-    const fileWriteStream = createWriteStream(targetFilePath, { highWaterMark: 64 * 1024 });
+    const fileWriteStream = createWriteStream(targetFilePath, {
+      highWaterMark: 64 * 1024,
+    });
 
-    await pipeline(nodeReadable, progressTransform, fileWriteStream, { signal });
+    await pipeline(nodeReadable, progressTransform, fileWriteStream, {
+      signal,
+    });
     logger.info("updater", `Download finished (${bytesDownloaded} bytes)`);
     return true;
   } catch (err) {
@@ -172,7 +218,25 @@ async function doUpdateLauncher(
   const onProgress = options?.onProgress;
   const signal = options?.signal;
 
-  const downloadUrl = resolveDownloadUrl(release);
+  let downloadUrl: string | null = null;
+  try {
+    const info = await fetchLauncherInfo("portable", signal);
+    if (info?.url) {
+      downloadUrl = info.url;
+      logger.info("updater", `Resolved download URL from backend API: ${downloadUrl}`);
+    }
+  } catch (err) {
+    logger.warn(
+      "updater",
+      "Backend /launcher/info request failed, using release download url:",
+      err,
+    );
+  }
+
+  if (!downloadUrl) {
+    downloadUrl = resolveDownloadUrl(release);
+  }
+
   if (!downloadUrl) {
     logger.error("updater", "Could not resolve download URL for release", release.version);
     return { success: false, error: "Download URL not available" };
@@ -222,8 +286,9 @@ async function doUpdateLauncher(
     let payloadDir = stagingDir;
     try {
       const topItems = await readdir(stagingDir);
-      if (topItems.length === 1) {
-        const singleItemPath = join(stagingDir, topItems[0]);
+      const firstItem = topItems[0];
+      if (topItems.length === 1 && firstItem) {
+        const singleItemPath = join(stagingDir, firstItem);
         const s = await stat(singleItemPath);
         if (s.isDirectory()) {
           payloadDir = singleItemPath;
@@ -240,8 +305,8 @@ async function doUpdateLauncher(
     const newExeRelPath = relative(payloadDir, newExeFullPath);
     logger.info("updater", `Detected new executable: ${newExeRelPath} in ${payloadDir}`);
 
-    // If running in dev mode or non-windows:
-    if (isDevMode()) {
+    // If running in dev mode (without --allow-self-update) or non-windows:
+    if (isDevMode() && !getDevArgs().allowSelfUpdate) {
       logger.info(
         "updater",
         `Dev mode active. Update verified in staging: ${payloadDir} (Main exe: ${newExeRelPath})`,
@@ -309,26 +374,53 @@ rmdir /s /q "!STAGING_DIR!" > nul 2>&1
 
     await writeFile(batPath, batContent, "utf-8");
 
-    logger.info("updater", `Launching update helper script: ${batPath}`);
-    const proc = spawn(
-      "cmd.exe",
-      [
-        "/c",
-        batPath,
-        String(process.pid),
-        payloadDir,
-        currentLauncherDir,
-        newExeDestPath,
-        currentExePath,
-      ],
-      {
-        detached: true,
-        stdio: "ignore",
-        windowsHide: true,
-      },
-    );
+    const needsElevation = !(await canWriteToDirectory(currentLauncherDir));
+    if (needsElevation) {
+      logger.info(
+        "updater",
+        `Target directory requires elevation (${currentLauncherDir}), requesting UAC...`,
+      );
+      const escapeBatArg = (val: string) => val.replace(/%/g, "%%");
+      const elevatedBatPath = join(tempDir, "elevate_update.bat");
+      const elevatedBatContent = `@echo off
+call "%~dp0apply_update.bat" "${escapeBatArg(String(process.pid))}" "${escapeBatArg(payloadDir)}" "${escapeBatArg(currentLauncherDir)}" "${escapeBatArg(newExeDestPath)}" "${escapeBatArg(currentExePath)}"
+(goto) 2>nul & del "%~f0"
+`;
+      await writeFile(elevatedBatPath, elevatedBatContent, "utf-8");
 
-    proc.unref();
+      const elevated = await launchElevatedBatch(elevatedBatPath);
+      if (!elevated) {
+        logger.warn("updater", "UAC elevation was cancelled or failed");
+        await rm(tempDir, { recursive: true, force: true });
+        return {
+          success: false,
+          error: "Administrator permission is required to update in a protected folder",
+        };
+      }
+
+      logger.info("updater", `Launched elevated update helper script: ${elevatedBatPath}`);
+    } else {
+      logger.info("updater", `Launching update helper script: ${batPath}`);
+      const proc = spawn(
+        "cmd.exe",
+        [
+          "/c",
+          batPath,
+          String(process.pid),
+          payloadDir,
+          currentLauncherDir,
+          newExeDestPath,
+          currentExePath,
+        ],
+        {
+          detached: true,
+          stdio: "ignore",
+          windowsHide: true,
+        },
+      );
+
+      proc.unref();
+    }
 
     setTimeout(() => {
       process.exit(0);

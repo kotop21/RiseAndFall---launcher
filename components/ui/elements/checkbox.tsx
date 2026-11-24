@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { safeMotion as motion } from "@/components/ui/motion-compat";
 import { CheckIcon } from "@/icon";
 import { theme } from "../theme";
+import { useTooltipTrigger } from "./tooltip";
 
 export interface CheckboxProps {
   checked: boolean;
@@ -19,9 +20,12 @@ export function Checkbox({
   disabled = false,
   style = {},
 }: CheckboxProps) {
+  const tooltipHandlers = useTooltipTrigger();
+
   return (
     <div
       onClick={disabled ? undefined : () => onCheckedChange(!checked)}
+      {...tooltipHandlers}
       style={{
         display: "flex",
         flexDirection: "row",

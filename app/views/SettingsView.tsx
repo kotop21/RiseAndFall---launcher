@@ -11,16 +11,24 @@ import { ArrowLeft, Check } from "@/icon";
 import type { LauncherConfig } from "@/lib/config/types";
 import { formatErrorToast } from "@/lib/errors";
 import { useTranslation } from "@/lib/lang";
+import { logger } from "@/lib/logger";
 import { Button, Column, H2, Muted, Row, ScrollArea, Separator, theme, useToast } from "@/ui";
 
 interface SettingsViewProps {
   config: LauncherConfig;
   onChangeConfig: (nextConfig: LauncherConfig) => Promise<void> | void;
   onBack?: () => void;
-  onOpenInstall?: () => void;
+  onOpenInstall?: (targetDir?: string) => void;
+  onOpenNewInstall?: () => void;
 }
 
-export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: SettingsViewProps) {
+export function SettingsView({
+  config,
+  onChangeConfig,
+  onBack,
+  onOpenInstall,
+  onOpenNewInstall,
+}: SettingsViewProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -56,7 +64,8 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
     }
   }, [hasProfileChanges, showSavePrompt]);
 
-  const handleSaveProfiles = async () => {
+  const handleSaveProfiles = async (source: "header_prompt" | "profile_form" = "profile_form") => {
+    logger.info("settings", `save (${source})`);
     try {
       const activeProf = formState.gameProfiles.find((p) => p.id === formState.activeProfileId);
       const toSave: LauncherConfig = {
@@ -67,22 +76,24 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
         gameArg: activeProf?.gameArg || formState.gameArg,
       };
       await onChangeConfig(toSave);
+      logger.info("settings", `save ok (${source})`);
       toast({
-        title: t("toasts.settingsSavedTitle"),
         description: t("toasts.settingsSavedDesc"),
-        type: "info",
+        type: "success",
         duration: 2500,
       });
       setShowSavePrompt(false);
       setIsPromptAnimated(false);
       onBack?.();
     } catch (err) {
+      logger.error("settings", `save failed (${source})`, err);
       toast(formatErrorToast(err, "CONFIG_WRITE_FAILED"));
     }
   };
 
   const handleRevertProfiles = () => {
     const defaultActiveId = config.activeProfileId || "slot-1";
+    logger.info("settings", `revert (${defaultActiveId})`);
     const baseTarget = config.gameProfiles?.find((p) => p.id === defaultActiveId);
 
     setFormState({
@@ -98,7 +109,6 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
   const handleBackClick = () => {
     if (hasProfileChanges) {
       toast({
-        title: t("toasts.unsavedTitle"),
         description: t("toasts.unsavedDesc"),
         type: "warn",
       });
@@ -109,6 +119,21 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
       return;
     }
     onBack?.();
+  };
+
+  const handleOpenNewInstallClick = async () => {
+    const configuredCount = config.gameProfiles?.filter((p) => Boolean(p.path?.trim())).length || 0;
+    if (configuredCount >= 5) {
+      toast({
+        description: t("toasts.allSlotsFilledDesc"),
+        type: "warn",
+      });
+      return;
+    }
+    if (hasProfileChanges) {
+      await handleSaveProfiles("profile_form");
+    }
+    onOpenNewInstall?.();
   };
 
   return (
@@ -152,7 +177,7 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={handleSaveProfiles}
+                  onClick={() => handleSaveProfiles("header_prompt")}
                   style={{ height: 36 }}
                 >
                   <Row gap={6} align="center">
@@ -174,7 +199,12 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
                 variant="ghost"
                 size="sm"
                 onClick={handleBackClick}
-                style={{ width: 36, height: 36, paddingLeft: 0, paddingRight: 0 }}
+                style={{
+                  width: 36,
+                  height: 36,
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                }}
               >
                 <ArrowLeft size={18} color={theme.colors.fg} />
               </Button>
@@ -194,8 +224,10 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
           formState={formState}
           setFormState={setFormState}
           hasProfileChanges={hasProfileChanges}
-          onSaveProfiles={handleSaveProfiles}
+          onSaveProfiles={() => handleSaveProfiles("profile_form")}
           onRevertProfiles={handleRevertProfiles}
+          onOpenInstall={onOpenInstall}
+          onConfigChange={onChangeConfig}
         />
 
         <Separator orientation="horizontal" />
@@ -206,7 +238,13 @@ export function SettingsView({ config, onChangeConfig, onBack, onOpenInstall }: 
 
         <Separator orientation="horizontal" />
 
-        <SettingsActions gameDir={formState.gameDir} onOpenInstall={onOpenInstall} />
+        <SettingsActions
+          gameDir={formState.gameDir}
+          onOpenNewInstall={handleOpenNewInstallClick}
+          isNewInstallDisabled={
+            (config.gameProfiles?.filter((p) => Boolean(p.path?.trim())).length || 0) >= 5
+          }
+        />
       </Column>
     </ScrollArea>
   );

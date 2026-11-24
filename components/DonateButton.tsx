@@ -19,8 +19,7 @@ export function DonateButton({ style }: DonateButtonProps) {
     try {
       if (!openBrowser(DONATE_URL)) {
         toast({
-          title: t("toasts.browserErrorTitle"),
-          description: t("toasts.browserErrorDesc"),
+          description: t("errors.BROWSER_FAILED.description"),
           type: "error",
         });
       }
@@ -31,9 +30,15 @@ export function DonateButton({ style }: DonateButtonProps) {
 
   return (
     <Tooltip content={t("buttons.donateTooltip")} side="top">
-      <Button variant="outline" size="sm" onClick={handleOpen} style={style}>
+      <Button
+        featureId="main.actions.donate"
+        variant="outline"
+        size="sm"
+        onClick={handleOpen}
+        style={style}
+      >
         <Row gap={8} align="center" justify="center">
-          <Heart size={14} color={theme.colors.destructive} />
+          <Heart size={14} color={theme.colors.fg} />
           {t("buttons.donate")}
         </Row>
       </Button>

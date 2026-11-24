@@ -17,6 +17,8 @@ export interface LauncherConfig {
   activeProfileId: string;
   discordRpc: boolean;
   lowPerformanceMode: boolean;
+  seenBadges: string[];
+  welcomeSeen: boolean;
 }
 
 export interface LauncherState {

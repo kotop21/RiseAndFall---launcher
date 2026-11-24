@@ -1,7 +1,8 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { pack, unpack } from "msgpackr";
-import { getDevArgs } from "@/lib/dev/cli";
+import { getDevArgs, isForceWelcome } from "@/lib/dev";
+import { ALL_CURRENT_FEATURE_IDS } from "@/lib/features/generated-features";
 import { logger } from "@/lib/logger";
 import { getConfigPath } from "./dir";
 import {
@@ -24,6 +25,8 @@ export const DEFAULT_CONFIG: LauncherConfig = {
   activeProfileId: "slot-1",
   discordRpc: true,
   lowPerformanceMode: false,
+  seenBadges: [...ALL_CURRENT_FEATURE_IDS],
+  welcomeSeen: false,
 };
 
 async function fileExists(path: string): Promise<boolean> {
@@ -35,12 +38,7 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-export function isForceWelcome(): boolean {
-  const flag = (process.env.FORCE_WELCOME || process.env.TEST_MODE || process.env.WELCOME || "")
-    .toLowerCase()
-    .trim();
-  return flag === "1" || flag === "true" || flag === "yes";
-}
+export { isForceWelcome };
 
 export async function hasExistingConfigFile(): Promise<boolean> {
   return fileExists(getConfigPath());
@@ -55,10 +53,14 @@ export async function initConfig(): Promise<{
   const devArgs = getDevArgs();
 
   const applyDevConfigOverrides = (targetConfig: LauncherConfig): LauncherConfig => {
+    let cfg = targetConfig;
     if (devArgs.isDev && devArgs.lang) {
-      return { ...targetConfig, launcherLang: devArgs.lang };
+      cfg = { ...cfg, launcherLang: devArgs.lang };
     }
-    return targetConfig;
+    if (devArgs.isDev && devArgs.resetBadges) {
+      cfg = { ...cfg, seenBadges: [] };
+    }
+    return cfg;
   };
 
   try {
@@ -76,7 +78,10 @@ export async function initConfig(): Promise<{
     } catch (err) {
       logger.error("config", `Failed writing default config to ${filePath}:`, err);
     }
-    return { config: applyDevConfigOverrides(DEFAULT_CONFIG), isFirstLaunch: true };
+    return {
+      config: applyDevConfigOverrides(DEFAULT_CONFIG),
+      isFirstLaunch: true,
+    };
   }
 
   try {
@@ -93,7 +98,10 @@ export async function initConfig(): Promise<{
       }
     }
 
-    return { config: applyDevConfigOverrides(config), isFirstLaunch: forceWelcome };
+    return {
+      config: applyDevConfigOverrides(config),
+      isFirstLaunch: forceWelcome,
+    };
   } catch (err) {
     logger.error(
       "config",
@@ -105,6 +113,9 @@ export async function initConfig(): Promise<{
     } catch (writeErr) {
       logger.error("config", `Failed recreating fallback config at ${filePath}:`, writeErr);
     }
-    return { config: applyDevConfigOverrides(DEFAULT_CONFIG), isFirstLaunch: true };
+    return {
+      config: applyDevConfigOverrides(DEFAULT_CONFIG),
+      isFirstLaunch: true,
+    };
   }
 }

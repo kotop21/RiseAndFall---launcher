@@ -6,6 +6,7 @@ import {
   downloadFromMirrors,
   fetchManifest,
   formatSpeed,
+  getInstallPackageQueue,
   type ManifestPackage,
   type ManifestResponse,
 } from "@/lib/api";
@@ -23,10 +24,14 @@ import { logger } from "@/lib/logger";
 import { setBackgroundActivity } from "@/lib/render/frame-loop";
 import { recordInstalledFiles, scanFileStats } from "./install-manifest";
 import { ensureInstallDir } from "./install-path";
+import { recordInstalledMod } from "./mods-storage";
 
 export * from "./install-manager";
 export * from "./install-manifest";
 export * from "./install-path";
+export * from "./launcher-storage";
+export * from "./mod-service";
+export * from "./mods-storage";
 export { formatSpeed };
 
 export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" | "error";
@@ -34,17 +39,57 @@ export type InstallStatus = "idle" | "downloading" | "extracting" | "completed" 
 export interface InstallProgress {
   status: InstallStatus;
   message: string;
+  percent?: number;
   bytesDownloaded?: number;
   totalBytes?: number;
   bytesPerSecond?: number;
 }
 
+function getPackageWeightBytes(pkg: ManifestPackage): number | null {
+  if (typeof pkg.size === "number" && Number.isFinite(pkg.size) && pkg.size > 0) {
+    return pkg.size;
+  }
+  if (typeof pkg.size === "string") {
+    const parsed = Number.parseFloat(pkg.size.trim());
+    if (Number.isFinite(parsed) && parsed > 0 && /^\d+(\.\d+)?$/.test(pkg.size.trim())) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function computeQueuePercent(
+  packages: ManifestPackage[],
+  index: number,
+  packageFraction: number,
+): number {
+  if (packages.length === 0) return 0;
+  const clampedFraction = Math.max(0, Math.min(1, packageFraction));
+  const weights = packages.map(getPackageWeightBytes);
+  const allHaveWeights = weights.every((w): w is number => w !== null);
+
+  if (allHaveWeights) {
+    const totalWeight = weights.reduce((acc, w) => acc + w, 0);
+    if (totalWeight > 0) {
+      let completedWeight = 0;
+      for (let i = 0; i < index; i++) {
+        completedWeight += weights[i] ?? 0;
+      }
+      const currentWeight = weights[index] ?? 0;
+      return Math.round(((completedWeight + currentWeight * clampedFraction) / totalWeight) * 100);
+    }
+  }
+
+  return Math.round(((index + clampedFraction) / packages.length) * 100);
+}
+
 export interface InstallGameOptions {
   targetDir: string;
-  lang: "en" | "ru";
+  lang: string;
   cleanBeforeInstall?: boolean;
   signal?: AbortSignal;
   onProgress?: (progress: InstallProgress) => void;
+  manifest?: ManifestResponse;
 }
 
 export async function installGamePackage({
@@ -53,6 +98,7 @@ export async function installGamePackage({
   cleanBeforeInstall = false,
   signal,
   onProgress,
+  manifest,
 }: InstallGameOptions): Promise<{
   success: boolean;
   config?: LauncherConfig;
@@ -66,6 +112,7 @@ export async function installGamePackage({
       cleanBeforeInstall,
       signal,
       onProgress,
+      manifest,
     });
   } finally {
     setBackgroundActivity("install-game", false);
@@ -78,6 +125,7 @@ async function doInstallGamePackage({
   cleanBeforeInstall = false,
   signal,
   onProgress,
+  manifest: preloadedManifest,
 }: InstallGameOptions): Promise<{
   success: boolean;
   config?: LauncherConfig;
@@ -129,6 +177,7 @@ async function doInstallGamePackage({
     onProgress?.({
       status: "extracting",
       message: getTranslation(currentLang, "install.cleaningOld"),
+      percent: 0,
     });
     if (!(await cleanGameDirectory(cleanDir))) {
       logger.error("install", `Failed cleaning directory: ${cleanDir}`);
@@ -145,30 +194,48 @@ async function doInstallGamePackage({
 
   const initialUserFiles = await scanFileStats(cleanDir);
 
-  logger.info("install", "Fetching installation manifest...");
-  onProgress?.({
-    status: "downloading",
-    message: getTranslation(currentLang, "install.fetchingManifest"),
-  });
-
   let manifest: ManifestResponse;
-  try {
-    manifest = await fetchManifest(signal);
-  } catch (err: unknown) {
-    const normalized = normalizeError(err, "MANIFEST_FAILED");
-    logger.error("install", "Failed to fetch installation manifest:", normalized);
-    onProgress?.({ status: "error", message: normalized.description });
-    return {
-      success: false,
-      error: createLauncherError(normalized.code, normalized.description, err),
-    };
+  if (
+    preloadedManifest &&
+    Array.isArray(preloadedManifest.packages) &&
+    preloadedManifest.packages.length > 0
+  ) {
+    logger.info("install", "Using pre-cached installation manifest");
+    manifest = preloadedManifest;
+  } else {
+    logger.info("install", "Fetching installation manifest...");
+    onProgress?.({
+      status: "downloading",
+      message: getTranslation(currentLang, "install.fetchingManifest"),
+      percent: 0,
+    });
+
+    try {
+      manifest = await fetchManifest(signal);
+    } catch (err: unknown) {
+      const normalized = normalizeError(err, "MANIFEST_FAILED");
+      logger.error("install", "Failed to fetch installation manifest:", normalized);
+      onProgress?.({ status: "error", message: normalized.description });
+      return {
+        success: false,
+        error: createLauncherError(normalized.code, normalized.description, err),
+      };
+    }
   }
 
-  // Queue ordering:
-  // 1) id === "game"
-  // 2) id === `lang_${lang}`
-  // 3) id === "mod_bfm"
-  const targetIds = ["game", `lang_${lang}`, "mod_bfm"];
+  // Queue ordering from manifest (e.g. install_ru, install_en, or fallback)
+  let targetIds: string[];
+  try {
+    targetIds = getInstallPackageQueue(manifest, lang);
+  } catch (err: unknown) {
+    const norm = normalizeError(err, "MANIFEST_FAILED");
+    logger.error("install", "Failed resolving package queue from manifest:", norm);
+    onProgress?.({ status: "error", message: norm.description });
+    return {
+      success: false,
+      error: createLauncherError(norm.code, norm.description, err),
+    };
+  }
   const packages: ManifestPackage[] = [];
   for (const id of targetIds) {
     const pkg = manifest.packages.find((p) => p.id === id);
@@ -188,20 +255,27 @@ async function doInstallGamePackage({
   }
 
   let cumulativeBytes = 0;
+  let lastPercent = 0;
 
   for (let i = 0; i < packages.length; i++) {
     if (signal?.aborted) {
-      return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+      return {
+        success: false,
+        error: createLauncherError("INSTALL_CANCELLED"),
+      };
     }
 
     const pkg = packages[i];
+    if (!pkg) continue;
     const stepLabel = `[${i + 1}/${packages.length}] ${pkg.name}`;
 
     logger.info("install", `Starting package download: ${pkg.name} (${pkg.id})`);
 
+    lastPercent = computeQueuePercent(packages, i, 0);
     onProgress?.({
       status: "downloading",
       message: getTranslation(currentLang, "install.connecting").replace("{step}", stepLabel),
+      percent: lastPercent,
       bytesDownloaded: cumulativeBytes,
     });
 
@@ -217,10 +291,14 @@ async function doInstallGamePackage({
             p.totalBytes && p.totalBytes > 0
               ? `${currentMB} / ${(p.totalBytes / 1024 / 1024).toFixed(1)} MB`
               : `${currentMB} MB`;
+          const pkgFraction =
+            p.totalBytes && p.totalBytes > 0 ? Math.min(1, p.bytesDownloaded / p.totalBytes) : 0;
+          lastPercent = computeQueuePercent(packages, i, pkgFraction * 0.9);
 
           onProgress?.({
             status: "downloading",
             message: `${stepLabel}: ${sizeStr} (${speedStr})`,
+            percent: lastPercent,
             bytesDownloaded: cumulativeBytes + p.bytesDownloaded,
             totalBytes: p.totalBytes,
             bytesPerSecond: p.bytesPerSecond,
@@ -235,7 +313,10 @@ async function doInstallGamePackage({
       } catch {}
 
       if (signal?.aborted) {
-        return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+        return {
+          success: false,
+          error: createLauncherError("INSTALL_CANCELLED"),
+        };
       }
 
       logger.error("install", `All mirrors failed for package ${pkg.id}`, {
@@ -244,7 +325,7 @@ async function doInstallGamePackage({
 
       const normalized = normalizeError(err, "DOWNLOAD_FAILED");
       const launchErr = createLauncherError(normalized.code, normalized.description, err);
-      onProgress?.({ status: "error", message: launchErr.description });
+      onProgress?.({ status: "error", message: launchErr.description, percent: lastPercent });
       return { success: false, error: launchErr };
     }
 
@@ -252,12 +333,17 @@ async function doInstallGamePackage({
       try {
         await unlink(tempArchivePath);
       } catch {}
-      return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+      return {
+        success: false,
+        error: createLauncherError("INSTALL_CANCELLED"),
+      };
     }
 
+    lastPercent = computeQueuePercent(packages, i, 0.92);
     onProgress?.({
       status: "extracting",
       message: getTranslation(currentLang, "install.extracting").replace("{step}", stepLabel),
+      percent: lastPercent,
       bytesDownloaded: cumulativeBytes,
     });
 
@@ -267,6 +353,12 @@ async function doInstallGamePackage({
       }
       logger.info("install", `Package extracted successfully: ${pkg.name} (${pkg.id})`);
       await recordInstalledFiles(cleanDir, pkg.id, initialUserFiles);
+      if (pkg.id.startsWith("mod_")) {
+        try {
+          const modFiles = pkg.check_file ? [pkg.check_file.replace(/\\/g, "/")] : [];
+          await recordInstalledMod(cleanDir, pkg.id, pkg.hash || "", modFiles, pkg.check_file);
+        } catch {}
+      }
     } catch (err: unknown) {
       try {
         await unlink(tempArchivePath);
@@ -276,11 +368,14 @@ async function doInstallGamePackage({
       logger.error("install", `Error while extracting package ${pkg.id}:`, normalized);
 
       if (normalized.code === "INSTALL_CANCELLED" || signal?.aborted) {
-        return { success: false, error: createLauncherError("INSTALL_CANCELLED") };
+        return {
+          success: false,
+          error: createLauncherError("INSTALL_CANCELLED"),
+        };
       }
 
       const launchErr = createLauncherError(normalized.code, undefined, err);
-      onProgress?.({ status: "error", message: launchErr.description });
+      onProgress?.({ status: "error", message: launchErr.description, percent: lastPercent });
       return { success: false, error: launchErr };
     } finally {
       try {
@@ -322,6 +417,7 @@ async function doInstallGamePackage({
   onProgress?.({
     status: "completed",
     message: getTranslation(currentLang, "install.completed"),
+    percent: 100,
     bytesDownloaded: cumulativeBytes,
   });
 
