@@ -77,6 +77,49 @@ function findExecutableInDir(dir: string): string | null {
   return fallbackExe || entries[0] || null;
 }
 
+export async function canWriteToDirectory(dir: string): Promise<boolean> {
+  const probePath = join(dir, `.raf-write-probe-${process.pid}-${Date.now()}`);
+  try {
+    await writeFile(probePath, "1", "utf-8");
+    await rm(probePath, { force: true });
+    return true;
+  } catch {
+    try {
+      await rm(probePath, { force: true });
+    } catch {}
+    return false;
+  }
+}
+
+export function buildPowerShellElevationScript(batPath: string): string {
+  const escapedPath = batPath.replace(/'/g, "''");
+  return `Start-Process -FilePath '${escapedPath}' -Verb RunAs -WindowStyle Hidden`;
+}
+
+async function launchElevatedBatch(batPath: string): Promise<boolean> {
+  const script = buildPowerShellElevationScript(batPath);
+  const encoded = Buffer.from(script, "utf16le").toString("base64");
+
+  return new Promise((resolve) => {
+    const proc = spawn(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", encoded],
+      {
+        stdio: "ignore",
+        windowsHide: true,
+      },
+    );
+
+    proc.on("close", (code) => {
+      resolve(code === 0);
+    });
+    proc.on("error", (err) => {
+      logger.error("updater", "Failed to spawn PowerShell for UAC elevation:", err);
+      resolve(false);
+    });
+  });
+}
+
 export async function downloadReleaseArchive(
   url: string,
   targetFilePath: string,
@@ -331,26 +374,53 @@ rmdir /s /q "!STAGING_DIR!" > nul 2>&1
 
     await writeFile(batPath, batContent, "utf-8");
 
-    logger.info("updater", `Launching update helper script: ${batPath}`);
-    const proc = spawn(
-      "cmd.exe",
-      [
-        "/c",
-        batPath,
-        String(process.pid),
-        payloadDir,
-        currentLauncherDir,
-        newExeDestPath,
-        currentExePath,
-      ],
-      {
-        detached: true,
-        stdio: "ignore",
-        windowsHide: true,
-      },
-    );
+    const needsElevation = !(await canWriteToDirectory(currentLauncherDir));
+    if (needsElevation) {
+      logger.info(
+        "updater",
+        `Target directory requires elevation (${currentLauncherDir}), requesting UAC...`,
+      );
+      const escapeBatArg = (val: string) => val.replace(/%/g, "%%");
+      const elevatedBatPath = join(tempDir, "elevate_update.bat");
+      const elevatedBatContent = `@echo off
+call "%~dp0apply_update.bat" "${escapeBatArg(String(process.pid))}" "${escapeBatArg(payloadDir)}" "${escapeBatArg(currentLauncherDir)}" "${escapeBatArg(newExeDestPath)}" "${escapeBatArg(currentExePath)}"
+(goto) 2>nul & del "%~f0"
+`;
+      await writeFile(elevatedBatPath, elevatedBatContent, "utf-8");
 
-    proc.unref();
+      const elevated = await launchElevatedBatch(elevatedBatPath);
+      if (!elevated) {
+        logger.warn("updater", "UAC elevation was cancelled or failed");
+        await rm(tempDir, { recursive: true, force: true });
+        return {
+          success: false,
+          error: "Administrator permission is required to update in a protected folder",
+        };
+      }
+
+      logger.info("updater", `Launched elevated update helper script: ${elevatedBatPath}`);
+    } else {
+      logger.info("updater", `Launching update helper script: ${batPath}`);
+      const proc = spawn(
+        "cmd.exe",
+        [
+          "/c",
+          batPath,
+          String(process.pid),
+          payloadDir,
+          currentLauncherDir,
+          newExeDestPath,
+          currentExePath,
+        ],
+        {
+          detached: true,
+          stdio: "ignore",
+          windowsHide: true,
+        },
+      );
+
+      proc.unref();
+    }
 
     setTimeout(() => {
       process.exit(0);

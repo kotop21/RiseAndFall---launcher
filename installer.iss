@@ -23,6 +23,8 @@ SolidCompression=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequiredOverridesAllowed=dialog commandline
+CloseApplications=yes
+CloseApplicationsFilter=*.exe,*.dll,*.node
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

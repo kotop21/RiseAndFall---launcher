@@ -1,4 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { chmod, mkdir, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import en from "@/lang/en.json";
 import ru from "@/lang/ru.json";
 import ua from "@/lang/ua.json";
@@ -9,7 +12,12 @@ import {
   isDifferentVersion,
   isNewerVersion,
 } from "@/lib/updater/compare";
-import { isDevMode, resolveDownloadUrl } from "@/lib/updater/updater";
+import {
+  buildPowerShellElevationScript,
+  canWriteToDirectory,
+  isDevMode,
+  resolveDownloadUrl,
+} from "@/lib/updater/updater";
 
 describe("Updater: Version Comparison", () => {
   it("cleans versions properly", () => {
@@ -72,6 +80,43 @@ describe("Updater: Download URL Resolution", () => {
 
   it("detects dev mode correctly in Bun test environment", () => {
     expect(isDevMode()).toBe(true);
+  });
+});
+
+describe("Updater: Write Access & Elevation Helpers", () => {
+  it("returns true for a writable directory and removes probe file", async () => {
+    const dir = join(tmpdir(), `raf-write-ok-${Date.now()}`);
+    await mkdir(dir, { recursive: true });
+    try {
+      expect(await canWriteToDirectory(dir)).toBe(true);
+      expect(await readdir(dir)).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("returns false for a non-existent or read-only directory", async () => {
+    const missingDir = join(tmpdir(), `raf-write-missing-${Date.now()}`, "nested");
+    expect(await canWriteToDirectory(missingDir)).toBe(false);
+
+    if (process.platform !== "win32") {
+      const roDir = join(tmpdir(), `raf-write-ro-${Date.now()}`);
+      await mkdir(roDir, { recursive: true });
+      await chmod(roDir, 0o555);
+      try {
+        expect(await canWriteToDirectory(roDir)).toBe(false);
+      } finally {
+        await chmod(roDir, 0o755);
+        await rm(roDir, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("builds PowerShell RunAs command escaping single quotes", () => {
+    const cmd = buildPowerShellElevationScript("C:\\Users\\O'Neil\\Temp\\elevate_update.bat");
+    expect(cmd).toBe(
+      "Start-Process -FilePath 'C:\\Users\\O''Neil\\Temp\\elevate_update.bat' -Verb RunAs -WindowStyle Hidden",
+    );
   });
 });
 
